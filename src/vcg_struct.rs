@@ -9,7 +9,6 @@ pub struct File {
 
 #[derive(Debug)]
 pub struct Region {
-    pub id: u32,
     pub start: Coord,
     pub curves: Vec<Curve>,
     pub color: RGBA,

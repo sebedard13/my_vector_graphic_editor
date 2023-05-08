@@ -4,13 +4,14 @@ mod vcg_struct;
 mod read_file;
 mod read_header;
 mod read_common;
+mod read_content;
 
 fn main() {
     let bytes = fs::read("data/test1.vgcu").expect("Unable to read file");
     let a = read_file::read(bytes);
 
     match a {
-        Ok(_) => {}
+        Ok(file) => { println!("{:#?}", file) }
         Err(e) => { eprintln!("{}", e) }
     }
     // Construct a new RGB ImageBuffer with the specified width and height.
