@@ -1,6 +1,5 @@
 use crate::vcg_struct::{Coord, RGBA};
 
-
 pub fn read_number(char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Result<u32, String> {
     let mut string = String::new();
     loop {
@@ -28,13 +27,30 @@ pub fn read_number(char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> R
 }
 
 pub fn read_coord(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>)-> Result<Coord, String>{
+    let mut w = read_number(&mut char_iterator)? as f32;
+    let mut h = read_number(&mut char_iterator)? as f32;
 
-    let w = read_number(&mut char_iterator)?;
-    let h = read_number(&mut char_iterator)?;
+    loop {
+        match w >= 1.0 {
+            true => {
+                w = w / 10.0
+            }
+            false => { break }
+        }
+    }
 
-    Ok(Coord{
-        w,
-        h
+    loop {
+        match h >= 1.0 {
+            true => {
+                h = h / 10.0
+            }
+            false => { break }
+        }
+    }
+
+    Ok(Coord {
+        w: w as f32,
+        h: h as f32,
     })
 }
 
@@ -90,18 +106,27 @@ pub fn read_color(char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Re
     })
 }
 
+#[macro_export] macro_rules! try_append {
+    ($expr:expr, $msg:expr) => {
+        match $expr {
+            Ok(val) => val,
+            Err(err) => return Err(format!("{}\n{}", $msg, err)),
+        }
+    };
+}
+
 #[cfg(test)]
-mod tests{
+mod tests {
     use crate::read_common::read_coord;
 
     #[test]
-    pub fn coord_valid(){
+    pub fn coord_valid() {
         let mut iter = "50,20".chars();
 
         let result = read_coord(&mut iter).unwrap();
 
-        assert_eq!(result.w, 50);
-        assert_eq!(result.h, 20);
+        assert_eq!(result.w, 0.50);
+        assert_eq!(result.h, 0.20);
     }
 
     #[test]
@@ -110,8 +135,8 @@ mod tests{
 
         let result = read_coord(&mut iter).unwrap();
 
-        assert_eq!(result.w, 502000);
-        assert_eq!(result.h, 1);
+        assert_eq!(result.w, 0.502000);
+        assert_eq!(result.h, 0.1);
     }
 
     #[test]

@@ -1,18 +1,21 @@
-use crate::read_common;
+use crate::{read_common::*, try_append};
 use crate::vcg_struct::RGBA;
 
 pub fn read_background(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Result<RGBA, String> {
+    let error = "Not valid background color".into();
+
     match char_iterator.next() {
         None => {
-            return Err(String::from("Not valid background color"))
+
+            return Err(error)
         }
         Some(c) => {
             match c {
                 '#' => {
-                    read_common::read_color(&mut char_iterator)
+                    Ok(try_append!(read_color(&mut char_iterator), error))
                 }
                 _ => {
-                    return Err(String::from("Not valid background color"))
+                    return Err(error)
                 }
             }
         }
@@ -27,8 +30,8 @@ pub fn read_ratio(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -
         Some(c) => {
             match c {
                 'r' => {
-                    let num = read_common::read_number(&mut char_iterator)?;
-                    let denum = read_common::read_number(&mut char_iterator)?;
+                    let num = try_append!(read_number(&mut char_iterator), "Invalid ratio's numerator");
+                    let denum = try_append!(read_number(&mut char_iterator), "Invalid ratio's denominator");
 
                     if denum == 0{
                         return Err(String::from("Invalid Ratio because division by 0"));
@@ -46,10 +49,10 @@ pub fn read_ratio(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -
 
 pub fn read_version(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Result<u32, String> {
     let version: u32;
-    let error = Err(String::from("Not a valid VGC header"));
+    let error = "Not a valid VGC header".into();
 
     match char_iterator.next() {
-        None => { return Err(format!("No content")) }
+        None => { return Err("No content".into()) }
         Some(c) => {
             match c {
                 'V' => {}
@@ -59,21 +62,21 @@ pub fn read_version(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>)
     }
     match char_iterator.next() {
         None => {
-            return error
+            return Err(error)
         }
         Some(c) => {
             match c {
                 'G' => {}
-                _ => { return error; }
+                _ => { return Err(error); }
             }
         }
     }
     match char_iterator.next() {
-        None => { return error; }
+        None => { return Err(error); }
         Some(c) => {
             match c {
-                'C' => { version = read_common::read_number(&mut char_iterator)?; }
-                _ => { return error; }
+                'C' => { version = try_append!(read_number(&mut char_iterator), error); }
+                _ => { return Err(error); }
             }
         }
     }

@@ -1,4 +1,5 @@
 use crate::read_common::{read_color, read_coord};
+use crate::try_append;
 use crate::vcg_struct::{Curve, Region};
 
 pub fn read_regions(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Result<Vec<Region>, String> {
@@ -9,7 +10,7 @@ pub fn read_regions(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>)
             Some(c) => {
                 match c {
                     'E' => {
-                        let region = read_region(&mut char_iterator)?;
+                        let region = try_append!(read_region(&mut char_iterator),"Invalid Region");
                         regions.push(region);
                     }
                     _ => {}
@@ -23,13 +24,13 @@ pub fn read_regions(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>)
 
 fn read_region(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> Result<Region, String> {
     let start = match char_iterator.next() {
-        None => { return Err(format!("No valid start region")); }
+        None => { return Err(format!("No valid start coord")); }
         Some(c) => {
             match c {
                 'P' => {
                     read_coord(char_iterator)?
                 }
-                _ => { return Err(format!("No valid start region")); }
+                _ => { return Err(format!("No valid start coord")); }
             }
         }
     };
@@ -54,14 +55,14 @@ fn read_region(mut char_iterator: &mut impl DoubleEndedIterator<Item=char>) -> R
         }
     }
     let color = match char_iterator.next() {
-        None => { return Err(format!("No valid region color")); }
+        None => { return Err(format!("No region color")); }
         Some(c) => {
             match c {
                 '#' => {
                     read_color(char_iterator)?
                 }
                 _ => {
-                    return Err(format!("No valid region color"));
+                    return Err(format!("No region color"));
                 }
             }
         }
