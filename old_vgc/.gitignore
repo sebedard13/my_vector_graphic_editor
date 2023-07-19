@@ -1,0 +1,6 @@
+/target
+/data/*.svg
+/data/*.png
+/.idea
+/.vs
+/.vscode

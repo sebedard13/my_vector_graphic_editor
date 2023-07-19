@@ -1,6 +1,5 @@
-/target
-/data/*.svg
-/data/*.png
-/.idea
-/.vs
-/.vscode
+**/target
+**/.idea
+**/.vs
+**/.vscode
+**/node_modules
