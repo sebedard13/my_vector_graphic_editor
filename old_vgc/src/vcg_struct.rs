@@ -67,9 +67,9 @@ impl Curve {
         // self.max = Coord {w: list_w[2], h: list_h[2]};
     }
 
-    fn evaluate(self, t: f32, last_p: &Coord) -> Coord {
-        if 0.0 <= t && t < 1.0 {
-            panic!("Evalute curve outside");
+    pub fn evaluate(&self, t: f32, last_p: &Coord) -> Coord {
+        if !(0.0 <= t && t <= 1.0) {
+            panic!("Evaluate curve outside {}", t);
         }
 
         return cubic_bezier(t, last_p, &self.c1, &self.c2, &self.p);
