@@ -32,6 +32,8 @@ pub struct Coord {
 }
 
 impl Coord {
+
+
     fn scale_percent(self, w: u32, h: u32) -> Coord {
         let ws = self.w * w as f32;
         let hs = self.h * h as f32;
@@ -39,7 +41,32 @@ impl Coord {
     }
 }
 
+
+trait BoundingBox{
+    fn is_in(c:&Coord){
+
+    }
+}
+
 impl Curve {
+    pub fn new (c1: Coord, c2: Coord, p:Coord)-> Curve{
+        let mut c = Curve{c1,c2,p};
+
+        c.generate_bounding_box();
+        return c;
+
+    }
+
+    fn generate_bounding_box(&mut self){
+        let mut list_w = [self.c1.w,self.c2.w,self.p.w];
+        let mut list_h = [self.c1.h,self.c2.h,self.p.h];
+        list_w.sort_by(|a, b| a.partial_cmp(b).expect("Order float number should be good"));
+        list_h.sort_by(|a, b| a.partial_cmp(b).expect("Order float number should be good"));
+
+        // self.min = Coord {w: list_w[0], h: list_h[0]};
+        // self.max = Coord {w: list_w[2], h: list_h[2]};
+    }
+
     fn evaluate(self, t: f32, last_p: &Coord) -> Coord {
         if 0.0 <= t && t < 1.0 {
             panic!("Evalute curve outside");
