@@ -1,4 +1,5 @@
 use std::ops::{Add, Mul};
+use crate::coord::{Coord, CoordIndex};
 
 pub struct File {
     pub version: u32,
@@ -8,15 +9,15 @@ pub struct File {
 }
 
 pub struct Region {
-    pub start: Coord,
+    pub start: CoordIndex,
     pub curves: Vec<Curve>,
     pub color: RGBA,
 }
 
 pub struct Curve {
-    pub c1: Coord,
-    pub c2: Coord,
-    pub p: Coord,
+    pub c1: CoordIndex,
+    pub c2: CoordIndex,
+    pub p: CoordIndex,
 }
 
 pub struct RGBA {
@@ -26,54 +27,21 @@ pub struct RGBA {
     pub a: u8,
 }
 
-pub struct Coord {
-    pub w: f32,
-    pub h: f32,
-}
-
-impl Coord {
-
-
-    fn scale_percent(self, w: u32, h: u32) -> Coord {
-        let ws = self.w * w as f32;
-        let hs = self.h * h as f32;
-        Coord { w: ws, h: hs }
-    }
-}
-
-
-trait BoundingBox{
-    fn is_in(c:&Coord){
-
-    }
-}
 
 impl Curve {
-    pub fn new (c1: Coord, c2: Coord, p:Coord)-> Curve{
+    pub fn new (c1: CoordIndex, c2: CoordIndex, p:CoordIndex)-> Curve{
         let mut c = Curve{c1,c2,p};
 
-        c.generate_bounding_box();
         return c;
-
     }
 
-    fn generate_bounding_box(&mut self){
-        let mut list_w = [self.c1.w,self.c2.w,self.p.w];
-        let mut list_h = [self.c1.h,self.c2.h,self.p.h];
-        list_w.sort_by(|a, b| a.partial_cmp(b).expect("Order float number should be good"));
-        list_h.sort_by(|a, b| a.partial_cmp(b).expect("Order float number should be good"));
-
-        // self.min = Coord {w: list_w[0], h: list_h[0]};
-        // self.max = Coord {w: list_w[2], h: list_h[2]};
-    }
-
-    pub fn evaluate(&self, t: f32, last_p: &Coord) -> Coord {
+    /*pub fn evaluate(&self, t: f32, last_p: &Coord) -> Coord {
         if !(0.0 <= t && t <= 1.0) {
             panic!("Evaluate curve outside {}", t);
         }
 
         return cubic_bezier(t, last_p, &self.c1, &self.c2, &self.p);
-    }
+    }*/
 }
 
 fn cubic_bezier(t: f32, p0: &Coord, p1: &Coord, p2: &Coord, p3: &Coord) -> Coord {
@@ -91,7 +59,7 @@ impl Mul<Coord> for f32 {
     type Output = Coord;
 
     fn mul(self, rhs: Coord) -> Self::Output {
-        return Coord { w: self * rhs.w, h: self * rhs.h };
+        return Coord { x: self * rhs.x, y: self * rhs.y };
     }
 }
 
@@ -99,14 +67,6 @@ impl Mul<&Coord> for f32 {
     type Output = Coord;
 
     fn mul(self, rhs: &Coord) -> Self::Output {
-        return Coord { w: self * rhs.w, h: self * rhs.h };
-    }
-}
-
-impl Add<Coord> for Coord {
-    type Output = Coord;
-
-    fn add(self, rhs: Coord) -> Self::Output {
-        Coord { w: self.w + rhs.w, h: self.h + rhs.h }
+        return Coord { x: self * rhs.x, y: self * rhs.y };
     }
 }
