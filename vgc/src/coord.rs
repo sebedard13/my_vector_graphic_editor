@@ -57,7 +57,7 @@ mod tests {
     use crate::coord::{Coord, CoordDS};
 
     #[test]
-    fn scale_CoordDS() {
+    fn scale_coord_ds() {
        let mut cds = CoordDS::new();
         cds.insert(Coord { x: 0.5, y: 0.2 });
 

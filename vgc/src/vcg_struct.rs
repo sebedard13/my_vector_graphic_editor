@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Mul};
 use crate::coord::{Coord, CoordIndex};
 
 pub struct File {
@@ -30,7 +30,7 @@ pub struct RGBA {
 
 impl Curve {
     pub fn new (c1: CoordIndex, c2: CoordIndex, p:CoordIndex)-> Curve{
-        let mut c = Curve{c1,c2,p};
+        let c = Curve{c1,c2,p};
 
         return c;
     }

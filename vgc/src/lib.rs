@@ -1,5 +1,5 @@
-
-
+use std::ops::Add;
+use base64::Engine;
 use crate::coord::{Coord, CoordDS};
 use crate::render::render_w;
 use crate::vcg_struct::{Curve, File, Region, RGBA};
@@ -8,14 +8,39 @@ mod vcg_struct;
 mod render;
 mod coord;
 
-fn main() {
-
-   let (file, coord_ds) =  generate_exemple();
-
+pub fn test_get_image() -> String{
+    let (file, coord_ds) =  generate_exemple();
 
     match render_w(&file,&coord_ds, 512) {
-        Ok(img) => { img.save_png("old_vgc/data/test1.png").expect("Able to save image"); }
-        Err(e) => { eprintln!("{}", e) }
+        Ok(img) => {
+            let byte_image = img.encode_png().expect("Able to encode png");
+            let data = base64::engine::general_purpose::STANDARD_NO_PAD.encode(byte_image);
+            "data:image/png;base64,".to_string().add(data.as_str())
+        }
+        Err(e) => { e }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works_render_file() {
+        let (file, coord_ds) =  generate_exemple();
+
+
+        match render_w(&file,&coord_ds, 512) {
+            Ok(img) => { img.save_png("old_vgc/data/test1.png").expect("Able to save image"); }
+            Err(e) => { eprintln!("{}", e) }
+        }
+    }
+
+    #[test]
+    fn it_works_render_string() {
+        let a = test_get_image();
+        assert!(a.starts_with("data:image/png;base64,"));
     }
 }
 
