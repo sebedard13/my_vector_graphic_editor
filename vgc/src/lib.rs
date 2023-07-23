@@ -1,5 +1,6 @@
 use std::ops::Add;
 use base64::Engine;
+use tiny_skia::Path;
 use crate::coord::{Coord, CoordDS};
 use crate::render::render_w;
 use crate::vcg_struct::{Curve, File, Region, RGBA};
@@ -8,16 +9,20 @@ mod vcg_struct;
 mod render;
 mod coord;
 
-pub fn test_get_image() -> String{
+
+pub struct Tree{
+
+}
+
+
+pub fn test_get_image() -> Vec<u8> {
     let (file, coord_ds) =  generate_exemple();
 
     match render_w(&file,&coord_ds, 512) {
         Ok(img) => {
-            let byte_image = img.encode_png().expect("Able to encode png");
-            let data = base64::engine::general_purpose::STANDARD_NO_PAD.encode(byte_image);
-            "data:image/png;base64,".to_string().add(data.as_str())
+            return img.take();
         }
-        Err(e) => { e }
+        Err(e) => { panic!("Unable render {e}") }
     }
 }
 
