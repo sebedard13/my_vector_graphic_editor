@@ -1,25 +1,21 @@
 use std::ops::{Mul};
+use serde::{Deserialize, Serialize};
 use crate::coord::{Coord, CoordIndex};
 
-pub struct File {
-    pub version: u32,
-    pub background: RGBA,
-    pub ratio: f64,
-    pub regions: Vec<Region>,
-}
-
-pub struct Region {
+#[derive(Deserialize,Serialize, Debug)]
+pub struct Shape {
     pub start: CoordIndex,
     pub curves: Vec<Curve>,
     pub color: RGBA,
 }
-
+#[derive(Deserialize,Serialize, Debug)]
 pub struct Curve {
     pub c1: CoordIndex,
     pub c2: CoordIndex,
     pub p: CoordIndex,
 }
 
+#[derive(Deserialize,Serialize, Debug)]
 pub struct RGBA {
     pub r: u8,
     pub g: u8,

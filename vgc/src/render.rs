@@ -1,22 +1,21 @@
 use tiny_skia::{FillRule, Paint, PathBuilder, Pixmap, Transform};
+use crate::Canvas;
 use crate::coord::CoordDS;
 
-use crate::vcg_struct::File;
 
-
-pub fn render_w(file: &File, coord_ds: &CoordDS, w: u32) -> Result<Pixmap, String> {
-    let h = ((w as f64) * (1.0 / file.ratio)) as u32;
-    let scaled_coord_ds = coord_ds.scale(w as f32,h as f32);
-    return render(file, &scaled_coord_ds, w, h);
+pub fn render_w(canvas: &Canvas, w: u32) -> Result<Pixmap, String> {
+    let h = ((w as f64) * (1.0 / canvas.ratio)) as u32;
+    let scaled_coord_ds = canvas.coord_ds.scale(w as f32, h as f32);
+    return render(canvas, &scaled_coord_ds, w, h);
 }
 
 
-fn render(file: &File,coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, String> {
+fn render(canvas: &Canvas, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, String> {
     let mut image = Pixmap::new(w, h).expect("Valid Size");
 
 
-    for i_region in 0..file.regions.len() {
-        let region = &file.regions[i_region];
+    for i_region in 0..canvas.shapes.len() {
+        let region = &canvas.shapes[i_region];
 
         let mut paint = Paint::default();
         paint.set_color_rgba8(region.color.r, region.color.g, region.color.b, region.color.a);

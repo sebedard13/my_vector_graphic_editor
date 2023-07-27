@@ -1,12 +1,18 @@
 use std::ops::Add;
+use serde::{Deserialize, Serialize};
 
+use crate::instructions::{CurveInstruction, ShapeInstruction};
+use crate::vcg_struct::{Curve, Shape};
+
+#[derive(Deserialize,Serialize, Debug)]
 pub struct CoordIndex {
     i: usize,
 }
 
+#[derive(Deserialize,Serialize, Debug)]
 pub struct CoordDS {
-    array: Vec<Option<Coord>>,
-    is_normalize: bool,
+    pub array: Vec<Option<Coord>>,
+    pub is_normalize: bool,
 }
 
 impl Default for CoordDS {
@@ -26,7 +32,7 @@ impl CoordDS {
     }
 
     pub fn get(&self, coord_index: &CoordIndex) -> &Coord {
-        self.array[coord_index.i].as_ref().expect("Coord should be valid from CoordInde")
+        self.array[coord_index.i].as_ref().expect("Coord should be valid from CoordIndex")
     }
 
     pub fn modify(&mut self, coord_index: &CoordIndex, c: Coord) {
@@ -51,9 +57,27 @@ impl CoordDS {
     }
 }
 
+
+pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CurveInstruction) -> Curve {
+    let c1 = coord_ds.insert(curve_instruction.c1);
+    let c2 = coord_ds.insert(curve_instruction.c2);
+    let p = coord_ds.insert(curve_instruction.p);
+    Curve::new(c1, c2, p)
+}
+
+pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction) -> Shape {
+    let start = coord_ds.insert(shape_instruction.start);
+
+    let curves = shape_instruction.curves.iter().map(|curve_instruction| {
+        insert_curve(coord_ds,curve_instruction.clone())//Todo: clone is not good
+    }).collect();
+    Shape { start, curves, color: shape_instruction.color }
+}
+
 #[cfg(test)]
 mod tests {
     use float_cmp::approx_eq;
+
     use crate::coord::{Coord, CoordDS};
 
     #[test]
@@ -69,18 +93,10 @@ mod tests {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize,Serialize, Debug)]
 pub struct Coord {
     pub x: f32,
     pub y: f32,
-}
-
-impl Coord {
-    fn scale_percent(self, w: u32, h: u32) -> Coord {
-        let ws = self.x * w as f32;
-        let hs = self.y * h as f32;
-        Coord { x: ws, y: hs }
-    }
 }
 
 impl Add<Coord> for Coord {
