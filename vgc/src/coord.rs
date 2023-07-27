@@ -35,8 +35,9 @@ impl CoordDS {
         self.array[coord_index.i].as_ref().expect("Coord should be valid from CoordIndex")
     }
 
-    pub fn modify(&mut self, coord_index: &CoordIndex, c: Coord) {
-        self.array[coord_index.i] = Some(c);
+    pub fn modify(&mut self, coord_index: usize, c: Coord) {
+        //Todo couple with CoordIndex?
+        self.array[coord_index] = Some(c);
     }
 
 

@@ -1,19 +1,14 @@
+use std::mem::swap;
 use serde::{Deserialize, Serialize};
-use crate::coord::{Coord, CoordDS, insert_shape};
-use crate::instructions::{CurveInstruction, ShapeInstruction};
-use crate::vcg_struct::{Shape, RGBA};
+
+use crate::coord::{Coord, CoordDS, insert_curve, insert_shape};
+use crate::instructions::{AddCurve, CurveInstruction, ShapeInstruction};
+use crate::vcg_struct::{RGBA, Shape};
 
 mod vcg_struct;
 mod render;
 mod coord;
 mod instructions;
-
-
-/*Todo API
-- Coord::move
-- Region::add_coord
-- move_coord(index
-*/
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Canvas {
@@ -39,8 +34,7 @@ impl Canvas {
     pub fn add_shape(&mut self, shape_instruction: ShapeInstruction) {
 
         let shape = insert_shape(&mut self.coord_ds, shape_instruction);
-         self.shapes.push(shape);
-        //Todo: update coord_ds
+        self.shapes.push(shape);
 
         //Todo: refactor and remove colliding shape?
     }
@@ -55,10 +49,30 @@ impl Canvas {
             };
         }).collect();
     }
+
+    pub fn move_coord(&mut self, index: usize, x: f32, y: f32) {
+        self.coord_ds.modify(index, Coord { x, y })
+    }
+
+    pub fn add_coord(&mut self, add_curve_coord: AddCurve) {
+        let curves = &mut self.shapes[add_curve_coord.index_shape].curves;
+
+        let mut curve = insert_curve(&mut self.coord_ds, add_curve_coord.curve);
+
+        let index_after = add_curve_coord.index_curve + 1;
+
+        let mut curve_after = curves.get_mut(index_after).expect("Index should be valid because we should not be able to add a curve at the end of the shape because the last elment close the curve with a link to the start coord in shape");
+
+        swap(&mut curve.c1,&mut curve.c2);
+        swap(&mut curve.c1,&mut curve_after.c1);
+        curves.insert(add_curve_coord.index_curve, curve);
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::render::render_w;
+
     use super::*;
 
     #[test]

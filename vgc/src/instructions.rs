@@ -1,5 +1,5 @@
 use crate::coord::Coord;
-use crate::vcg_struct::RGBA;
+use crate::vcg_struct::{Curve, RGBA};
 
 pub struct ShapeInstruction {
     pub start: Coord,
@@ -9,7 +9,14 @@ pub struct ShapeInstruction {
 
 #[derive(Clone)]
 pub struct CurveInstruction {
-    pub c1: Coord,
-    pub c2: Coord,
-    pub p: Coord,
+    //c1 become c1 in curve after
+    pub c1: Coord, // become c2 in current curve
+    pub p: Coord, // stay point
+    pub c2: Coord,// become c1 in curve after
+}
+
+pub struct AddCurve{
+    pub curve: CurveInstruction,
+    pub index_shape: usize,
+    pub index_curve: usize,
 }
