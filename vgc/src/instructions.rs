@@ -1,5 +1,5 @@
 use crate::coord::Coord;
-use crate::vcg_struct::{Curve, RGBA};
+use crate::vcg_struct::{RGBA};
 
 pub struct ShapeInstruction {
     pub start: Coord,

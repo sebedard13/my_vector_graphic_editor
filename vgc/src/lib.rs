@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_variables)]
+
 use std::mem::swap;
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +23,7 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new(ratio: f64, background: RGBA) -> Canvas {
-        return Canvas { ratio, background, shapes: Vec::new(), coord_ds : CoordDS::new() };
+        Canvas { ratio, background, shapes: Vec::new(), coord_ds : CoordDS::new() }
     }
 
     pub fn from_byte(byte: &[u8]) -> Result<Canvas, String> {
@@ -41,12 +44,12 @@ impl Canvas {
 
     pub fn list_coord(&self)->Vec<&Coord>{
         return self.coord_ds.array.iter().filter_map(|op_c| {
-            return match op_c {
+            match op_c {
                 Some(c) => {
                     Some(c)
                 }
                 None => { None }
-            };
+            }
         }).collect();
     }
 
@@ -61,7 +64,7 @@ impl Canvas {
 
         let index_after = add_curve_coord.index_curve + 1;
 
-        let mut curve_after = curves.get_mut(index_after).expect("Index should be valid because we should not be able to add a curve at the end of the shape because the last elment close the curve with a link to the start coord in shape");
+        let curve_after = curves.get_mut(index_after).expect("Index should be valid because we should not be able to add a curve at the end of the shape because the last elment close the curve with a link to the start coord in shape");
 
         swap(&mut curve.c1,&mut curve.c2);
         swap(&mut curve.c1,&mut curve_after.c1);
@@ -139,5 +142,5 @@ fn generate_exemple() -> Canvas {
         },
     });
 
-   return canvas;
+   canvas
 }

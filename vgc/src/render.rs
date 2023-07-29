@@ -6,7 +6,7 @@ use crate::coord::CoordDS;
 pub fn render_w(canvas: &Canvas, w: u32) -> Result<Pixmap, String> {
     let h = ((w as f64) * (1.0 / canvas.ratio)) as u32;
     let scaled_coord_ds = canvas.coord_ds.scale(w as f32, h as f32);
-    return render(canvas, &scaled_coord_ds, w, h);
+    render(canvas, &scaled_coord_ds, w, h)
 }
 
 

@@ -47,8 +47,8 @@ impl CoordDS {
         arr.iter_mut().for_each(|op_c| {
             match op_c {
                 Some(c) => {
-                    c.x =c.x * w;
-                    c.y =c.y * h;
+                    c.x *= w;
+                    c.y *= h;
                 }
                 None => {}
             };

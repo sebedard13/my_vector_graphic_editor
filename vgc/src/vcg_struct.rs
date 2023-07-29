@@ -26,9 +26,9 @@ pub struct RGBA {
 
 impl Curve {
     pub fn new (c1: CoordIndex, c2: CoordIndex, p:CoordIndex)-> Curve{
-        let c = Curve{c1,c2,p};
+        
 
-        return c;
+        Curve{c1,c2,p}
     }
 
     /*pub fn evaluate(&self, t: f32, last_p: &Coord) -> Coord {
@@ -41,13 +41,13 @@ impl Curve {
 }
 
 fn cubic_bezier(t: f32, p0: &Coord, p1: &Coord, p2: &Coord, p3: &Coord) -> Coord {
-    return (1.0 - t) * quadratic_bezier(t, &p0, &p1, &p2) + t * quadratic_bezier(t, &p1, &p2, &p3);
+    (1.0 - t) * quadratic_bezier(t, p0, p1, p2) + t * quadratic_bezier(t, p1, p2, p3)
 }
 
 
 fn quadratic_bezier(t: f32, p0: &Coord, p1: &Coord, p2: &Coord) -> Coord {
-    let c = (1.0 - t) * (1.0 - t) * p0 + 2.0 * (1.0 - t) * t * p1 + t * t * p2;
-    return c;
+    
+    (1.0 - t) * (1.0 - t) * p0 + 2.0 * (1.0 - t) * t * p1 + t * t * p2
 }
 
 
@@ -55,7 +55,7 @@ impl Mul<Coord> for f32 {
     type Output = Coord;
 
     fn mul(self, rhs: Coord) -> Self::Output {
-        return Coord { x: self * rhs.x, y: self * rhs.y };
+        Coord { x: self * rhs.x, y: self * rhs.y }
     }
 }
 
@@ -63,6 +63,6 @@ impl Mul<&Coord> for f32 {
     type Output = Coord;
 
     fn mul(self, rhs: &Coord) -> Self::Output {
-        return Coord { x: self * rhs.x, y: self * rhs.y };
+        Coord { x: self * rhs.x, y: self * rhs.y }
     }
 }
