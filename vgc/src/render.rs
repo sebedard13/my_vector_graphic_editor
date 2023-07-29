@@ -27,9 +27,9 @@ fn render(canvas: &Canvas, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap,
             let coord_start = coord_ds.get(&region.start);
             pb.move_to(coord_start.x, coord_start.y);
             for i_curve in 0..region.curves.len() {
-                pb.cubic_to(coord_ds.get(&region.curves[i_curve].c1).x, coord_ds.get(&region.curves[i_curve].c1).y,
-                            coord_ds.get(&region.curves[i_curve].c2).x, coord_ds.get(&region.curves[i_curve].c2).y,
-                            coord_ds.get(&region.curves[i_curve].p).x, coord_ds.get(&region.curves[i_curve].p).y,
+                pb.cubic_to(coord_ds.get(&region.curves[i_curve].cp0).x, coord_ds.get(&region.curves[i_curve].cp0).y,
+                            coord_ds.get(&region.curves[i_curve].cp1).x, coord_ds.get(&region.curves[i_curve].cp1).y,
+                            coord_ds.get(&region.curves[i_curve].p1).x, coord_ds.get(&region.curves[i_curve].p1).y,
                 );
             }
             pb.close();

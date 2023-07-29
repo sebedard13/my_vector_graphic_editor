@@ -1,12 +1,12 @@
-use std::ops::Add;
+use std::ops::{Add, Div, Mul, Sub};
 use serde::{Deserialize, Serialize};
 
 use crate::instructions::{CurveInstruction, ShapeInstruction};
 use crate::vcg_struct::{Curve, Shape};
 
-#[derive(Deserialize,Serialize, Debug)]
+#[derive(Deserialize,Serialize, Debug, Clone)]
 pub struct CoordIndex {
-    i: usize,
+    pub i: usize,
 }
 
 #[derive(Deserialize,Serialize, Debug)]
@@ -69,10 +69,18 @@ pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CurveInstruction)
 pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction) -> Shape {
     let start = coord_ds.insert(shape_instruction.start);
 
-    let curves = shape_instruction.curves.iter().map(|curve_instruction| {
+    let mut curves: Vec<Curve> = shape_instruction.curves.iter().map(|curve_instruction| {
         insert_curve(coord_ds,curve_instruction.clone())//Todo: clone is not good
     }).collect();
+
+    //Create last curve at start point for closing shape
+    curves.push(Curve{ cp0: start.clone(), cp1: start.clone(), p1: start.clone()}); //Todo: clone is not good
+
     Shape { start, curves, color: shape_instruction.color }
+}
+
+pub fn separate_handle(coord_ds: &mut CoordDS, curve:Curve){
+    //TODO separate control point from points
 }
 
 #[cfg(test)]
@@ -100,10 +108,67 @@ pub struct Coord {
     pub y: f32,
 }
 
+
 impl Add<Coord> for Coord {
     type Output = Coord;
 
     fn add(self, rhs: Coord) -> Self::Output {
         Coord { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl Add<&Coord> for Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: &Coord) -> Self::Output {
+        Coord { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl Sub<Coord> for Coord {
+    type Output = Coord;
+
+    fn sub(self, rhs: Coord) -> Self::Output {
+        Coord { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl Sub<&Coord> for &Coord {
+    type Output = Coord;
+
+    fn sub(self, rhs: &Coord) -> Self::Output {
+        Coord { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl Mul<Coord> for f32 {
+    type Output = Coord;
+
+    fn mul(self, rhs: Coord) -> Self::Output {
+        Coord { x: self * rhs.x, y: self * rhs.y }
+    }
+}
+
+impl Mul<&Coord> for f32 {
+    type Output = Coord;
+
+    fn mul(self, rhs: &Coord) -> Self::Output {
+        Coord { x: self * rhs.x, y: self * rhs.y }
+    }
+}
+
+impl Div<f32> for Coord {
+    type Output = Coord;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Coord { x: self.x / rhs, y: self.y / rhs }
+    }
+}
+
+impl Div<f32> for &Coord {
+    type Output = Coord;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        Coord { x: self.x / rhs, y: self.y / rhs }
     }
 }

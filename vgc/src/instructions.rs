@@ -1,10 +1,10 @@
 use crate::coord::Coord;
-use crate::vcg_struct::{RGBA};
+use crate::vcg_struct::{Rgba};
 
 pub struct ShapeInstruction {
     pub start: Coord,
     pub curves: Vec<CurveInstruction>,
-    pub color: RGBA,
+    pub color: Rgba,
 }
 
 #[derive(Clone)]
@@ -19,4 +19,10 @@ pub struct AddCurve{
     pub curve: CurveInstruction,
     pub index_shape: usize,
     pub index_curve: usize,
+}
+
+#[derive(Debug)]
+pub struct CoordWithIndex<'a>{
+    pub coord: &'a Coord,
+    pub i: usize,
 }
