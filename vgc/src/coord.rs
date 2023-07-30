@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 use serde::{Deserialize, Serialize};
 
@@ -79,9 +80,7 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     Shape { start, curves, color: shape_instruction.color }
 }
 
-pub fn separate_handle(coord_ds: &mut CoordDS, curve:Curve){
-    //TODO separate control point from points
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -102,10 +101,16 @@ mod tests {
     }
 }
 
-#[derive(Clone, Deserialize,Serialize, Debug)]
+#[derive(Clone, Deserialize,Serialize, Debug, PartialEq)]
 pub struct Coord {
     pub x: f32,
     pub y: f32,
+}
+
+impl Display for Coord{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({},{})", self.x, self.y)
+    }
 }
 
 
@@ -117,7 +122,7 @@ impl Add<Coord> for Coord {
     }
 }
 
-impl Add<&Coord> for Coord {
+impl Add<&Coord> for &Coord {
     type Output = Coord;
 
     fn add(self, rhs: &Coord) -> Self::Output {

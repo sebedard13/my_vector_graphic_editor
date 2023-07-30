@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::mem::swap;
 use serde::{Deserialize, Serialize};
 
 use crate::coord::{Coord, CoordDS, insert_curve, insert_shape};
@@ -61,34 +60,21 @@ impl Canvas {
     }
 
     pub fn add_coord(&mut self, add_curve_coord: AddCurve) {
-        let curves = &mut self.shapes[add_curve_coord.index_shape].curves;
+        let curve = insert_curve(&mut self.coord_ds, add_curve_coord.curve);
 
-        let mut curve = insert_curve(&mut self.coord_ds, add_curve_coord.curve);
-
-        let index_after = add_curve_coord.index_curve ;
-
-        let curve_after = curves.get_mut(index_after).expect("Index should be valid because we should not be able to add a curve at the end of the shape because the last element close the curve with a link to the start coord in shape");
-
-        swap(&mut curve.cp0, &mut curve.cp1);
-        swap(&mut curve.cp0, &mut curve_after.cp0);
-        curves.insert(add_curve_coord.index_curve, curve);
+       self.shapes[add_curve_coord.index_shape].add_coord(&mut self.coord_ds, curve, add_curve_coord.index_curve);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::render::render_w;
-
     use super::*;
 
     #[test]
     fn it_works_render_file() {
         let canvas = generate_exemple();
 
-        match render_w(&canvas, 512) {
-            Ok(img) => { img.save_png("data/test2.png").expect("Able to save image"); }
-            Err(e) => { panic!("{e}") }
-        }
+       assert_eq!(canvas.shapes[0].to_path(&canvas.coord_ds),"M 0.5 0 C 0.6 0.25 0.6 0.25 0.5 0.5 C 0.4 0.75 0.4 0.75 0.5 1 C 1 1 1 1 1 1 C 1 0 1 0 1 0 C 1 0 0.5 0 0.5 0 Z");
     }
 }
 
@@ -116,9 +102,11 @@ fn generate_exemple() -> Canvas {
         },
     });
 
+    canvas.shapes[shape_index].separate_handle(&mut canvas.coord_ds,0);
     println!("Coords : {:?}", canvas.list_coord());
 
-    //Coord { x: 0.6, y: 0.25 };
+    canvas.coord_ds.modify(1,Coord { x: 0.5, y: 0.0 });
+    canvas.coord_ds.modify(2,Coord { x: 0.6, y: 0.25 });
 
     let curve : CurveInstruction = {
         let c1 = Coord { x: 0.6, y: 0.25 };
