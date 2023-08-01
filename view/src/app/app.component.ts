@@ -1,6 +1,5 @@
 import {AfterViewInit, Component, EmbeddedViewRef} from '@angular/core';
 import * as wasm from 'wasm-vgc';
-import * as wasm_bg from 'wasm-vgc/wasm_vgc_bg.wasm';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',

@@ -8,7 +8,7 @@ use crate::instructions::{AddCurve, CoordWithIndex, CurveInstruction, ShapeInstr
 use crate::vcg_struct::{Rgba, Shape};
 
 mod vcg_struct;
-mod render;
+pub mod render;
 mod coord;
 mod instructions;
 
@@ -79,7 +79,7 @@ mod tests {
 }
 
 
-fn generate_exemple() -> Canvas {
+pub fn generate_exemple() -> Canvas {
     let color = Rgba {
         r: 0,
         g: 0,

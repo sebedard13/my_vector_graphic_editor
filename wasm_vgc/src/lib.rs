@@ -5,7 +5,8 @@ use wasm_bindgen::prelude::wasm_bindgen;
 #[wasm_bindgen]
 pub fn render() -> Uint8ClampedArray {
     console_log!("Render");
-    js_sys::Uint8ClampedArray::from( vgc::test_get_image().as_slice())
+   let image = vgc::render::render_w(&vgc::generate_exemple(), 512).unwrap();
+    js_sys::Uint8ClampedArray::from( image.data())
 }
 
 
