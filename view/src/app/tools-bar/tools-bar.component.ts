@@ -1,5 +1,6 @@
-import {Component, ContentChildren, Directive, QueryList} from '@angular/core';
-import { faCoffee, faWheelchairMove} from "@fortawesome/free-solid-svg-icons";
+import {Component, Directive} from '@angular/core';
+import {Button} from "../interface/Button";
+import {toolsbarSvgBtn} from "../config/toolsbar-svg-btn";
 
 
 @Directive({selector: 'button'})
@@ -12,10 +13,7 @@ export class ButtonDirective {
   styleUrls: ['./tools-bar.component.scss']
 })
 export class ToolsBarComponent {
-  faCoffee = faCoffee;
-  faMove = faWheelchairMove
-
-  @ContentChildren(ButtonDirective) contentChildren!: QueryList<ButtonDirective>;
+  buttons: Button[] = toolsbarSvgBtn
 
   constructor() { }
 

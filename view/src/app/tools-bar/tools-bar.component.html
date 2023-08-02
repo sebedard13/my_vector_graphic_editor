@@ -1,4 +1,6 @@
 <div class="left">
-    <button (click)="onclick()"><fa-icon [icon]="faCoffee"></fa-icon></button>
-    <button (click)="onclick()"><fa-icon [icon]="faMove"></fa-icon></button>
+    <div *ngFor="let button of buttons; let i = index" (click)="onclick()" title="{{button.title}}">
+        <input type="radio" id="btn-id-{{i}}" name="btn-toolsbar">
+        <label for="btn-id-{{i}}"><fa-icon [icon]="button.icon"></fa-icon></label>
+    </div>
 </div>
