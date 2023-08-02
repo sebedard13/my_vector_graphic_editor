@@ -16,14 +16,8 @@
         background: aliceblue;
       }
     }
-    .canvas-container{
-      justify-content: center;
-      align-items: center;
-      height: 100%;
-      canvas{
-
-      }
-
+    app-canvas{
+      width: 100%;
     }
   }
 }

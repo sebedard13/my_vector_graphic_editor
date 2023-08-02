@@ -1,6 +1,6 @@
 import {Component, Directive} from '@angular/core';
-import {Button} from "../interface/Button";
-import {toolsbarSvgBtn} from "../config/toolsbar-svg-btn";
+import {Button} from "../../interface/Button";
+import {toolsbarSvgBtn} from "../../config/toolsbar-svg-btn";
 
 
 @Directive({selector: 'button'})
