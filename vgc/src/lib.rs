@@ -38,7 +38,7 @@ impl Canvas {
         let shape = insert_shape(&mut self.coord_ds, shape_instruction);
         self.shapes.push(shape);
         self.shapes.len() - 1
-        //Todo: refactor and remove colliding shape?<
+        //TODO: refactor and remove colliding shape?<
     }
 
 

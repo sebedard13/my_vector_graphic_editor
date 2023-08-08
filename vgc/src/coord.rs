@@ -37,7 +37,7 @@ impl CoordDS {
     }
 
     pub fn modify(&mut self, coord_index: usize, c: Coord) {
-        //Todo couple with CoordIndex?
+        //TODO couple with CoordIndex?
         self.array[coord_index] = Some(c);
     }
 
@@ -71,11 +71,11 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     let start = coord_ds.insert(shape_instruction.start);
 
     let mut curves: Vec<Curve> = shape_instruction.curves.iter().map(|curve_instruction| {
-        insert_curve(coord_ds,curve_instruction.clone())//Todo: clone is not good
+        insert_curve(coord_ds,curve_instruction.clone())//TODO: clone is not good
     }).collect();
 
     //Create last curve at start point for closing shape
-    curves.push(Curve{ cp0: start.clone(), cp1: start.clone(), p1: start.clone()}); //Todo: clone is not good
+    curves.push(Curve{ cp0: start.clone(), cp1: start.clone(), p1: start.clone()}); //TODO: clone is not good
 
     Shape { start, curves, color: shape_instruction.color }
 }

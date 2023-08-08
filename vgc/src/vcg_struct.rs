@@ -34,7 +34,7 @@ impl Shape{
 
         let coords_separate = tangent_pts(1.0, c0, h0, h1, c1);
 
-        let coord_index0 = coord_ds.insert(coords_separate[0].clone()); //Todo clone not good
+        let coord_index0 = coord_ds.insert(coords_separate[0].clone()); //TODO clone not good
         self.curves[index].cp1 = coord_index0;
         let coord_index1 = coord_ds.insert(coords_separate[1].clone());
         if index+1>=self.curves.len(){
