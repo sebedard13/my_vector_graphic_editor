@@ -1,15 +1,15 @@
 use iced::Theme;
 use iced::{
     theme::Button,
-    widget::{button, checkbox, column, container, image, pick_list, row, slider, text, Image},
+    widget::{button, column, image, Image},
     Alignment, Background, BorderRadius, Color, Element, Length, Vector,
 };
 
 #[derive(Clone, Debug)]
 pub enum MsgLeftToolbar {
     MoveCoordCursor,
-    AddCoordCursor,
-    ToggleHandleCursor,
+    // AddCoordCursor,
+    // ToggleHandleCursor,
 }
 
 pub fn left_toolbar<'a>() -> Element<'a, MsgLeftToolbar> {
@@ -51,7 +51,7 @@ impl Default for BtnStyle {
 impl button::StyleSheet for BtnStyle {
     type Style = Theme;
 
-    fn active(&self, style: &Self::Style) -> button::Appearance {
+    fn active(&self, _style: &Self::Style) -> button::Appearance {
         self.appe
     }
 

@@ -33,7 +33,7 @@ struct VgcEditor {
 
 #[derive(Debug, Clone)]
 enum Message {
-    Grid(grid::Message, usize),
+    Grid(grid::MsgGrid),
     LeftToolbar(MsgLeftToolbar),
 }
 
@@ -51,7 +51,17 @@ impl Application for VgcEditor {
         String::from("VGC Editor")
     }
 
-    fn update(&mut self, _: Message) -> Command<Message> {
+    fn update(&mut self, msg: Message) -> Command<Message> {
+        match msg {
+            Message::Grid(message) => {
+                self.grid.update(message);
+                
+            },
+            Message::LeftToolbar(_message) => {
+                
+            }
+        }
+
         Command::none()
     }
 
@@ -61,7 +71,7 @@ impl Application for VgcEditor {
         let canvas = self
             .grid
             .view()
-            .map(move |message| Message::Grid(message, 1));
+            .map(move |message| Message::Grid(message));
 
         let top_toolbar = container(row![])
             .width(Length::Fill)
