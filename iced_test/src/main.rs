@@ -10,16 +10,24 @@ use iced::theme::Theme;
 
 use iced::widget::{column, container, row};
 use iced::window;
+use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::{left_toolbar, MsgLeftToolbar};
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
 
+    let icon = from_file_data(include_bytes!("../data/icons/icon.png"),None);
+
+    let icon = match icon{
+        Ok(ico) => Some(ico),
+        Err(_) => None,
+    };
     VgcEditor::run(Settings {
         antialiasing: true,
         window: window::Settings {
             position: window::Position::Centered,
+            icon,
             ..window::Settings::default()
         },
         ..Settings::default()
