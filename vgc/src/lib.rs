@@ -3,14 +3,14 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::coord::{Coord, CoordDS, insert_curve, insert_shape};
+use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
 use crate::instructions::{AddCurve, CoordWithIndex, CurveInstruction, ShapeInstruction};
 use crate::vcg_struct::{Rgba, Shape};
 
-mod vcg_struct;
-pub mod render;
 mod coord;
 mod instructions;
+pub mod render;
+mod vcg_struct;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Canvas {
@@ -22,7 +22,12 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new(ratio: f64, background: Rgba) -> Canvas {
-        Canvas { ratio, background, shapes: Vec::new(), coord_ds : CoordDS::new() }
+        Canvas {
+            ratio,
+            background,
+            shapes: Vec::new(),
+            coord_ds: CoordDS::new(),
+        }
     }
 
     pub fn from_byte(byte: &[u8]) -> Result<Canvas, String> {
@@ -34,13 +39,11 @@ impl Canvas {
     }
 
     pub fn add_shape(&mut self, shape_instruction: ShapeInstruction) -> usize {
-
         let shape = insert_shape(&mut self.coord_ds, shape_instruction);
         self.shapes.push(shape);
         self.shapes.len() - 1
         //TODO: refactor and remove colliding shape?<
     }
-
 
     pub fn list_coord(&self) -> Vec<CoordWithIndex> {
         let mut vec = Vec::new();
@@ -49,7 +52,7 @@ impl Canvas {
                 Some(c) => {
                     vec.push(CoordWithIndex { coord: c, i });
                 }
-                None => { }
+                None => {}
             }
         }
         vec
@@ -62,7 +65,11 @@ impl Canvas {
     pub fn add_coord(&mut self, add_curve_coord: AddCurve) {
         let curve = insert_curve(&mut self.coord_ds, add_curve_coord.curve);
 
-       self.shapes[add_curve_coord.index_shape].add_coord(&mut self.coord_ds, curve, add_curve_coord.index_curve);
+        self.shapes[add_curve_coord.index_shape].add_coord(
+            &mut self.coord_ds,
+            curve,
+            add_curve_coord.index_curve,
+        );
     }
 }
 
@@ -74,10 +81,9 @@ mod tests {
     fn it_works_render_file() {
         let canvas = generate_exemple();
 
-       assert_eq!(canvas.shapes[0].to_path(&canvas.coord_ds),"M 0.5 0 C 0.6 0.25 0.6 0.25 0.5 0.5 C 0.4 0.75 0.4 0.75 0.5 1 C 1 1 1 1 1 1 C 1 0 1 0 1 0 C 1 0 0.5 0 0.5 0 Z");
+        assert_eq!(canvas.shapes[0].to_path(&canvas.coord_ds),"M 0.5 0 C 0.6 0.25 0.6 0.25 0.5 0.5 C 0.4 0.75 0.4 0.75 0.5 1 C 1 1 1 1 1 1 C 1 0 1 0 1 0 C 1 0 0.5 0 0.5 0 Z");
     }
 }
-
 
 pub fn generate_exemple() -> Canvas {
     let color = Rgba {
@@ -102,40 +108,56 @@ pub fn generate_exemple() -> Canvas {
         },
     });
 
-    canvas.shapes[shape_index].separate_handle(&mut canvas.coord_ds,0);
+    canvas.shapes[shape_index].separate_handle(&mut canvas.coord_ds, 0);
     println!("Coords : {:?}", canvas.list_coord());
 
-    canvas.coord_ds.modify(1,Coord { x: 0.5, y: 0.0 });
-    canvas.coord_ds.modify(2,Coord { x: 0.6, y: 0.25 });
+    canvas.coord_ds.modify(1, Coord { x: 0.5, y: 0.0 });
+    canvas.coord_ds.modify(2, Coord { x: 0.6, y: 0.25 });
 
-    let curve : CurveInstruction = {
+    let curve: CurveInstruction = {
         let c1 = Coord { x: 0.6, y: 0.25 };
         let c2 = Coord { x: 0.4, y: 0.75 };
         let p = Coord { x: 0.5, y: 0.5 };
-        CurveInstruction  { c1, c2, p, }
+        CurveInstruction { c1, c2, p }
     };
-    canvas.add_coord(AddCurve { curve, index_shape: shape_index, index_curve: 0 });
-    let curve : CurveInstruction = {
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 0,
+    });
+    let curve: CurveInstruction = {
         let c1 = Coord { x: 0.4, y: 0.75 };
         let c2 = Coord { x: 1.0, y: 1.0 };
         let p = Coord { x: 0.5, y: 1.0 };
-        CurveInstruction  { c1, c2, p, }
+        CurveInstruction { c1, c2, p }
     };
-    canvas.add_coord(AddCurve { curve, index_shape: shape_index, index_curve: 1 });
-    let curve : CurveInstruction = {
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 1,
+    });
+    let curve: CurveInstruction = {
         let c1 = Coord { x: 1.0, y: 1.0 };
         let c2 = Coord { x: 1.0, y: 0.0 };
         let p = Coord { x: 1.0, y: 1.0 };
-        CurveInstruction  { c1, c2, p, }
+        CurveInstruction { c1, c2, p }
     };
-    canvas.add_coord(AddCurve { curve, index_shape: shape_index, index_curve: 2 });
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 2,
+    });
     let curve: CurveInstruction = {
         let c1 = Coord { x: 1.0, y: 0.0 };
         let c2 = Coord { x: 1.0, y: 0.0 };
         let p = Coord { x: 1.0, y: 0.0 };
-        CurveInstruction  { c1, c2, p, }
+        CurveInstruction { c1, c2, p }
     };
-    canvas.add_coord(AddCurve { curve, index_shape: shape_index, index_curve: 3 });
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 3,
+    });
 
     canvas
 }

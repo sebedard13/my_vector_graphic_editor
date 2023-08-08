@@ -1,20 +1,16 @@
 //! This example showcases an interactive version of the Game of Life, invented
 //! by John Conway. It leverages a `Canvas` together with other widgets.
-mod toolbars;
 mod grid;
+mod toolbars;
 
 use grid::Grid;
 
 use iced::executor;
 use iced::theme::Theme;
 
-use iced::widget::{
-    container, row, column
-};
+use iced::widget::{column, container, row};
 use iced::window;
-use iced::{
-    Application, Command, Element, Length, Settings,
-};
+use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::{left_toolbar, MsgLeftToolbar};
 
 pub fn main() -> iced::Result {
@@ -32,13 +28,13 @@ pub fn main() -> iced::Result {
 
 #[derive(Default)]
 struct VgcEditor {
-    grid: Grid
+    grid: Grid,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     Grid(grid::Message, usize),
-    LeftToolbar(MsgLeftToolbar)
+    LeftToolbar(MsgLeftToolbar),
 }
 
 impl Application for VgcEditor {
@@ -48,12 +44,7 @@ impl Application for VgcEditor {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (
-            Self {
-                ..Self::default()
-            },
-            Command::none(),
-        )
+        (Self { ..Self::default() }, Command::none())
     }
 
     fn title(&self) -> String {
@@ -65,24 +56,18 @@ impl Application for VgcEditor {
     }
 
     fn view(&self) -> Element<Message> {
-        let controls = left_toolbar()
-        .map(move |message| Message::LeftToolbar(message));
+        let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
 
-        let canvas =   self.grid
+        let canvas = self
+            .grid
             .view()
             .map(move |message| Message::Grid(message, 1));
 
         let top_toolbar = container(row![])
             .width(Length::Fill)
             .height(Length::Fixed(50.0));
-       
-        let content = column![
-            top_toolbar,
-            row![
-                controls,
-                canvas
-                ]
-        ];
+
+        let content = column![top_toolbar, row![controls, canvas]];
 
         container(content)
             .width(Length::Fill)

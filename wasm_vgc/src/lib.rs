@@ -1,15 +1,12 @@
 use js_sys::Uint8ClampedArray;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-
 #[wasm_bindgen]
 pub fn render() -> Uint8ClampedArray {
     console_log!("Render");
-   let image = vgc::render::render_w(&vgc::generate_exemple(), 512).unwrap();
-    js_sys::Uint8ClampedArray::from( image.data())
+    let image = vgc::render::render_w(&vgc::generate_exemple(), 512).unwrap();
+    js_sys::Uint8ClampedArray::from(image.data())
 }
-
-
 
 //------------------------------------------------------------------------------
 // Utilities
