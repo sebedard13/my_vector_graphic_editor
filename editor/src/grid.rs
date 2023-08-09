@@ -6,11 +6,14 @@ use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path, Text};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vector};
+use vgc::Vgc;
+use vgc::generate_exemple;
 
 pub struct Grid {
     draw_cache: Cache,
     translation: Vector,
     scaling: f32,
+    vgc_data: Vgc
 }
 
 #[derive(Debug, Clone)]
@@ -21,21 +24,18 @@ pub enum MsgGrid {
 
 impl Default for Grid {
     fn default() -> Self {
-        Self::from_preset()
+        Self {
+            draw_cache: Cache::default(),
+            translation: Vector::new(-250.0, -250.0),
+            scaling: 1.0,
+            vgc_data: generate_exemple()
+        }
     }
 }
 
 impl Grid {
     const MIN_SCALING: f32 = 0.1;
     const MAX_SCALING: f32 = 2.0;
-
-    pub fn from_preset() -> Self {
-        Self {
-            draw_cache: Cache::default(),
-            translation: Vector::default(),
-            scaling: 1.0,
-        }
-    }
 
 
     pub fn update(&mut self, message: MsgGrid) {
@@ -216,12 +216,18 @@ impl canvas::Program<MsgGrid> for Grid {
                 frame.translate(center);
                 frame.scale(self.scaling);
                 frame.translate(self.translation);
-                frame.scale(20.0);
+
+                let size= Size {
+                    width: 500.0,
+                    height: (500.0/self.vgc_data.ratio)as f32,
+                };
+
+                let color = Color::from_rgb8(self.vgc_data.background.r, self.vgc_data.background.g, self.vgc_data.background.b);
 
                 frame.fill_rectangle(
                     Point::new(0 as f32, 0 as f32),
-                    Size::UNIT,
-                    Color::WHITE,
+                    size,
+                    color,
                 );
             });
         });

@@ -1,5 +1,3 @@
-//! This example showcases an interactive version of the Game of Life, invented
-//! by John Conway. It leverages a `Canvas` together with other widgets.
 mod grid;
 mod toolbars;
 

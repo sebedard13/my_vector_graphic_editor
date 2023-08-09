@@ -1,1 +1,0 @@
-# VGC Editor

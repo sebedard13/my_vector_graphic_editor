@@ -13,7 +13,7 @@ pub enum MsgLeftToolbar {
 }
 
 pub fn left_toolbar<'a>() -> Element<'a, MsgLeftToolbar> {
-    let content = Image::<image::Handle>::new("iced_test/data/flower.png")
+    let content = Image::<image::Handle>::new("editor/data/flower.png")
         .width(20)
         .height(16);
     let btn_style = Box::new(BtnStyle::default());

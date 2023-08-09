@@ -1,14 +1,14 @@
 use crate::coord::CoordDS;
-use crate::Canvas;
+use crate::Vgc;
 use tiny_skia::{FillRule, Paint, PathBuilder, Pixmap, Transform};
 
-pub fn render_w(canvas: &Canvas, w: u32) -> Result<Pixmap, String> {
+pub fn render_w(canvas: &Vgc, w: u32) -> Result<Pixmap, String> {
     let h = ((w as f64) * (1.0 / canvas.ratio)) as u32;
     let scaled_coord_ds = canvas.coord_ds.scale(w as f32, h as f32);
     render(canvas, &scaled_coord_ds, w, h)
 }
 
-fn render(canvas: &Canvas, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, String> {
+fn render(canvas: &Vgc, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, String> {
     let mut image = Pixmap::new(w, h).expect("Valid Size");
 
     for i_region in 0..canvas.shapes.len() {

@@ -1,2 +1,2 @@
 [workspace]
-members = ["vgc", "iced_test"]
+members = ["vgc", "editor"]

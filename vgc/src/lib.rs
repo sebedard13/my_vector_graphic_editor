@@ -13,16 +13,16 @@ pub mod render;
 mod vcg_struct;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Canvas {
-    ratio: f64,
-    background: Rgba,
+pub struct Vgc {
+    pub ratio: f64, //width/height 16/9
+    pub background: Rgba,
     shapes: Vec<Shape>,
     coord_ds: CoordDS,
 }
 
-impl Canvas {
-    pub fn new(ratio: f64, background: Rgba) -> Canvas {
-        Canvas {
+impl Vgc {
+    pub fn new(ratio: f64, background: Rgba) -> Vgc {
+        Vgc {
             ratio,
             background,
             shapes: Vec::new(),
@@ -30,7 +30,7 @@ impl Canvas {
         }
     }
 
-    pub fn from_byte(byte: &[u8]) -> Result<Canvas, String> {
+    pub fn from_byte(byte: &[u8]) -> Result<Vgc, String> {
         postcard::from_bytes(byte).map_err(|e| e.to_string())
     }
 
@@ -85,15 +85,15 @@ mod tests {
     }
 }
 
-pub fn generate_exemple() -> Canvas {
+pub fn generate_exemple() -> Vgc {
     let color = Rgba {
-        r: 0,
-        g: 0,
-        b: 0,
+        r: 255,
+        g: 255,
+        b: 255,
         a: 255,
     };
 
-    let mut canvas = Canvas::new(1.0, color);
+    let mut canvas = Vgc::new(1.0, color);
 
     let p0 = Coord { x: 0.5, y: 0.0 };
 
