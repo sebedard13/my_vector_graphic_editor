@@ -93,7 +93,7 @@ pub fn generate_exemple() -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(16.0/9.0, color);
+    let mut canvas = Vgc::new(16.0 / 9.0, color);
 
     let p0 = Coord { x: 0.5, y: 0.0 };
 

@@ -1,4 +1,3 @@
-
 use iced::alignment;
 use iced::keyboard;
 use iced::mouse;
@@ -6,14 +5,14 @@ use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path, Text};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vector};
-use vgc::Vgc;
 use vgc::generate_exemple;
+use vgc::Vgc;
 
 pub struct Grid {
     draw_cache: Cache,
     translation: Vector,
     scaling: f32,
-    vgc_data: Vgc
+    vgc_data: Vgc,
 }
 
 #[derive(Debug, Clone)]
@@ -24,12 +23,14 @@ pub enum MsgGrid {
 
 impl Default for Grid {
     fn default() -> Self {
-
         let vgc_data = generate_exemple();
 
         Self {
             draw_cache: Cache::default(),
-            translation: Vector::new(-Self::WIDTH/2.0, -Self::WIDTH/vgc_data.ratio as f32/2.0),
+            translation: Vector::new(
+                -Self::WIDTH / 2.0,
+                -Self::WIDTH / vgc_data.ratio as f32 / 2.0,
+            ),
             scaling: 1.0,
             vgc_data: vgc_data,
         }
@@ -40,7 +41,6 @@ impl Grid {
     const MIN_SCALING: f32 = 0.1;
     const MAX_SCALING: f32 = 50.0;
     const WIDTH: f32 = 500.0;
-
 
     pub fn update(&mut self, message: MsgGrid) {
         match message {
@@ -85,7 +85,7 @@ impl Grid {
 
         Point::new(
             (position.x / self.scaling + region.x) / 500.0,
-            (position.y / self.scaling  + region.y)/(500.0/self.vgc_data.ratio)as f32,
+            (position.y / self.scaling + region.y) / (500.0 / self.vgc_data.ratio) as f32,
         )
     }
 }
@@ -109,7 +109,6 @@ impl canvas::Program<MsgGrid> for Grid {
         } else {
             return (event::Status::Ignored, None);
         };
-
 
         match event {
             Event::Mouse(mouse_event) => match mouse_event {
@@ -185,16 +184,19 @@ impl canvas::Program<MsgGrid> for Grid {
             Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
                 let message = match key_code {
                     keyboard::KeyCode::PageUp => Some(MsgGrid::Scaled(
-                        (self.scaling* 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
                     )),
                     keyboard::KeyCode::PageDown => Some(MsgGrid::Scaled(
-                        (self.scaling/ 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
                     )),
                     keyboard::KeyCode::Home => Some(MsgGrid::Scaled(
-                       1.0,
-                        Some(Vector::new(-Self::WIDTH/2.0, -Self::WIDTH/self.vgc_data.ratio as f32/2.0))
+                        1.0,
+                        Some(Vector::new(
+                            -Self::WIDTH / 2.0,
+                            -Self::WIDTH / self.vgc_data.ratio as f32 / 2.0,
+                        )),
                     )),
                     _ => None,
                 };
@@ -225,26 +227,25 @@ impl canvas::Program<MsgGrid> for Grid {
                 frame.scale(self.scaling);
                 frame.translate(self.translation);
 
-                let size= Size {
+                let size = Size {
                     width: Self::WIDTH,
-                    height: (Self::WIDTH/self.vgc_data.ratio as f32),
+                    height: (Self::WIDTH / self.vgc_data.ratio as f32),
                 };
 
-                let color = Color::from_rgb8(self.vgc_data.background.r, self.vgc_data.background.g, self.vgc_data.background.b);
-
-                frame.fill_rectangle(
-                    Point::new(0 as f32, 0 as f32),
-                    size,
-                    color,
+                let color = Color::from_rgb8(
+                    self.vgc_data.background.r,
+                    self.vgc_data.background.g,
+                    self.vgc_data.background.b,
                 );
+
+                frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
             });
         });
 
         let overlay = {
             let mut frame = Frame::new(renderer, bounds.size());
 
-            let cursor_pos = cursor
-             .position_in(bounds);
+            let cursor_pos = cursor.position_in(bounds);
 
             let text = Text {
                 color: Color::WHITE,
@@ -258,7 +259,7 @@ impl canvas::Program<MsgGrid> for Grid {
             if let Some(pos) = cursor_pos {
                 let pos = self.project(pos, bounds.size());
                 frame.fill_text(Text {
-                    content: format!("({:.4}, {:.4}) {:.0}%", pos.x, pos.y,self.scaling*100.0),
+                    content: format!("({:.4}, {:.4}) {:.0}%", pos.x, pos.y, self.scaling * 100.0),
                     position: text.position - Vector::new(0.0, 0.0),
                     ..text
                 });

@@ -15,9 +15,9 @@ use toolbars::left::{left_toolbar, MsgLeftToolbar};
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
 
-    let icon = from_file_data(include_bytes!("../data/icons/icon.png"),None);
+    let icon = from_file_data(include_bytes!("../data/icons/icon.png"), None);
 
-    let icon = match icon{
+    let icon = match icon {
         Ok(ico) => Some(ico),
         Err(_) => None,
     };
@@ -61,11 +61,8 @@ impl Application for VgcEditor {
         match msg {
             Message::Grid(message) => {
                 self.grid.update(message);
-                
-            },
-            Message::LeftToolbar(_message) => {
-                
             }
+            Message::LeftToolbar(_message) => {}
         }
 
         Command::none()
@@ -74,10 +71,7 @@ impl Application for VgcEditor {
     fn view(&self) -> Element<Message> {
         let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
 
-        let canvas = self
-            .grid
-            .view()
-            .map(move |message| Message::Grid(message));
+        let canvas = self.grid.view().map(move |message| Message::Grid(message));
 
         let top_toolbar = container(row![])
             .width(Length::Fill)
