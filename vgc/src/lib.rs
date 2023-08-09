@@ -93,7 +93,7 @@ pub fn generate_exemple() -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(1.0, color);
+    let mut canvas = Vgc::new(16.0/9.0, color);
 
     let p0 = Coord { x: 0.5, y: 0.0 };
 
@@ -109,7 +109,6 @@ pub fn generate_exemple() -> Vgc {
     });
 
     canvas.shapes[shape_index].separate_handle(&mut canvas.coord_ds, 0);
-    println!("Coords : {:?}", canvas.list_coord());
 
     canvas.coord_ds.modify(1, Coord { x: 0.5, y: 0.0 });
     canvas.coord_ds.modify(2, Coord { x: 0.6, y: 0.25 });

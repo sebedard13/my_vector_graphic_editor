@@ -24,18 +24,22 @@ pub enum MsgGrid {
 
 impl Default for Grid {
     fn default() -> Self {
+
+        let vgc_data = generate_exemple();
+
         Self {
             draw_cache: Cache::default(),
-            translation: Vector::new(-250.0, -250.0),
+            translation: Vector::new(-Self::WIDTH/2.0, -Self::WIDTH/vgc_data.ratio as f32/2.0),
             scaling: 1.0,
-            vgc_data: generate_exemple()
+            vgc_data: vgc_data,
         }
     }
 }
 
 impl Grid {
     const MIN_SCALING: f32 = 0.1;
-    const MAX_SCALING: f32 = 2.0;
+    const MAX_SCALING: f32 = 50.0;
+    const WIDTH: f32 = 500.0;
 
 
     pub fn update(&mut self, message: MsgGrid) {
@@ -80,8 +84,8 @@ impl Grid {
         let region = self.visible_region(size);
 
         Point::new(
-            position.x / self.scaling + region.x,
-            position.y / self.scaling + region.y,
+            (position.x / self.scaling + region.x) / 500.0,
+            (position.y / self.scaling  + region.y)/(500.0/self.vgc_data.ratio)as f32,
         )
     }
 }
@@ -180,13 +184,17 @@ impl canvas::Program<MsgGrid> for Grid {
             },
             Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
                 let message = match key_code {
-                    keyboard::KeyCode::E => Some(MsgGrid::Scaled(
-                        self.scaling * 1.1,
+                    keyboard::KeyCode::PageUp => Some(MsgGrid::Scaled(
+                        (self.scaling* 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
                     )),
-                    keyboard::KeyCode::Q => Some(MsgGrid::Scaled(
-                        self.scaling / 1.1,
+                    keyboard::KeyCode::PageDown => Some(MsgGrid::Scaled(
+                        (self.scaling/ 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
+                    )),
+                    keyboard::KeyCode::Home => Some(MsgGrid::Scaled(
+                       1.0,
+                        Some(Vector::new(-Self::WIDTH/2.0, -Self::WIDTH/self.vgc_data.ratio as f32/2.0))
                     )),
                     _ => None,
                 };
@@ -218,8 +226,8 @@ impl canvas::Program<MsgGrid> for Grid {
                 frame.translate(self.translation);
 
                 let size= Size {
-                    width: 500.0,
-                    height: (500.0/self.vgc_data.ratio)as f32,
+                    width: Self::WIDTH,
+                    height: (Self::WIDTH/self.vgc_data.ratio as f32),
                 };
 
                 let color = Color::from_rgb8(self.vgc_data.background.r, self.vgc_data.background.g, self.vgc_data.background.b);
