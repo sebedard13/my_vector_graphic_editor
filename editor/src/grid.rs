@@ -84,8 +84,8 @@ impl Grid {
         let region = self.visible_region(size);
 
         Point::new(
-            (position.x / self.scaling + region.x) / 500.0,
-            (position.y / self.scaling + region.y) / (500.0 / self.vgc_data.ratio) as f32,
+            (position.x / self.scaling + region.x) / Self::WIDTH ,
+            (position.y / self.scaling + region.y) / (Self::WIDTH/ self.vgc_data.ratio as f32) ,
         )
     }
 }
@@ -239,6 +239,9 @@ impl canvas::Program<MsgGrid> for Grid {
                 );
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
+
+                self.vgc_data.frame_render(frame, Self::WIDTH as u32);
+
             });
         });
 

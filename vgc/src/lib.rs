@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
 use crate::instructions::{AddCurve, CoordWithIndex, CurveInstruction, ShapeInstruction};
 use crate::vcg_struct::{Rgba, Shape};
+use iced::widget::canvas::Frame;
 
 mod coord;
 mod instructions;
@@ -71,6 +72,10 @@ impl Vgc {
             add_curve_coord.index_curve,
         );
     }
+
+    pub fn frame_render(&self, frame: &mut Frame, w: u32) {
+        render::frame_render(self, frame, w);
+    }
 }
 
 #[cfg(test)]
@@ -93,7 +98,7 @@ pub fn generate_exemple() -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(16.0 / 9.0, color);
+    let mut canvas = Vgc::new(16.0 / 16.0, color);
 
     let p0 = Coord { x: 0.5, y: 0.0 };
 
