@@ -2,8 +2,8 @@ use iced::alignment;
 use iced::mouse;
 use iced::mouse::Cursor;
 use iced::widget::canvas;
-use iced::widget::canvas::Fill;
 use iced::widget::canvas::event::{self, Event};
+use iced::widget::canvas::Fill;
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path, Text};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vector};
 use vgc::generate_exemple;
@@ -24,7 +24,7 @@ pub struct Grid {
 pub enum MsgGrid {
     Translated(Vector),
     Scaled(f32, Option<Vector>),
-    MoveCoord(MoveCoordStep)
+    MoveCoord(MoveCoordStep),
 }
 
 impl Default for Grid {
@@ -40,8 +40,6 @@ impl Default for Grid {
     }
 }
 
-
-
 pub enum Interaction {
     None,
     Panning { translation: Vector, start: Point },
@@ -55,10 +53,9 @@ impl Default for Interaction {
 
 impl Grid {
     pub fn update(&mut self, message: MsgGrid) {
-       
         match message {
             MsgGrid::Translated(translation) => {
-                self.camera.translation=translation;
+                self.camera.translation = translation;
 
                 self.draw_cache.clear();
             }
@@ -66,13 +63,13 @@ impl Grid {
                 self.camera.scaling = scaling;
 
                 if let Some(translation) = translation {
-                    self.camera.translation=translation;
+                    self.camera.translation = translation;
                 }
 
                 self.draw_cache.clear();
             }
             MsgGrid::MoveCoord(step) => {
-                MoveCoord::update(self,step);
+                MoveCoord::update(self, step);
 
                 self.draw_cache.clear();
             }
@@ -85,7 +82,6 @@ impl Grid {
             .height(Length::Fill)
             .into()
     }
-
 }
 
 impl canvas::Program<MsgGrid> for Grid {
@@ -103,13 +99,12 @@ impl canvas::Program<MsgGrid> for Grid {
         }
 
         let cursor_position = if let Some(position) = cursor.position_in(bounds) {
-            position   
+            position
         } else {
             return (event::Status::Ignored, None);
         };
 
-       
-        let rtn = MoveCoord::handle_event(self,event, cursor_position, cursor, bounds);
+        let rtn = MoveCoord::handle_event(self, event, cursor_position, cursor, bounds);
         match rtn.0 {
             event::Status::Captured => {
                 return rtn;
@@ -117,7 +112,8 @@ impl canvas::Program<MsgGrid> for Grid {
             _ => {}
         }
 
-        self.camera.handle_event_camera(event, interaction, cursor_position, cursor, bounds)
+        self.camera
+            .handle_event_camera(event, interaction, cursor_position, cursor, bounds)
     }
 
     fn draw(
@@ -128,15 +124,12 @@ impl canvas::Program<MsgGrid> for Grid {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-       
-
         let life = self.draw_cache.draw(renderer, bounds.size(), |frame| {
             let background = Path::rectangle(Point::ORIGIN, frame.size());
             frame.fill(&background, Color::from_rgb8(0x40, 0x44, 0x4B));
 
             frame.with_save(|frame| {
                 self.camera.transform_frame(frame, bounds);
-               
 
                 let size = Size {
                     width: 1.0,
@@ -170,19 +163,24 @@ impl canvas::Program<MsgGrid> for Grid {
             };
 
             if let Some(pos) = cursor_pos {
-              
                 let pos = self.camera.project(pos, bounds.size());
 
-                let content = format!("({:.4}, {:.4}) {:.0}%", pos.x, pos.y, self.camera.scaling * 100.0);
+                let content = format!(
+                    "({:.4}, {:.4}) {:.0}%",
+                    pos.x,
+                    pos.y,
+                    self.camera.scaling * 100.0
+                );
 
-                let overlay_width = content.len()as f32*6.58;
+                let overlay_width = content.len() as f32 * 6.58;
                 let overlay_height = 16.0;
-                
-                frame.fill_rectangle(text.position - Vector::new(overlay_width, overlay_height), 
-                Size::new(overlay_width, overlay_height), 
-                Fill::from(Color::from_rgba8(0x00, 0x00, 0x00, 0.8)));
 
-              
+                frame.fill_rectangle(
+                    text.position - Vector::new(overlay_width, overlay_height),
+                    Size::new(overlay_width, overlay_height),
+                    Fill::from(Color::from_rgba8(0x00, 0x00, 0x00, 0.8)),
+                );
+
                 frame.fill_text(Text {
                     content,
                     position: text.position - Vector::new(0.0, 0.0),
@@ -193,24 +191,33 @@ impl canvas::Program<MsgGrid> for Grid {
             frame.with_save(|frame| {
                 self.camera.transform_frame(frame, bounds);
 
-             // Render points
-             let coords = self.vgc_data.list_coord();
-             for coord in coords {
-                 let color = match cursor.position_in(bounds) {
-                     Some(p) => {
-                         if point_in_radius(&self.camera.project(p, bounds.size()), 
-                         &Point::new(coord.coord.x, coord.coord.y), self.camera.fixed_length(12.0)) {
-                             Color::from_rgb8(0x0E, 0x90, 0xAA)
-                         }else{
-                             Color::from_rgb8(0x3A, 0xD1, 0xEF)
-                         }
-                     },
-                     None => Color::from_rgb8(0x3A, 0xD1, 0xEF)
-                 };
-                  
-                 let center = Point::new(coord.coord.x, coord.coord.y*1.0 / self.vgc_data.ratio as f32);
-                 frame.fill(&Path::circle(center, self.camera.fixed_length(5.0)), Fill::from(color));
-             }
+                // Render points
+                let coords = self.vgc_data.list_coord();
+                for coord in coords {
+                    let color = match cursor.position_in(bounds) {
+                        Some(p) => {
+                            if point_in_radius(
+                                &self.camera.project(p, bounds.size()),
+                                &Point::new(coord.coord.x, coord.coord.y),
+                                self.camera.fixed_length(12.0),
+                            ) {
+                                Color::from_rgb8(0x0E, 0x90, 0xAA)
+                            } else {
+                                Color::from_rgb8(0x3A, 0xD1, 0xEF)
+                            }
+                        }
+                        None => Color::from_rgb8(0x3A, 0xD1, 0xEF),
+                    };
+
+                    let center = Point::new(
+                        coord.coord.x,
+                        coord.coord.y * 1.0 / self.vgc_data.ratio as f32,
+                    );
+                    frame.fill(
+                        &Path::circle(center, self.camera.fixed_length(5.0)),
+                        Fill::from(color),
+                    );
+                }
             });
             frame.into_geometry()
         };
@@ -232,9 +239,6 @@ impl canvas::Program<MsgGrid> for Grid {
     }
 }
 
-
-
-
 /// Return true if the cursor is in the radius of the center
 ///```rust
 ///
@@ -245,16 +249,16 @@ impl canvas::Program<MsgGrid> for Grid {
 /// let cursor = Cursor::Available(Point::new(-3.0, 0.0));
 /// assert_eq!(position_in_radius(cursor, center, radius), true);
 ///```
-pub fn position_in_radius(cursor:&Cursor, center:&Point, radius:f32) -> bool {
-    cursor.position().filter(|p| {
-       point_in_radius(p, center, radius)
-    }).is_some()
+pub fn position_in_radius(cursor: &Cursor, center: &Point, radius: f32) -> bool {
+    cursor
+        .position()
+        .filter(|p| point_in_radius(p, center, radius))
+        .is_some()
 }
 
-
-pub fn point_in_radius(point:&Point, center:&Point, radius:f32) -> bool {
+pub fn point_in_radius(point: &Point, center: &Point, radius: f32) -> bool {
     let x = point.x - center.x;
     let y = point.y - center.y;
-    let distance = x*x + y*y;
-    distance < (radius*radius)
+    let distance = x * x + y * y;
+    distance < (radius * radius)
 }

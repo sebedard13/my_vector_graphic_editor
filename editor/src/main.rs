@@ -1,7 +1,7 @@
-mod grid;
-mod toolbars;
 mod canvas_camera;
+mod grid;
 mod move_coord;
+mod toolbars;
 
 use grid::Grid;
 
