@@ -57,12 +57,12 @@ fn render(canvas: &Vgc, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, St
 }
 
 
-pub fn frame_render(canvas: &Vgc,  frame:&mut Frame ,w: u32){
+pub fn frame_render(canvas: &Vgc,  frame:&mut Frame){
     use iced::widget::canvas::{Path, Fill};
     use iced::{Point, Color};
     
-    let h = ((w as f64) * (1.0 / canvas.ratio)) as u32;
-    let coord_ds = canvas.coord_ds.scale(w as f32, h as f32);
+    let h = 1.0 / canvas.ratio;
+    let coord_ds = canvas.coord_ds.scale(1.0, h as f32);
 
     for i_region in 0..canvas.shapes.len() {
         let region = &canvas.shapes[i_region];

@@ -1,5 +1,4 @@
 use iced::alignment;
-use iced::keyboard;
 use iced::mouse;
 use iced::mouse::Cursor;
 use iced::widget::canvas;
@@ -10,17 +9,22 @@ use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vect
 use vgc::generate_exemple;
 use vgc::Vgc;
 
+use crate::canvas_camera::Camera;
+use crate::move_coord::MoveCoord;
+use crate::move_coord::MoveCoordStep;
+
 pub struct Grid {
     draw_cache: Cache,
-    translation: Vector,
-    scaling: f32,
-    vgc_data: Vgc,
+    pub camera: Camera,
+    pub vgc_data: Vgc,
+    pub move_coord: MoveCoord,
 }
 
 #[derive(Debug, Clone)]
 pub enum MsgGrid {
     Translated(Vector),
     Scaled(f32, Option<Vector>),
+    MoveCoord(MoveCoordStep)
 }
 
 impl Default for Grid {
@@ -29,35 +33,46 @@ impl Default for Grid {
 
         Self {
             draw_cache: Cache::default(),
-            translation: Vector::new(
-                -Self::WIDTH / 2.0,
-                -Self::WIDTH / vgc_data.ratio as f32 / 2.0,
-            ),
-            scaling: 1.0,
+            camera: Camera::new(vgc_data.ratio as f32),
             vgc_data: vgc_data,
+            move_coord: MoveCoord::new(),
         }
     }
 }
 
-impl Grid {
-    const MIN_SCALING: f32 = 0.1;
-    const MAX_SCALING: f32 = 50.0;
-    const WIDTH: f32 = 500.0;
 
+
+pub enum Interaction {
+    None,
+    Panning { translation: Vector, start: Point },
+}
+
+impl Default for Interaction {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl Grid {
     pub fn update(&mut self, message: MsgGrid) {
        
         match message {
             MsgGrid::Translated(translation) => {
-                self.translation = translation;
+                self.camera.translation=translation;
 
                 self.draw_cache.clear();
             }
             MsgGrid::Scaled(scaling, translation) => {
-                self.scaling = scaling;
+                self.camera.scaling = scaling;
 
                 if let Some(translation) = translation {
-                    self.translation = translation;
+                    self.camera.translation=translation;
                 }
+
+                self.draw_cache.clear();
+            }
+            MsgGrid::MoveCoord(step) => {
+                MoveCoord::update(self,step);
 
                 self.draw_cache.clear();
             }
@@ -71,26 +86,6 @@ impl Grid {
             .into()
     }
 
-    fn visible_region(&self, size: Size) -> Region {
-        let width = size.width / self.scaling;
-        let height = size.height / self.scaling;
-
-        Region {
-            x: -self.translation.x - width / 2.0,
-            y: -self.translation.y - height / 2.0,
-            width,
-            height,
-        }
-    }
-
-    fn project(&self, position: Point, size: Size) -> Point {
-        let region = self.visible_region(size);
-
-        Point::new(
-            (position.x / self.scaling + region.x) / Self::WIDTH ,
-            (position.y / self.scaling + region.y) / (Self::WIDTH/ self.vgc_data.ratio as f32) ,
-        )
-    }
 }
 
 impl canvas::Program<MsgGrid> for Grid {
@@ -108,110 +103,21 @@ impl canvas::Program<MsgGrid> for Grid {
         }
 
         let cursor_position = if let Some(position) = cursor.position_in(bounds) {
-            position
-           
+            position   
         } else {
             return (event::Status::Ignored, None);
         };
 
-      
-
-        match event {
-            Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonPressed(button) => {
-                    let message = match button {
-                        mouse::Button::Right => {
-                            *interaction = Interaction::Panning {
-                                translation: self.translation,
-                                start: cursor_position,
-                            };
-
-                            None
-                        }
-                        _ => None,
-                    };
-
-                    (event::Status::Captured, message)
-                }
-                mouse::Event::CursorMoved { .. } => {
-                    let message = match *interaction {
-                        Interaction::Panning { translation, start } => Some(MsgGrid::Translated(
-                            translation + (cursor_position - start) * (1.0 / self.scaling),
-                        )),
-                        _ => None,
-                    };
-
-                    let event_status = match interaction {
-                        Interaction::None => event::Status::Ignored,
-                        _ => event::Status::Captured,
-                    };
-
-                    (event_status, message)
-                }
-                mouse::Event::WheelScrolled { delta } => match delta {
-                    mouse::ScrollDelta::Lines { y, .. } | mouse::ScrollDelta::Pixels { y, .. } => {
-                        if y < 0.0 && self.scaling > Self::MIN_SCALING
-                            || y > 0.0 && self.scaling < Self::MAX_SCALING
-                        {
-                            let old_scaling = self.scaling;
-
-                            let scaling = (self.scaling * (1.0 + y / 30.0))
-                                .clamp(Self::MIN_SCALING, Self::MAX_SCALING);
-
-                            let translation = if let Some(cursor_to_center) =
-                                cursor.position_from(bounds.center())
-                            {
-                                let factor = scaling - old_scaling;
-
-                                Some(
-                                    self.translation
-                                        - Vector::new(
-                                            cursor_to_center.x * factor
-                                                / (old_scaling * old_scaling),
-                                            cursor_to_center.y * factor
-                                                / (old_scaling * old_scaling),
-                                        ),
-                                )
-                            } else {
-                                None
-                            };
-
-                            (
-                                event::Status::Captured,
-                                Some(MsgGrid::Scaled(scaling, translation)),
-                            )
-                        } else {
-                            (event::Status::Captured, None)
-                        }
-                    }
-                },
-                _ => (event::Status::Ignored, None),
-            },
-            Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
-                let message = match key_code {
-                    keyboard::KeyCode::PageUp => Some(MsgGrid::Scaled(
-                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::PageDown => Some(MsgGrid::Scaled(
-                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::Home => Some(MsgGrid::Scaled(
-                        1.0,
-                        Some(Vector::new(
-                            -Self::WIDTH / 2.0,
-                            -Self::WIDTH / self.vgc_data.ratio as f32 / 2.0,
-                        )),
-                    )),
-                    _ => None,
-                };
-
-                (event::Status::Captured, message)
+       
+        let rtn = MoveCoord::handle_event(self,event, cursor_position, cursor, bounds);
+        match rtn.0 {
+            event::Status::Captured => {
+                return rtn;
             }
-
-            _ => (event::Status::Ignored, None),
+            _ => {}
         }
+
+        self.camera.handle_event_camera(event, interaction, cursor_position, cursor, bounds)
     }
 
     fn draw(
@@ -222,20 +128,19 @@ impl canvas::Program<MsgGrid> for Grid {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        let center = Vector::new(bounds.width / 2.0, bounds.height / 2.0);
+       
 
         let life = self.draw_cache.draw(renderer, bounds.size(), |frame| {
             let background = Path::rectangle(Point::ORIGIN, frame.size());
             frame.fill(&background, Color::from_rgb8(0x40, 0x44, 0x4B));
 
             frame.with_save(|frame| {
-                frame.translate(center);
-                frame.scale(self.scaling);
-                frame.translate(self.translation);
+                self.camera.transform_frame(frame, bounds);
+               
 
                 let size = Size {
-                    width: Self::WIDTH,
-                    height: (Self::WIDTH / self.vgc_data.ratio as f32),
+                    width: 1.0,
+                    height: (1.0 / self.vgc_data.ratio as f32),
                 };
 
                 let color = Color::from_rgb8(
@@ -246,7 +151,7 @@ impl canvas::Program<MsgGrid> for Grid {
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
 
-                self.vgc_data.frame_render(frame, Self::WIDTH as u32);
+                self.vgc_data.frame_render(frame);
             });
         });
 
@@ -266,9 +171,9 @@ impl canvas::Program<MsgGrid> for Grid {
 
             if let Some(pos) = cursor_pos {
               
-                let pos = self.project(pos, bounds.size());
+                let pos = self.camera.project(pos, bounds.size());
 
-                let content = format!("({:.4}, {:.4}) {:.0}%", pos.x, pos.y, self.scaling * 100.0);
+                let content = format!("({:.4}, {:.4}) {:.0}%", pos.x, pos.y, self.camera.scaling * 100.0);
 
                 let overlay_width = content.len()as f32*6.58;
                 let overlay_height = 16.0;
@@ -286,17 +191,15 @@ impl canvas::Program<MsgGrid> for Grid {
             }
 
             frame.with_save(|frame| {
-                frame.translate(center);
-                frame.scale(self.scaling);
-                frame.translate(self.translation);
+                self.camera.transform_frame(frame, bounds);
 
              // Render points
              let coords = self.vgc_data.list_coord();
              for coord in coords {
                  let color = match cursor.position_in(bounds) {
                      Some(p) => {
-                         if point_in_radius(&self.project(p, bounds.size()), 
-                         &Point::new(coord.coord.x, coord.coord.y), (12.0/self.scaling)/500.0) {
+                         if point_in_radius(&self.camera.project(p, bounds.size()), 
+                         &Point::new(coord.coord.x, coord.coord.y), self.camera.fixed_length(12.0)) {
                              Color::from_rgb8(0x0E, 0x90, 0xAA)
                          }else{
                              Color::from_rgb8(0x3A, 0xD1, 0xEF)
@@ -305,8 +208,8 @@ impl canvas::Program<MsgGrid> for Grid {
                      None => Color::from_rgb8(0x3A, 0xD1, 0xEF)
                  };
                   
-                 let center = Point::new(coord.coord.x*Self::WIDTH, coord.coord.y*(Self::WIDTH / self.vgc_data.ratio as f32));
-                 frame.fill(&Path::circle(center, 5.0/self.scaling), Fill::from(color));
+                 let center = Point::new(coord.coord.x, coord.coord.y*1.0 / self.vgc_data.ratio as f32);
+                 frame.fill(&Path::circle(center, self.camera.fixed_length(5.0)), Fill::from(color));
              }
             });
             frame.into_geometry()
@@ -329,23 +232,7 @@ impl canvas::Program<MsgGrid> for Grid {
     }
 }
 
-pub struct Region {
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32,
-}
 
-pub enum Interaction {
-    None,
-    Panning { translation: Vector, start: Point },
-}
-
-impl Default for Interaction {
-    fn default() -> Self {
-        Self::None
-    }
-}
 
 
 /// Return true if the cursor is in the radius of the center

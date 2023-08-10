@@ -1,5 +1,7 @@
 mod grid;
 mod toolbars;
+mod canvas_camera;
+mod move_coord;
 
 use grid::Grid;
 
@@ -11,7 +13,6 @@ use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::{left_toolbar, MsgLeftToolbar};
-
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
 
