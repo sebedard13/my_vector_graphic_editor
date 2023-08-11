@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -132,6 +133,15 @@ mod tests {
 pub struct Coord {
     pub x: f32,
     pub y: f32,
+}
+impl Coord {
+    pub fn key(&self) -> u64 {
+        let mut key:u64 = self.x.to_bits().into();
+        key <<= 32;
+        let into:u64 = self.y.to_bits().into();
+        key |= into;
+        key
+    }
 }
 
 impl Display for Coord {

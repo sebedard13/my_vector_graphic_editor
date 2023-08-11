@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use std::collections::HashMap;
+
+use coord::CoordIndex;
 use serde::{Deserialize, Serialize};
 
 use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
@@ -75,6 +78,41 @@ impl Vgc {
 
     pub fn frame_render(&self, frame: &mut Frame) {
         render::frame_render(self, frame);
+    }
+
+    pub fn optimize_coord(&mut self) {
+        // TODO Maybe Coord implement Hash and be use in HashMap directly
+        let mut coord_map: HashMap<u64, CoordIndex> = HashMap::new();
+
+        let mut coord_ds = CoordDS::new();
+
+        
+        for shape in &mut self.shapes {
+            shape.start = optimize_coord_index(&shape.start, &mut coord_map, &mut coord_ds, &self.coord_ds);
+            for curve in &mut shape.curves {
+                curve.cp0 = optimize_coord_index(&curve.cp0, &mut coord_map, &mut coord_ds, &self.coord_ds);
+                curve.cp1 = optimize_coord_index(&curve.cp1, &mut coord_map, &mut coord_ds, &self.coord_ds);               
+                curve.p1 = optimize_coord_index(&curve.p1, &mut coord_map, &mut coord_ds, &self.coord_ds);
+            }
+        }
+
+        self.coord_ds = coord_ds;
+    }
+}
+
+
+fn optimize_coord_index(cp1:&CoordIndex, coord_map: &mut HashMap<u64, CoordIndex>, new_coord_ds: &mut CoordDS,coord_ds: & CoordDS) -> CoordIndex{
+    let coord = coord_ds.get(cp1);
+    let key = coord.key();
+    match coord_map.get(&key) {
+        Some(coord_index) => {
+            coord_index.clone()
+        }
+        None => {
+            let coord_index = new_coord_ds.insert(coord.clone());
+            coord_map.insert(key, coord_index.clone());
+            coord_index
+        }
     }
 }
 
@@ -162,6 +200,8 @@ pub fn generate_exemple() -> Vgc {
         index_shape: shape_index,
         index_curve: 3,
     });
+
+    canvas.optimize_coord();
 
     canvas
 }
