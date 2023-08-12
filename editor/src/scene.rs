@@ -18,6 +18,24 @@ pub struct Scene {
     pub camera: Camera,
     pub vgc_data: Vgc,
     pub move_coord: MoveCoord,
+
+    selected_shape: SelectedShape,
+}
+
+trait SceneOverlay {
+    type T :std::fmt::Debug + Send;
+
+    fn update(&mut self, msg : Self::T);
+
+    fn handle_event(
+        &self,
+        scene : &Scene,
+        event: Event,
+        cursor_position: Option<Point>,
+    ) -> (iced::event::Status, Option<MsgScene>);
+
+    /// Draw on frame with transform done to have canvas in 0 to 1 coordinate
+    fn draw(&self, frame: &mut Frame, scene: &Scene);
 }
 
 #[derive(Debug, Clone)]
@@ -25,6 +43,7 @@ pub enum MsgScene {
     Translated(Vector),
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
+    HoverCoord(usize)
 }
 
 impl Default for Scene {
@@ -36,6 +55,8 @@ impl Default for Scene {
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data: vgc_data,
             move_coord: MoveCoord::new(),
+            selected_shape: SelectedShape::default(),
+            
         }
     }
 }
@@ -73,6 +94,10 @@ impl Scene {
 
                 self.draw_cache.clear();
             }
+            MsgScene::HoverCoord(_) => {
+                self.selected_shape.update(message)
+            },
+            
         }
     }
 
@@ -94,6 +119,8 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
+       
+
         if let Event::Mouse(mouse::Event::ButtonReleased(_)) = event {
             *interaction = Interaction::None;
         }
@@ -105,6 +132,15 @@ impl canvas::Program<MsgScene> for Scene {
         };
 
         let rtn = MoveCoord::handle_event(self, event, cursor_position, cursor, bounds);
+        match rtn.0 {
+            event::Status::Captured => {
+                return rtn;
+            }
+            _ => {}
+        }
+
+        let rtn = self.selected_shape.handle_event(self,  event, Some(cursor_position));
+
         match rtn.0 {
             event::Status::Captured => {
                 return rtn;
@@ -124,6 +160,7 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
+        self.camera.visible_region(bounds.size());
         let life = self.draw_cache.draw(renderer, bounds.size(), |frame| {
             let background = Path::rectangle(Point::ORIGIN, frame.size());
             frame.fill(&background, Color::from_rgb8(0x40, 0x44, 0x4B));
@@ -163,7 +200,7 @@ impl canvas::Program<MsgScene> for Scene {
             };
 
             if let Some(pos) = cursor_pos {
-                let pos = self.camera.project(pos, bounds.size());
+                let pos = self.camera.project(pos);
 
                 let content = format!(
                     "({:.4}, {:.4}) {:.0}%",
@@ -191,33 +228,8 @@ impl canvas::Program<MsgScene> for Scene {
             frame.with_save(|frame| {
                 self.camera.transform_frame(frame, bounds);
 
-                // Render points
-                let coords = self.vgc_data.list_coord();
-                for coord in coords {
-                    let color = match cursor.position_in(bounds) {
-                        Some(p) => {
-                            if point_in_radius(
-                                &self.camera.project(p, bounds.size()),
-                                &Point::new(coord.coord.x, coord.coord.y),
-                                self.camera.fixed_length(12.0),
-                            ) {
-                                Color::from_rgb8(0x0E, 0x90, 0xAA)
-                            } else {
-                                Color::from_rgb8(0x3A, 0xD1, 0xEF)
-                            }
-                        }
-                        None => Color::from_rgb8(0x3A, 0xD1, 0xEF),
-                    };
-
-                    let center = Point::new(
-                        coord.coord.x,
-                        coord.coord.y * 1.0 / self.vgc_data.ratio as f32,
-                    );
-                    frame.fill(
-                        &Path::circle(center, self.camera.fixed_length(5.0)),
-                        Fill::from(color),
-                    );
-                }
+                self.selected_shape.draw(frame, self);
+                
             });
             frame.into_geometry()
         };
@@ -261,4 +273,76 @@ pub fn point_in_radius(point: &Point, center: &Point, radius: f32) -> bool {
     let y = point.y - center.y;
     let distance = x * x + y * y;
     distance < (radius * radius)
+}
+
+struct SelectedShape {
+    index_selected_coord: usize,
+}
+
+impl Default for SelectedShape{
+    fn default() -> Self {
+        Self { index_selected_coord: 999 }
+    }
+} 
+
+impl SceneOverlay for SelectedShape {
+    fn draw(&self, frame: &mut Frame, scene: &Scene) {
+        // Render points
+        let coords = scene.vgc_data.list_coord();
+        for coord in coords {
+            let color = match self.index_selected_coord == coord.i {
+                true => Color::from_rgb8(0x0E, 0x90, 0xAA),
+                false => Color::from_rgb8(0x3A, 0xD1, 0xEF),
+            };
+
+            let center = Point::new(
+                coord.coord.x,
+                coord.coord.y * 1.0 / scene.vgc_data.ratio as f32,
+            );
+            frame.fill(
+                &Path::circle(center, scene.camera.fixed_length(5.0)),
+                Fill::from(color),
+            );
+        }
+    }
+
+    fn handle_event(
+        &self,
+        scene: &Scene,
+        event: Event,
+        cursor_position: Option<Point>,
+    ) -> (iced::event::Status, Option<MsgScene>) {
+        
+        let coords = scene.vgc_data.list_coord();
+        for coord in coords {
+            match cursor_position {
+                Some(p) => {
+                    if point_in_radius(
+                        &scene.camera.project(p),
+                        &Point::new(coord.coord.x, coord.coord.y),
+                        scene.camera.fixed_length(12.0),
+                    ) {
+                      
+                        return (iced::event::Status::Captured, Some(MsgScene::HoverCoord(coord.i)));
+                    } else {
+                       
+                    }
+                }
+                None => {}
+            }
+        }
+
+        return (iced::event::Status::Ignored, None);
+    }
+
+    type T = MsgScene ;
+
+    fn update(&mut self, msg : Self::T) {
+       match msg{
+        MsgScene::Translated(_) => {},
+        MsgScene::Scaled(_, _) => {},
+        MsgScene::MoveCoord(_) => {},
+        MsgScene::HoverCoord(index) => self.index_selected_coord=index,
+    }
+    }
 }

@@ -12,6 +12,7 @@ pub struct Camera {
     pub scaling: f32,
     home: Vector,
     ratio: f32,
+    region: Region,
 }
 
 impl Camera {
@@ -27,6 +28,7 @@ impl Camera {
             scaling: 1.0,
             home: default_translate,
             ratio: ratio,
+            region : Region::default()
         }
     }
 
@@ -42,8 +44,8 @@ impl Camera {
         }
     }
 
-    pub fn project(&self, position: Point, size: Size) -> Point {
-        let region = self.visible_region(size);
+    pub fn project(&self, position: Point) -> Point {
+        let region = &self.region;
 
         Point::new(
             (position.x / self.scaling + region.x) / Self::WIDTH,
@@ -175,4 +177,10 @@ pub struct Region {
     y: f32,
     width: f32,
     height: f32,
+}
+
+impl Default for Region {
+    fn default() -> Self {
+        Self { x: Default::default(), y: Default::default(), width: Default::default(), height: Default::default() }
+    }
 }

@@ -55,7 +55,7 @@ impl MoveCoord {
                         );
                     }
                     mouse::Event::CursorMoved { .. } => {
-                        let pt = scene.camera.project(cursor_position, bounds.size());
+                        let pt = scene.camera.project(cursor_position);
                         return (
                             event::Status::Captured,
                             Some(MsgScene::MoveCoord(MoveCoordStep::Drag(pt))),
@@ -73,11 +73,11 @@ impl MoveCoord {
                             match cursor.position_in(bounds) {
                                 Some(p) => {
                                     if point_in_radius(
-                                        &scene.camera.project(p, bounds.size()),
+                                        &scene.camera.project(p),
                                         &Point::new(coord.coord.x, coord.coord.y),
                                         scene.camera.fixed_length(12.0),
                                     ) {
-                                        let pt = scene.camera.project(p, bounds.size());
+                                        let pt = scene.camera.project(p);
                                         return (
                                             event::Status::Captured,
                                             Some(MsgScene::MoveCoord(MoveCoordStep::Click(
