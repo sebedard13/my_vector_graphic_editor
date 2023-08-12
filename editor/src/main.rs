@@ -1,9 +1,9 @@
 mod canvas_camera;
-mod grid;
+mod scene;
 mod move_coord;
 mod toolbars;
 
-use grid::Grid;
+use scene::Scene;
 
 use iced::executor;
 use iced::theme::Theme;
@@ -35,12 +35,12 @@ pub fn main() -> iced::Result {
 
 #[derive(Default)]
 struct VgcEditor {
-    grid: Grid,
+    scene: Scene,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
-    Grid(grid::MsgGrid),
+    Scene(scene::MsgScene),
     LeftToolbar(MsgLeftToolbar),
 }
 
@@ -60,8 +60,8 @@ impl Application for VgcEditor {
 
     fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            Message::Grid(message) => {
-                self.grid.update(message);
+            Message::Scene(message) => {
+                self.scene.update(message);
             }
             Message::LeftToolbar(_message) => {}
         }
@@ -72,7 +72,7 @@ impl Application for VgcEditor {
     fn view(&self) -> Element<Message> {
         let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
 
-        let canvas = self.grid.view().map(move |message| Message::Grid(message));
+        let canvas = self.scene.view().map(move |message| Message::Scene(message));
 
         let top_toolbar = container(row![])
             .width(Length::Fill)

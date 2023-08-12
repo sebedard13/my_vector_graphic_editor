@@ -1,4 +1,4 @@
-use crate::grid::{Interaction, MsgGrid};
+use crate::scene::{Interaction, MsgScene};
 use iced::widget::canvas::Frame;
 use iced::{
     event, keyboard,
@@ -56,7 +56,7 @@ impl Camera {
         y: f32,
         cursor: Cursor,
         bounds: Rectangle,
-    ) -> (iced::event::Status, Option<MsgGrid>) {
+    ) -> (iced::event::Status, Option<MsgScene>) {
         if y < 0.0 && self.scaling > Self::MIN_SCALING
             || y > 0.0 && self.scaling < Self::MAX_SCALING
         {
@@ -82,7 +82,7 @@ impl Camera {
 
             (
                 event::Status::Captured,
-                Some(MsgGrid::Scaled(scaling, translation)),
+                Some(MsgScene::Scaled(scaling, translation)),
             )
         } else {
             (event::Status::Captured, None)
@@ -96,7 +96,7 @@ impl Camera {
         cursor_position: Point,
         cursor: Cursor,
         bounds: Rectangle,
-    ) -> (iced::event::Status, Option<MsgGrid>) {
+    ) -> (iced::event::Status, Option<MsgScene>) {
         match event {
             Event::Mouse(mouse_event) => match mouse_event {
                 mouse::Event::ButtonPressed(button) => {
@@ -116,7 +116,7 @@ impl Camera {
                 }
                 mouse::Event::CursorMoved { .. } => {
                     let message = match *interaction {
-                        Interaction::Panning { translation, start } => Some(MsgGrid::Translated(
+                        Interaction::Panning { translation, start } => Some(MsgScene::Translated(
                             translation + (cursor_position - start) * (1.0 / self.scaling),
                         )),
                         _ => None,
@@ -138,15 +138,15 @@ impl Camera {
             },
             Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
                 let message = match key_code {
-                    keyboard::KeyCode::PageUp => Some(MsgGrid::Scaled(
+                    keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
                         (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
                     )),
-                    keyboard::KeyCode::PageDown => Some(MsgGrid::Scaled(
+                    keyboard::KeyCode::PageDown => Some(MsgScene::Scaled(
                         (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
                         None,
                     )),
-                    keyboard::KeyCode::Home => Some(MsgGrid::Scaled(1.0, Some(self.home))),
+                    keyboard::KeyCode::Home => Some(MsgScene::Scaled(1.0, Some(self.home))),
                     _ => None,
                 };
 

@@ -13,7 +13,7 @@ use crate::canvas_camera::Camera;
 use crate::move_coord::MoveCoord;
 use crate::move_coord::MoveCoordStep;
 
-pub struct Grid {
+pub struct Scene {
     draw_cache: Cache,
     pub camera: Camera,
     pub vgc_data: Vgc,
@@ -21,13 +21,13 @@ pub struct Grid {
 }
 
 #[derive(Debug, Clone)]
-pub enum MsgGrid {
+pub enum MsgScene {
     Translated(Vector),
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
 }
 
-impl Default for Grid {
+impl Default for Scene {
     fn default() -> Self {
         let vgc_data = generate_exemple();
 
@@ -51,15 +51,15 @@ impl Default for Interaction {
     }
 }
 
-impl Grid {
-    pub fn update(&mut self, message: MsgGrid) {
+impl Scene {
+    pub fn update(&mut self, message: MsgScene) {
         match message {
-            MsgGrid::Translated(translation) => {
+            MsgScene::Translated(translation) => {
                 self.camera.translation = translation;
 
                 self.draw_cache.clear();
             }
-            MsgGrid::Scaled(scaling, translation) => {
+            MsgScene::Scaled(scaling, translation) => {
                 self.camera.scaling = scaling;
 
                 if let Some(translation) = translation {
@@ -68,7 +68,7 @@ impl Grid {
 
                 self.draw_cache.clear();
             }
-            MsgGrid::MoveCoord(step) => {
+            MsgScene::MoveCoord(step) => {
                 MoveCoord::update(self, step);
 
                 self.draw_cache.clear();
@@ -76,7 +76,7 @@ impl Grid {
         }
     }
 
-    pub fn view(&self) -> Element<MsgGrid> {
+    pub fn view(&self) -> Element<MsgScene> {
         Canvas::new(self)
             .width(Length::Fill)
             .height(Length::Fill)
@@ -84,7 +84,7 @@ impl Grid {
     }
 }
 
-impl canvas::Program<MsgGrid> for Grid {
+impl canvas::Program<MsgScene> for Scene {
     type State = Interaction;
 
     fn update(
@@ -93,7 +93,7 @@ impl canvas::Program<MsgGrid> for Grid {
         event: Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
-    ) -> (event::Status, Option<MsgGrid>) {
+    ) -> (event::Status, Option<MsgScene>) {
         if let Event::Mouse(mouse::Event::ButtonReleased(_)) = event {
             *interaction = Interaction::None;
         }

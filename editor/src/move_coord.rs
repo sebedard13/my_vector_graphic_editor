@@ -5,7 +5,7 @@ use iced::{
     Point, Rectangle,
 };
 
-use crate::grid::{point_in_radius, Grid, MsgGrid};
+use crate::scene::{point_in_radius, Scene, MsgScene};
 
 pub struct MoveCoord {
     id_point: Option<usize>,
@@ -23,42 +23,42 @@ impl MoveCoord {
         Self { id_point: None }
     }
 
-    pub fn update(grid: &mut Grid, msg: MoveCoordStep) {
+    pub fn update(scene: &mut Scene, msg: MoveCoordStep) {
         match msg {
             MoveCoordStep::Click(_, id) => {
-                grid.move_coord.id_point = Some(id);
+                scene.move_coord.id_point = Some(id);
             }
-            MoveCoordStep::Drag(pt) => match grid.move_coord.id_point {
+            MoveCoordStep::Drag(pt) => match scene.move_coord.id_point {
                 Some(id) => {
-                    grid.vgc_data.move_coord(id, pt.x, pt.y);
+                    scene.vgc_data.move_coord(id, pt.x, pt.y);
                 }
                 None => {}
             },
-            MoveCoordStep::Release => grid.move_coord.id_point = None,
+            MoveCoordStep::Release => scene.move_coord.id_point = None,
         }
     }
 
     pub fn handle_event(
-        grid: &Grid,
+        scene: &Scene,
         event: Event,
         cursor_position: Point,
         cursor: Cursor,
         bounds: Rectangle,
-    ) -> (iced::event::Status, Option<MsgGrid>) {
-        match grid.move_coord.id_point {
+    ) -> (iced::event::Status, Option<MsgScene>) {
+        match scene.move_coord.id_point {
             Some(_) => match event {
                 Event::Mouse(mouse_event) => match mouse_event {
                     mouse::Event::ButtonReleased(mouse::Button::Left) => {
                         return (
                             event::Status::Captured,
-                            Some(MsgGrid::MoveCoord(MoveCoordStep::Release)),
+                            Some(MsgScene::MoveCoord(MoveCoordStep::Release)),
                         );
                     }
                     mouse::Event::CursorMoved { .. } => {
-                        let pt = grid.camera.project(cursor_position, bounds.size());
+                        let pt = scene.camera.project(cursor_position, bounds.size());
                         return (
                             event::Status::Captured,
-                            Some(MsgGrid::MoveCoord(MoveCoordStep::Drag(pt))),
+                            Some(MsgScene::MoveCoord(MoveCoordStep::Drag(pt))),
                         );
                     }
                     _ => {}
@@ -68,19 +68,19 @@ impl MoveCoord {
             None => match event {
                 Event::Mouse(mouse_event) => match mouse_event {
                     mouse::Event::ButtonPressed(mouse::Button::Left) => {
-                        let coords = grid.vgc_data.list_coord();
+                        let coords = scene.vgc_data.list_coord();
                         for coord in coords {
                             match cursor.position_in(bounds) {
                                 Some(p) => {
                                     if point_in_radius(
-                                        &grid.camera.project(p, bounds.size()),
+                                        &scene.camera.project(p, bounds.size()),
                                         &Point::new(coord.coord.x, coord.coord.y),
-                                        grid.camera.fixed_length(12.0),
+                                        scene.camera.fixed_length(12.0),
                                     ) {
-                                        let pt = grid.camera.project(p, bounds.size());
+                                        let pt = scene.camera.project(p, bounds.size());
                                         return (
                                             event::Status::Captured,
-                                            Some(MsgGrid::MoveCoord(MoveCoordStep::Click(
+                                            Some(MsgScene::MoveCoord(MoveCoordStep::Click(
                                                 pt, coord.i,
                                             ))),
                                         );
