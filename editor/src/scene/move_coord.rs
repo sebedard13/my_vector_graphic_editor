@@ -5,7 +5,9 @@ use iced::{
     Point, Rectangle,
 };
 
-use crate::scene::{point_in_radius, Scene, MsgScene};
+use super::{point_in_radius, Scene, MsgScene};
+
+use super::SceneOverlay;
 
 pub struct MoveCoord {
     id_point: Option<usize>,

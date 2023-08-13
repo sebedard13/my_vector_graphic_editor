@@ -1,7 +1,5 @@
-mod canvas_camera;
-mod move_coord;
+
 mod scene;
-mod selected_shape;
 mod toolbars;
 
 use scene::Scene;

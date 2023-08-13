@@ -1,3 +1,7 @@
+mod canvas_camera;
+mod move_coord;
+mod selected_shape;
+
 use iced::alignment;
 use iced::mouse;
 use iced::widget::canvas;
@@ -8,12 +12,12 @@ use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vect
 use vgc::generate_exemple;
 use vgc::Vgc;
 
-use crate::canvas_camera::Camera;
-use crate::canvas_camera::Region;
-use crate::move_coord::MoveCoord;
-use crate::move_coord::MoveCoordStep;
-use crate::selected_shape::SelectedShape;
-use crate::selected_shape::SelectedShapeEvent;
+use canvas_camera::Camera;
+use canvas_camera::Region;
+use move_coord::MoveCoord;
+use move_coord::MoveCoordStep;
+use selected_shape::SelectedShape;
+use selected_shape::SelectedShapeEvent;
 
 pub struct Scene {
     draw_cache: Cache,
@@ -111,6 +115,8 @@ impl Scene {
     }
 }
 
+
+
 impl canvas::Program<MsgScene> for Scene {
     type State = Interaction;
 
@@ -143,9 +149,7 @@ impl canvas::Program<MsgScene> for Scene {
             _ => {}
         }
 
-        let rtn = self
-            .selected_shape
-            .handle_event(self, event, Some(cursor_position));
+        let rtn = self.selected_shape.handle_event(self, event, Some(cursor_position));
 
         match rtn.0 {
             event::Status::Captured => match rtn.1 {
