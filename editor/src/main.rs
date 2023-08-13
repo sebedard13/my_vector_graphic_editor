@@ -1,6 +1,7 @@
 mod canvas_camera;
-mod scene;
 mod move_coord;
+mod scene;
+mod selected_shape;
 mod toolbars;
 
 use scene::Scene;
@@ -72,7 +73,10 @@ impl Application for VgcEditor {
     fn view(&self) -> Element<Message> {
         let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
 
-        let canvas = self.scene.view().map(move |message| Message::Scene(message));
+        let canvas = self
+            .scene
+            .view()
+            .map(move |message| Message::Scene(message));
 
         let top_toolbar = container(row![])
             .width(Length::Fill)

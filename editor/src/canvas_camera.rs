@@ -12,7 +12,7 @@ pub struct Camera {
     pub scaling: f32,
     home: Vector,
     ratio: f32,
-    region: Region,
+    pub region: Region,
 }
 
 impl Camera {
@@ -28,7 +28,7 @@ impl Camera {
             scaling: 1.0,
             home: default_translate,
             ratio: ratio,
-            region : Region::default()
+            region: Region::default(),
         }
     }
 
@@ -172,6 +172,7 @@ impl Camera {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Region {
     x: f32,
     y: f32,
@@ -181,6 +182,11 @@ pub struct Region {
 
 impl Default for Region {
     fn default() -> Self {
-        Self { x: Default::default(), y: Default::default(), width: Default::default(), height: Default::default() }
+        Self {
+            x: Default::default(),
+            y: Default::default(),
+            width: Default::default(),
+            height: Default::default(),
+        }
     }
 }

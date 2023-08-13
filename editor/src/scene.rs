@@ -1,6 +1,5 @@
 use iced::alignment;
 use iced::mouse;
-use iced::mouse::Cursor;
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::Fill;
@@ -10,8 +9,11 @@ use vgc::generate_exemple;
 use vgc::Vgc;
 
 use crate::canvas_camera::Camera;
+use crate::canvas_camera::Region;
 use crate::move_coord::MoveCoord;
 use crate::move_coord::MoveCoordStep;
+use crate::selected_shape::SelectedShape;
+use crate::selected_shape::SelectedShapeEvent;
 
 pub struct Scene {
     draw_cache: Cache,
@@ -22,17 +24,17 @@ pub struct Scene {
     selected_shape: SelectedShape,
 }
 
-trait SceneOverlay {
-    type T :std::fmt::Debug + Send;
+pub trait SceneOverlay {
+    type T: std::fmt::Debug + Send;
 
-    fn update(&mut self, msg : Self::T);
+    fn update(&mut self, msg: Self::T);
 
     fn handle_event(
         &self,
-        scene : &Scene,
+        scene: &Scene,
         event: Event,
         cursor_position: Option<Point>,
-    ) -> (iced::event::Status, Option<MsgScene>);
+    ) -> (iced::event::Status, Option<Self::T>);
 
     /// Draw on frame with transform done to have canvas in 0 to 1 coordinate
     fn draw(&self, frame: &mut Frame, scene: &Scene);
@@ -43,7 +45,8 @@ pub enum MsgScene {
     Translated(Vector),
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
-    HoverCoord(usize)
+    HoverCoord(SelectedShapeEvent),
+    ChangeBounds(Region),
 }
 
 impl Default for Scene {
@@ -56,7 +59,6 @@ impl Default for Scene {
             vgc_data: vgc_data,
             move_coord: MoveCoord::new(),
             selected_shape: SelectedShape::default(),
-            
         }
     }
 }
@@ -94,10 +96,10 @@ impl Scene {
 
                 self.draw_cache.clear();
             }
-            MsgScene::HoverCoord(_) => {
-                self.selected_shape.update(message)
-            },
-            
+            MsgScene::HoverCoord(message) => self.selected_shape.update(message),
+            MsgScene::ChangeBounds(region) => {
+                self.camera.region = region;
+            }
         }
     }
 
@@ -114,15 +116,17 @@ impl canvas::Program<MsgScene> for Scene {
 
     fn update(
         &self,
-        interaction: &mut Interaction,
+        _interaction: &mut Interaction,
         event: Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
-       
-
-        if let Event::Mouse(mouse::Event::ButtonReleased(_)) = event {
-            *interaction = Interaction::None;
+        let visible_region = self.camera.visible_region(bounds.size());
+        if self.camera.region != visible_region {
+            return (
+                event::Status::Captured,
+                Some(MsgScene::ChangeBounds(visible_region)),
+            );
         }
 
         let cursor_position = if let Some(position) = cursor.position_in(bounds) {
@@ -139,17 +143,20 @@ impl canvas::Program<MsgScene> for Scene {
             _ => {}
         }
 
-        let rtn = self.selected_shape.handle_event(self,  event, Some(cursor_position));
+        let rtn = self
+            .selected_shape
+            .handle_event(self, event, Some(cursor_position));
 
         match rtn.0 {
-            event::Status::Captured => {
-                return rtn;
-            }
+            event::Status::Captured => match rtn.1 {
+                Some(msg) => return (rtn.0, Some(MsgScene::HoverCoord(msg))),
+                None => return (rtn.0, None),
+            },
             _ => {}
         }
 
         self.camera
-            .handle_event_camera(event, interaction, cursor_position, cursor, bounds)
+            .handle_event_camera(event, _interaction, cursor_position, cursor, bounds)
     }
 
     fn draw(
@@ -160,7 +167,6 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
-        self.camera.visible_region(bounds.size());
         let life = self.draw_cache.draw(renderer, bounds.size(), |frame| {
             let background = Path::rectangle(Point::ORIGIN, frame.size());
             frame.fill(&background, Color::from_rgb8(0x40, 0x44, 0x4B));
@@ -229,7 +235,6 @@ impl canvas::Program<MsgScene> for Scene {
                 self.camera.transform_frame(frame, bounds);
 
                 self.selected_shape.draw(frame, self);
-                
             });
             frame.into_geometry()
         };
@@ -239,15 +244,11 @@ impl canvas::Program<MsgScene> for Scene {
 
     fn mouse_interaction(
         &self,
-        interaction: &Interaction,
-        bounds: Rectangle,
-        cursor: mouse::Cursor,
+        _: &Interaction,
+        _: Rectangle,
+        _: mouse::Cursor,
     ) -> mouse::Interaction {
-        match interaction {
-            Interaction::Panning { .. } => mouse::Interaction::Grabbing,
-            Interaction::None if cursor.is_over(bounds) => mouse::Interaction::Crosshair,
-            _ => mouse::Interaction::default(),
-        }
+        mouse::Interaction::Crosshair
     }
 }
 
@@ -257,92 +258,13 @@ impl canvas::Program<MsgScene> for Scene {
 /// let cursor = Cursor::Available(Point::new(10.0, 10.0));
 /// let center = Point::new(0.0, 0.0);
 /// let radius = 5.0;
-/// assert_eq!(position_in_radius(cursor, center, radius), false);
+/// assert_eq!(point_in_radius(cursor, center, radius), false);
 /// let cursor = Cursor::Available(Point::new(-3.0, 0.0));
-/// assert_eq!(position_in_radius(cursor, center, radius), true);
+/// assert_eq!(point_in_radius(cursor, center, radius), true);
 ///```
-pub fn position_in_radius(cursor: &Cursor, center: &Point, radius: f32) -> bool {
-    cursor
-        .position()
-        .filter(|p| point_in_radius(p, center, radius))
-        .is_some()
-}
-
 pub fn point_in_radius(point: &Point, center: &Point, radius: f32) -> bool {
     let x = point.x - center.x;
     let y = point.y - center.y;
     let distance = x * x + y * y;
     distance < (radius * radius)
-}
-
-struct SelectedShape {
-    index_selected_coord: usize,
-}
-
-impl Default for SelectedShape{
-    fn default() -> Self {
-        Self { index_selected_coord: 999 }
-    }
-} 
-
-impl SceneOverlay for SelectedShape {
-    fn draw(&self, frame: &mut Frame, scene: &Scene) {
-        // Render points
-        let coords = scene.vgc_data.list_coord();
-        for coord in coords {
-            let color = match self.index_selected_coord == coord.i {
-                true => Color::from_rgb8(0x0E, 0x90, 0xAA),
-                false => Color::from_rgb8(0x3A, 0xD1, 0xEF),
-            };
-
-            let center = Point::new(
-                coord.coord.x,
-                coord.coord.y * 1.0 / scene.vgc_data.ratio as f32,
-            );
-            frame.fill(
-                &Path::circle(center, scene.camera.fixed_length(5.0)),
-                Fill::from(color),
-            );
-        }
-    }
-
-    fn handle_event(
-        &self,
-        scene: &Scene,
-        event: Event,
-        cursor_position: Option<Point>,
-    ) -> (iced::event::Status, Option<MsgScene>) {
-        
-        let coords = scene.vgc_data.list_coord();
-        for coord in coords {
-            match cursor_position {
-                Some(p) => {
-                    if point_in_radius(
-                        &scene.camera.project(p),
-                        &Point::new(coord.coord.x, coord.coord.y),
-                        scene.camera.fixed_length(12.0),
-                    ) {
-                      
-                        return (iced::event::Status::Captured, Some(MsgScene::HoverCoord(coord.i)));
-                    } else {
-                       
-                    }
-                }
-                None => {}
-            }
-        }
-
-        return (iced::event::Status::Ignored, None);
-    }
-
-    type T = MsgScene ;
-
-    fn update(&mut self, msg : Self::T) {
-       match msg{
-        MsgScene::Translated(_) => {},
-        MsgScene::Scaled(_, _) => {},
-        MsgScene::MoveCoord(_) => {},
-        MsgScene::HoverCoord(index) => self.index_selected_coord=index,
-    }
-    }
 }
