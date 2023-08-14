@@ -95,10 +95,24 @@ impl Camera {
         &self,
         event: Event,
         interaction: &mut Interaction,
-        cursor_position: Point,
+        cursor_position: Option<Point>,
         cursor: Cursor,
         bounds: Rectangle,
     ) -> (iced::event::Status, Option<MsgScene>) {
+        match event {
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) => {
+                *interaction = Interaction::None;
+                return (event::Status::Captured, None)
+            }
+            _ => {}
+        }
+
+        let cursor_position = if let Some(cursor_position) = cursor_position {
+            cursor_position
+        } else {
+            return (event::Status::Ignored, None);
+        };
+
         match event {
             Event::Mouse(mouse_event) => match mouse_event {
                 mouse::Event::ButtonPressed(mouse::Button::Right) => {
@@ -108,10 +122,7 @@ impl Camera {
                     };
                     (event::Status::Captured, None)
                 }
-                mouse::Event::ButtonReleased(mouse::Button::Right) => {
-                    *interaction = Interaction::None;
-                    (event::Status::Captured,None)
-                }
+
                 mouse::Event::CursorMoved { .. } => {
                     let message = match *interaction {
                         Interaction::Panning { translation, start } => Some(MsgScene::Translated(

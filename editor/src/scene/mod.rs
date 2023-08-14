@@ -145,18 +145,17 @@ impl canvas::Program<MsgScene> for Scene {
             );
         }
         
-
-        let cursor_position = if let Some(position) = cursor.position_in(bounds) {
-            position
-        } else {
-            return (event::Status::Ignored, None);
-        };
-
+        let cursor_position = cursor.position_in(bounds);
         return_if_captured!(self.camera.handle_event_camera(event, _interaction, cursor_position, cursor, bounds),event);
+        match cursor_position {
+            Some(cursor_position) => {
+                return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
+                return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
+            }
+            None => {}
+        }
        
-        return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
-        return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
-
+       
         (event::Status::Ignored, None)
     }
 
