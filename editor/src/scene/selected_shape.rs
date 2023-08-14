@@ -3,7 +3,9 @@ use iced::{
     Color, Point,
 };
 
-use crate::scene::{point_in_radius, Scene, SceneOverlay};
+use crate::scene::{point_in_radius, Scene};
+
+use super::MsgScene;
 
 pub struct SelectedShape {
     index_selected_coord: usize,
@@ -17,69 +19,62 @@ pub enum SelectedShapeEvent {
 impl Default for SelectedShape {
     fn default() -> Self {
         Self {
-            index_selected_coord: 999,
+            index_selected_coord: 9999,
         }
     }
 }
 
-impl SceneOverlay for SelectedShape {
-    type T = SelectedShapeEvent;
+pub fn draw(scene: &Scene, frame: &mut Frame) {
+    // Render points
+    let coords = scene.vgc_data.list_coord();
+    for coord in coords {
+        let color = match scene.selected_shape.index_selected_coord == coord.i {
+            true => Color::from_rgb8(0x0E, 0x90, 0xAA),
+            false => Color::from_rgb8(0x3A, 0xD1, 0xEF),
+        };
 
-    fn draw(&self, frame: &mut Frame, scene: &Scene) {
-        // Render points
-        let coords = scene.vgc_data.list_coord();
-        for coord in coords {
-            let color = match self.index_selected_coord == coord.i {
-                true => Color::from_rgb8(0x0E, 0x90, 0xAA),
-                false => Color::from_rgb8(0x3A, 0xD1, 0xEF),
-            };
+        let center = Point::new(
+            coord.coord.x,
+            coord.coord.y * 1.0 / scene.vgc_data.ratio as f32,
+        );
+        frame.fill(
+            &Path::circle(center, scene.camera.fixed_length(5.0)),
+            Fill::from(color),
+        );
+    }
+}
 
-            let center = Point::new(
-                coord.coord.x,
-                coord.coord.y * 1.0 / scene.vgc_data.ratio as f32,
+pub fn handle_event(
+    scene: &Scene,
+    _event: Event,
+    cursor_position: Point,
+) -> (iced::event::Status, Option<MsgScene>) {
+    let coords = scene.vgc_data.list_coord();
+    for coord in coords {
+        if point_in_radius(
+            &scene.camera.project(cursor_position),
+            &Point::new(coord.coord.x, coord.coord.y),
+            scene.camera.fixed_length(12.0),
+        ) {
+            return (
+                iced::event::Status::Captured,
+                Some(MsgScene::HoverCoord(SelectedShapeEvent::HoverCoord(coord.i))),
             );
-            frame.fill(
-                &Path::circle(center, scene.camera.fixed_length(5.0)),
-                Fill::from(color),
-            );
-        }
+        }       
     }
 
-    fn handle_event(
-        &self,
-        scene: &Scene,
-        _event: Event,
-        cursor_position: Option<Point>,
-    ) -> (iced::event::Status, Option<Self::T>) {
-        let coords = scene.vgc_data.list_coord();
-        for coord in coords {
-            match cursor_position {
-                Some(p) => {
-                    if point_in_radius(
-                        &scene.camera.project(p),
-                        &Point::new(coord.coord.x, coord.coord.y),
-                        scene.camera.fixed_length(12.0),
-                    ) {
-                        return (
-                            iced::event::Status::Captured,
-                            Some(SelectedShapeEvent::HoverCoord(coord.i)),
-                        );
-                    } else {
-                    }
-                }
-                None => {}
-            }
-        }
-
+    if scene.selected_shape.index_selected_coord != 9999 {
         return (
             iced::event::Status::Captured,
-            Some(SelectedShapeEvent::HoverCoord(9999)),
+            Some(MsgScene::HoverCoord(SelectedShapeEvent::HoverCoord(9999))),
         );
     }
 
-    fn update(&mut self, msg: Self::T) {
-        match msg {
-            SelectedShapeEvent::HoverCoord(index) => self.index_selected_coord = index,
-        }
+    (iced::event::Status::Ignored, None)
+}
+
+pub fn update(scene: &mut Scene, msg: SelectedShapeEvent) {
+    match msg {
+        SelectedShapeEvent::HoverCoord(index) => scene.selected_shape.index_selected_coord = index,
     }
 }

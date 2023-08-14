@@ -21,7 +21,7 @@ impl Camera {
     pub const WIDTH: f32 = 500.0;
 
     pub fn new(ratio: f32) -> Self {
-        let default_translate = Vector::new(-Self::WIDTH / 2.0, -Self::WIDTH / ratio as f32 / 2.0);
+        let default_translate = Vector::new(-Self::WIDTH / 2.0, -Self::WIDTH / ratio / 2.0);
 
         Self {
             translation: default_translate,
@@ -49,7 +49,7 @@ impl Camera {
 
         Point::new(
             (position.x / self.scaling + region.x) / Self::WIDTH,
-            (position.y / self.scaling + region.y) / (Self::WIDTH / self.ratio as f32),
+            (position.y / self.scaling + region.y) / (Self::WIDTH / self.ratio),
         )
     }
 
@@ -101,20 +101,16 @@ impl Camera {
     ) -> (iced::event::Status, Option<MsgScene>) {
         match event {
             Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonPressed(button) => {
-                    let message = match button {
-                        mouse::Button::Right => {
-                            *interaction = Interaction::Panning {
-                                translation: self.translation,
-                                start: cursor_position,
-                            };
-
-                            None
-                        }
-                        _ => None,
+                mouse::Event::ButtonPressed(mouse::Button::Right) => {
+                    *interaction = Interaction::Panning {
+                        translation: self.translation,
+                        start: cursor_position,
                     };
-
-                    (event::Status::Captured, message)
+                    (event::Status::Captured, None)
+                }
+                mouse::Event::ButtonReleased(mouse::Button::Right) => {
+                    *interaction = Interaction::None;
+                    (event::Status::Captured,None)
                 }
                 mouse::Event::CursorMoved { .. } => {
                     let message = match *interaction {

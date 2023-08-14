@@ -4,10 +4,10 @@ mod toolbars;
 
 use scene::Scene;
 
-use iced::executor;
+use iced::{executor, Renderer, Alignment};
 use iced::theme::Theme;
 
-use iced::widget::{column, container, row};
+use iced::widget::{column, container, row, button, text};
 use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
@@ -34,13 +34,15 @@ pub fn main() -> iced::Result {
 
 #[derive(Default)]
 struct VgcEditor {
-    scene: Scene,
+    scene: Vec<Scene>,
+    current_scene: usize,
 }
 
 #[derive(Debug, Clone)]
 enum Message {
     Scene(scene::MsgScene),
     LeftToolbar(MsgLeftToolbar),
+    NewEmptyScene,
 }
 
 impl Application for VgcEditor {
@@ -60,9 +62,16 @@ impl Application for VgcEditor {
     fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::Scene(message) => {
-                self.scene.update(message);
+                match self.scene.get_mut(self.current_scene){
+                    Some(scene) => scene.update(message),
+                    None => println!("No scene"),
+                };
             }
             Message::LeftToolbar(_message) => {}
+            Message::NewEmptyScene => {
+                self.current_scene = self.scene.len();
+                self.scene.push(Scene::default());
+            },
         }
 
         Command::none()
@@ -71,10 +80,12 @@ impl Application for VgcEditor {
     fn view(&self) -> Element<Message> {
         let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
 
-        let canvas = self
-            .scene
-            .view()
-            .map(move |message| Message::Scene(message));
+        
+
+        let canvas: Element<'_, Message, Renderer<Theme>> = match self.scene.is_empty(){
+            true => new_scene(),
+            false => self.scene[self.current_scene].view().map(move |message| Message::Scene(message)),
+        };
 
         let top_toolbar = container(row![])
             .width(Length::Fill)
@@ -91,4 +102,18 @@ impl Application for VgcEditor {
     fn theme(&self) -> Theme {
         Theme::Dark
     }
+}
+
+
+ fn new_scene<'a>() -> Element<'a, Message> {
+    let text = text("No current scene, click on New Scene to create one!").width(Length::Fixed(150.0));
+    let btn_play = button("New Scene")
+        .on_press(Message::NewEmptyScene);
+
+    column![text,btn_play]
+        .padding(50)
+        .spacing(10)
+        .align_items(Alignment::Center)
+        .width(Length::Fill)
+        .into()
 }

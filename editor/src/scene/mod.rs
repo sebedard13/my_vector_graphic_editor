@@ -1,13 +1,13 @@
 mod canvas_camera;
 mod move_coord;
 mod selected_shape;
+mod coord_position_tooltip;
 
-use iced::alignment;
 use iced::mouse;
+use std::time::{SystemTime, UNIX_EPOCH};
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
-use iced::widget::canvas::Fill;
-use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path, Text};
+use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vector};
 use vgc::generate_exemple;
 use vgc::Vgc;
@@ -26,22 +26,7 @@ pub struct Scene {
     pub move_coord: MoveCoord,
 
     selected_shape: SelectedShape,
-}
-
-pub trait SceneOverlay {
-    type T: std::fmt::Debug + Send;
-
-    fn update(&mut self, msg: Self::T);
-
-    fn handle_event(
-        &self,
-        scene: &Scene,
-        event: Event,
-        cursor_position: Option<Point>,
-    ) -> (iced::event::Status, Option<Self::T>);
-
-    /// Draw on frame with transform done to have canvas in 0 to 1 coordinate
-    fn draw(&self, frame: &mut Frame, scene: &Scene);
+    scene_size: Size,
 }
 
 #[derive(Debug, Clone)]
@@ -50,7 +35,7 @@ pub enum MsgScene {
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
     HoverCoord(SelectedShapeEvent),
-    ChangeBounds(Region),
+    ChangeBounds(Size<f32>),
 }
 
 impl Default for Scene {
@@ -63,6 +48,7 @@ impl Default for Scene {
             vgc_data: vgc_data,
             move_coord: MoveCoord::new(),
             selected_shape: SelectedShape::default(),
+            scene_size: Size::new(1.0, 1.0),
         }
     }
 }
@@ -96,13 +82,14 @@ impl Scene {
                 self.draw_cache.clear();
             }
             MsgScene::MoveCoord(step) => {
-                MoveCoord::update(self, step);
+                move_coord::update(self, step);
 
                 self.draw_cache.clear();
             }
-            MsgScene::HoverCoord(message) => self.selected_shape.update(message),
-            MsgScene::ChangeBounds(region) => {
-                self.camera.region = region;
+            MsgScene::HoverCoord(message) => selected_shape::update(self,message),
+            MsgScene::ChangeBounds(size) => {
+                self.scene_size = size;
+                self.camera.region =self.camera.visible_region(size);
             }
         }
     }
@@ -113,8 +100,31 @@ impl Scene {
             .height(Length::Fill)
             .into()
     }
+
+    
 }
 
+
+macro_rules! return_if_captured{
+    // first arm match add!(1,2), add!(2,3) etc
+       ($a:expr, $event:expr)=>{
+           {
+                let rtn = $a;
+                match rtn.0 {
+                    event::Status::Captured => {
+                        let start = SystemTime::now();
+                        let since_the_epoch = start
+                            .duration_since(UNIX_EPOCH)
+                            .expect("Time went backwards");
+                        let in_ms = since_the_epoch.as_millis();
+                        println!("{in_ms} Captured {:?}", $event);
+                        return rtn;
+                    }
+                    _ => {}
+                }
+           }
+       };
+   }
 
 
 impl canvas::Program<MsgScene> for Scene {
@@ -127,13 +137,14 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
-        let visible_region = self.camera.visible_region(bounds.size());
-        if self.camera.region != visible_region {
+        
+        if self.scene_size != bounds.size(){
             return (
                 event::Status::Captured,
-                Some(MsgScene::ChangeBounds(visible_region)),
+                Some(MsgScene::ChangeBounds(bounds.size())),
             );
         }
+        
 
         let cursor_position = if let Some(position) = cursor.position_in(bounds) {
             position
@@ -141,26 +152,12 @@ impl canvas::Program<MsgScene> for Scene {
             return (event::Status::Ignored, None);
         };
 
-        let rtn = MoveCoord::handle_event(self, event, cursor_position, cursor, bounds);
-        match rtn.0 {
-            event::Status::Captured => {
-                return rtn;
-            }
-            _ => {}
-        }
+        return_if_captured!(self.camera.handle_event_camera(event, _interaction, cursor_position, cursor, bounds),event);
+       
+        return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
+        return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
 
-        let rtn = self.selected_shape.handle_event(self, event, Some(cursor_position));
-
-        match rtn.0 {
-            event::Status::Captured => match rtn.1 {
-                Some(msg) => return (rtn.0, Some(MsgScene::HoverCoord(msg))),
-                None => return (rtn.0, None),
-            },
-            _ => {}
-        }
-
-        self.camera
-            .handle_event_camera(event, _interaction, cursor_position, cursor, bounds)
+        (event::Status::Ignored, None)
     }
 
     fn draw(
@@ -200,45 +197,16 @@ impl canvas::Program<MsgScene> for Scene {
 
             let cursor_pos = cursor.position_in(bounds);
 
-            let text = Text {
-                color: Color::WHITE,
-                size: 14.0,
-                position: Point::new(frame.width(), frame.height()),
-                horizontal_alignment: alignment::Horizontal::Right,
-                vertical_alignment: alignment::Vertical::Bottom,
-                ..Text::default()
-            };
-
+            
             if let Some(pos) = cursor_pos {
-                let pos = self.camera.project(pos);
 
-                let content = format!(
-                    "({:.4}, {:.4}) {:.0}%",
-                    pos.x,
-                    pos.y,
-                    self.camera.scaling * 100.0
-                );
-
-                let overlay_width = content.len() as f32 * 6.58;
-                let overlay_height = 16.0;
-
-                frame.fill_rectangle(
-                    text.position - Vector::new(overlay_width, overlay_height),
-                    Size::new(overlay_width, overlay_height),
-                    Fill::from(Color::from_rgba8(0x00, 0x00, 0x00, 0.8)),
-                );
-
-                frame.fill_text(Text {
-                    content,
-                    position: text.position - Vector::new(0.0, 0.0),
-                    ..text
-                });
+                coord_position_tooltip::draw(self,&mut frame, pos);
             }
 
             frame.with_save(|frame| {
                 self.camera.transform_frame(frame, bounds);
 
-                self.selected_shape.draw(frame, self);
+                selected_shape::draw(self,frame);
             });
             frame.into_geometry()
         };
