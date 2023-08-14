@@ -1,11 +1,11 @@
 use iced::{
     event,
-    mouse::{self, Cursor},
+    mouse::{self},
     widget::canvas::Event,
-    Point, Rectangle,
+    Point,
 };
 
-use super::{point_in_radius, Scene, MsgScene};
+use super::{point_in_radius, MsgScene, Scene};
 
 pub struct MoveCoord {
     id_point: Option<usize>,
@@ -29,11 +29,8 @@ pub fn update(scene: &mut Scene, msg: MoveCoordStep) {
         MoveCoordStep::Click(_, id) => {
             scene.move_coord.id_point = Some(id);
         }
-        MoveCoordStep::Drag(pt) => match scene.move_coord.id_point {
-            Some(id) => {
-                scene.vgc_data.move_coord(id, pt.x, pt.y);
-            }
-            None => {}
+        MoveCoordStep::Drag(pt) => if let Some(id) = scene.move_coord.id_point {
+           scene.vgc_data.move_coord(id, pt.x, pt.y);
         },
         MoveCoordStep::Release => scene.move_coord.id_point = None,
     }
@@ -42,11 +39,11 @@ pub fn update(scene: &mut Scene, msg: MoveCoordStep) {
 pub fn handle_event(
     scene: &Scene,
     event: Event,
-    cursor_position: Point
+    cursor_position: Point,
 ) -> (iced::event::Status, Option<MsgScene>) {
     match scene.move_coord.id_point {
-        Some(_) => match event {
-            Event::Mouse(mouse_event) => match mouse_event {
+        Some(_) => if let Event::Mouse(mouse_event) = event {
+           match mouse_event {
                 mouse::Event::ButtonReleased(mouse::Button::Left) => {
                     return (
                         event::Status::Captured,
@@ -61,36 +58,27 @@ pub fn handle_event(
                     );
                 }
                 _ => {}
-            },
-            _ => {}
+            }
         },
-        None => match event {
-            Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonPressed(mouse::Button::Left) => {
-                    let coords = scene.vgc_data.list_coord();
-                    for coord in coords {
-                        if point_in_radius(
-                            &scene.camera.project(cursor_position),
-                            &Point::new(coord.coord.x, coord.coord.y),
-                            scene.camera.fixed_length(12.0),
-                        ) {
-                            let pt = scene.camera.project(cursor_position);
-                            return (
-                                event::Status::Captured,
-                                Some(MsgScene::MoveCoord(MoveCoordStep::Click(
-                                    pt, coord.i,
-                                ))),
-                            );
-                        }
+        None => if let Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) = event {
+                let coords = scene.vgc_data.list_coord();
+                for coord in coords {
+                    if point_in_radius(
+                        &scene.camera.project(cursor_position),
+                        &Point::new(coord.coord.x, coord.coord.y),
+                        scene.camera.fixed_length(12.0),
+                    ) {
+                        let pt = scene.camera.project(cursor_position);
+                        return (
+                            event::Status::Captured,
+                            Some(MsgScene::MoveCoord(MoveCoordStep::Click(pt, coord.i))),
+                        );
                     }
-
-                    return (event::Status::Ignored, None);
                 }
-                _ => {}
-            },
-            _ => {}
-        },
-    }
+
+                return (event::Status::Ignored, None);
+            }
+        }
 
     (event::Status::Ignored, None)
 }

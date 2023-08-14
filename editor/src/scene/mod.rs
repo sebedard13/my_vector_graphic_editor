@@ -13,7 +13,6 @@ use vgc::generate_exemple;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
-use canvas_camera::Region;
 use move_coord::MoveCoord;
 use move_coord::MoveCoordStep;
 use selected_shape::SelectedShape;
@@ -147,12 +146,9 @@ impl canvas::Program<MsgScene> for Scene {
         
         let cursor_position = cursor.position_in(bounds);
         return_if_captured!(self.camera.handle_event_camera(event, _interaction, cursor_position, cursor, bounds),event);
-        match cursor_position {
-            Some(cursor_position) => {
-                return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
-                return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
-            }
-            None => {}
+        if let Some(cursor_position) = cursor_position {
+            return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
+            return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
         }
        
        

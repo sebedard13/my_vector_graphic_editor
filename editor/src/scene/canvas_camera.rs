@@ -99,12 +99,9 @@ impl Camera {
         cursor: Cursor,
         bounds: Rectangle,
     ) -> (iced::event::Status, Option<MsgScene>) {
-        match event {
-            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) => {
-                *interaction = Interaction::None;
-                return (event::Status::Captured, None)
-            }
-            _ => {}
+        if let Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) = event {
+            *interaction = Interaction::None;
+            return (event::Status::Captured, None)
         }
 
         let cursor_position = if let Some(cursor_position) = cursor_position {
@@ -179,21 +176,10 @@ impl Camera {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub struct Region {
     x: f32,
     y: f32,
     width: f32,
     height: f32,
-}
-
-impl Default for Region {
-    fn default() -> Self {
-        Self {
-            x: Default::default(),
-            y: Default::default(),
-            width: Default::default(),
-            height: Default::default(),
-        }
-    }
 }

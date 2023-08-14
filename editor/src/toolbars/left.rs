@@ -16,7 +16,7 @@ pub fn left_toolbar<'a>() -> Element<'a, MsgLeftToolbar> {
     let content = Image::<image::Handle>::new("editor/data/flower.png")
         .width(20)
         .height(16);
-    let btn_style = Box::new(BtnStyle::default());
+    let btn_style = Box::<BtnStyle>::default();
     let btn_play = button(content)
         .on_press(MsgLeftToolbar::MoveCoordCursor)
         .style(Button::Custom(btn_style));
