@@ -4,7 +4,6 @@ mod selected_shape;
 mod coord_position_tooltip;
 
 use iced::mouse;
-use std::time::{SystemTime, UNIX_EPOCH};
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
@@ -25,7 +24,6 @@ pub struct Scene {
     pub move_coord: MoveCoord,
 
     selected_shape: SelectedShape,
-    scene_size: Size,
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +33,7 @@ pub enum MsgScene {
     MoveCoord(MoveCoordStep),
     HoverCoord(SelectedShapeEvent),
     ChangeBounds(Size<f32>),
+    SetCameraInteraction(canvas_camera::Interaction)
 }
 
 impl Default for Scene {
@@ -47,19 +46,19 @@ impl Default for Scene {
             vgc_data: vgc_data,
             move_coord: MoveCoord::new(),
             selected_shape: SelectedShape::default(),
-            scene_size: Size::new(1.0, 1.0),
         }
     }
 }
 
-pub enum Interaction {
-    None,
-    Panning { translation: Vector, start: Point },
+pub struct CanvasState{
+    scene_size: Size,
 }
 
-impl Default for Interaction {
-    fn default() -> Self {
-        Self::None
+impl Default for CanvasState{
+    fn default() -> Self{
+        Self{
+            scene_size: Size::new(0.0,0.0),
+        }
     }
 }
 
@@ -87,9 +86,9 @@ impl Scene {
             }
             MsgScene::HoverCoord(message) => selected_shape::update(self,message),
             MsgScene::ChangeBounds(size) => {
-                self.scene_size = size;
                 self.camera.region =self.camera.visible_region(size);
             }
+            MsgScene::SetCameraInteraction(interaction) =>self.camera.interaction = interaction,
         }
     }
 
@@ -111,12 +110,6 @@ macro_rules! return_if_captured{
                 let rtn = $a;
                 match rtn.0 {
                     event::Status::Captured => {
-                        let start = SystemTime::now();
-                        let since_the_epoch = start
-                            .duration_since(UNIX_EPOCH)
-                            .expect("Time went backwards");
-                        let in_ms = since_the_epoch.as_millis();
-                        println!("{in_ms} Captured {:?}", $event);
                         return rtn;
                     }
                     _ => {}
@@ -127,17 +120,18 @@ macro_rules! return_if_captured{
 
 
 impl canvas::Program<MsgScene> for Scene {
-    type State = Interaction;
+    type State = CanvasState;
 
     fn update(
         &self,
-        _interaction: &mut Interaction,
+        canvas_state: &mut CanvasState,
         event: Event,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
         
-        if self.scene_size != bounds.size(){
+        if canvas_state.scene_size != bounds.size(){
+            canvas_state.scene_size = bounds.size();
             return (
                 event::Status::Captured,
                 Some(MsgScene::ChangeBounds(bounds.size())),
@@ -145,7 +139,7 @@ impl canvas::Program<MsgScene> for Scene {
         }
         
         let cursor_position = cursor.position_in(bounds);
-        return_if_captured!(self.camera.handle_event_camera(event, _interaction, cursor_position, cursor, bounds),event);
+        return_if_captured!(self.camera.handle_event_camera(event, cursor_position, cursor, bounds),event);
         if let Some(cursor_position) = cursor_position {
             return_if_captured!(move_coord::handle_event(self, event, cursor_position), event);
             return_if_captured!(selected_shape::handle_event(self, event, cursor_position),event);
@@ -157,9 +151,9 @@ impl canvas::Program<MsgScene> for Scene {
 
     fn draw(
         &self,
-        _interaction: &Interaction,
+        _: &CanvasState,
         renderer: &Renderer,
-        _theme: &Theme,
+        _: &Theme,
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> Vec<Geometry> {
@@ -211,7 +205,7 @@ impl canvas::Program<MsgScene> for Scene {
 
     fn mouse_interaction(
         &self,
-        _: &Interaction,
+        _: &CanvasState,
         _: Rectangle,
         _: mouse::Cursor,
     ) -> mouse::Interaction {

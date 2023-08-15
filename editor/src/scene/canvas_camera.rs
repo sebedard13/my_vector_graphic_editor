@@ -1,4 +1,4 @@
-use crate::scene::{Interaction, MsgScene};
+use crate::scene::MsgScene;
 use iced::widget::canvas::Frame;
 use iced::{
     event, keyboard,
@@ -7,12 +7,24 @@ use iced::{
     Point, Rectangle, Size, Vector,
 };
 
+#[derive(Debug, Clone)]
+pub enum Interaction {
+    None,
+    Panning { translation: Vector, start: Point },
+}
+
+impl Default for Interaction {
+    fn default() -> Self {
+        Self::None
+    }
+}
 pub struct Camera {
     pub translation: Vector,
     pub scaling: f32,
     home: Vector,
     ratio: f32,
     pub region: Region,
+    pub interaction : Interaction
 }
 
 impl Camera {
@@ -29,6 +41,7 @@ impl Camera {
             home: default_translate,
             ratio: ratio,
             region: Region::default(),
+            interaction: Interaction::default()
         }
     }
 
@@ -94,14 +107,15 @@ impl Camera {
     pub fn handle_event_camera(
         &self,
         event: Event,
-        interaction: &mut Interaction,
         cursor_position: Option<Point>,
         cursor: Cursor,
         bounds: Rectangle,
     ) -> (iced::event::Status, Option<MsgScene>) {
+
+        let  interaction = &self.interaction;
+
         if let Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) = event {
-            *interaction = Interaction::None;
-            return (event::Status::Captured, None)
+            return (event::Status::Captured, Some(MsgScene::SetCameraInteraction(Interaction::None)))
         }
 
         let cursor_position = if let Some(cursor_position) = cursor_position {
@@ -113,11 +127,11 @@ impl Camera {
         match event {
             Event::Mouse(mouse_event) => match mouse_event {
                 mouse::Event::ButtonPressed(mouse::Button::Right) => {
-                    *interaction = Interaction::Panning {
+                    let interaction = Interaction::Panning {
                         translation: self.translation,
                         start: cursor_position,
                     };
-                    (event::Status::Captured, None)
+                    (event::Status::Captured, Some(MsgScene::SetCameraInteraction(interaction)))
                 }
 
                 mouse::Event::CursorMoved { .. } => {

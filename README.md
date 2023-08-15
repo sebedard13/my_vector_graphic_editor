@@ -1,6 +1,7 @@
-# vgc
+# VGC
 
 ## Building
+
 - Install npm package manager
 - Install angular cli 'ng'
 - 'cargo install cargo-make'
@@ -8,12 +9,15 @@
 - 'cargo install wasm-pack'
 
 After everything is installed, run the following command to run the web app:
-- 'cargo make serve' 
+
+- 'cargo make serve'
 
 ## Modules
 
-### view
-Contains the angular view and the web application
+### editor
 
-### desktop
-The tauri implementation for building the desktop app.
+Contains the iced editor
+
+### vgc
+
+The core of the data to reprensent a vector graphic
