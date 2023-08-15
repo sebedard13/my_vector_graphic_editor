@@ -2,6 +2,7 @@ mod canvas_camera;
 mod move_coord;
 mod selected_shape;
 mod coord_position_tooltip;
+mod events;
 
 use iced::mouse;
 use iced::widget::canvas;
@@ -64,6 +65,8 @@ impl Default for CanvasState{
 
 impl Scene {
     pub fn update(&mut self, message: MsgScene) {
+        
+
         match message {
             MsgScene::Translated(translation) => {
                 self.camera.translation = translation;
