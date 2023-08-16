@@ -56,7 +56,7 @@ impl EventsMerger {
                             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
                                 start: press.start_press.clone(),
                                 button: press.mouse_button.clone(),
-                                movement: position,
+                                current_coord: position,
                             })))
                         }
                         _ => EventStatus::Free,
@@ -153,7 +153,7 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
                 start: cursor_position,
                 button: mouse::Button::Left,
-                movement: Point::new(1.0, 1.0)
+                current_coord: Point::new(1.0, 1.0)
             })))
         );
 
@@ -232,7 +232,7 @@ pub struct Press {
 pub struct Pressmove {
     pub start: Point,
     pub button: mouse::Button,
-    pub movement: Point,
+    pub current_coord: Point,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct Click {

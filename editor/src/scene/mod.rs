@@ -35,9 +35,11 @@ pub enum MsgScene {
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
     HoverCoord(SelectedShapeEvent),
-    ChangeBounds(Rectangle),
     SetCameraInteraction(canvas_camera::Interaction),
+
+    ChangeBounds(Rectangle),
     ScrollZoom(events::Scroll),
+    DragCamera(events::Pressmove),
 }
 
 impl Default for Scene {
@@ -91,7 +93,10 @@ impl Scene {
             }
             MsgScene::SetCameraInteraction(interaction) => self.camera.interaction = interaction,
             MsgScene::ScrollZoom(scroll) => {
-                self.camera.handle_scroll(scroll);
+                self.camera.handle_zoom(scroll);
+            }
+            MsgScene::DragCamera(pressmove) => {
+                self.camera.handle_translate(pressmove);
             }
         }
     }
@@ -147,11 +152,23 @@ impl canvas::Program<MsgScene> for Scene {
                                 events::MergeEvent::Click(click)
                                     if click.button == mouse::Button::Left => {} // Lunch click main event,
                                 events::MergeEvent::Pressmove(pressmove)
-                                    if pressmove.button == mouse::Button::Right => {} // Lunch drag camera
+                                    if pressmove.button == mouse::Button::Right =>
+                                {
+                                    return (
+                                        event::Status::Captured,
+                                        Some(MsgScene::DragCamera(pressmove)),
+                                    );
+                                } // Lunch drag camera
                                 events::MergeEvent::Pressmove(pressmove)
                                     if pressmove.button == mouse::Button::Left => {} // Lunch drag coord
                                 events::MergeEvent::Pressmove(pressmove)
-                                    if pressmove.button == mouse::Button::Middle => {} // Lunch drag coord
+                                    if pressmove.button == mouse::Button::Middle =>
+                                {
+                                    return (
+                                        event::Status::Captured,
+                                        Some(MsgScene::DragCamera(pressmove)),
+                                    );
+                                } // Lunch drag coord
                                 events::MergeEvent::Scroll(scroll) => {
                                     return (
                                         event::Status::Captured,
@@ -186,11 +203,6 @@ impl canvas::Program<MsgScene> for Scene {
         }
 
         let cursor_position = cursor.position_in(bounds);
-        return_if_captured!(
-            self.camera
-                .handle_event_camera(event, cursor_position, cursor, bounds),
-            event
-        );
         if let Some(cursor_position) = cursor_position {
             return_if_captured!(
                 move_coord::handle_event(self, event, cursor_position),

@@ -69,7 +69,7 @@ impl Camera {
         )
     }
 
-    pub fn handle_scroll(&mut self, scroll: events::Scroll) {
+    pub fn handle_zoom(&mut self, scroll: events::Scroll) {
         if scroll.movement.y < 0.0 && self.scaling > Self::MIN_SCALING
             || scroll.movement.y > 0.0 && self.scaling < Self::MAX_SCALING
         {
@@ -92,77 +92,30 @@ impl Camera {
         };
     }
 
-    pub fn handle_event_camera(
-        &self,
-        event: Event,
-        cursor_position: Option<Point>,
-        _: Cursor,
-        _: Rectangle,
-    ) -> (iced::event::Status, Option<MsgScene>) {
-        let interaction = &self.interaction;
-
-        if let Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) = event {
-            return (
-                event::Status::Captured,
-                Some(MsgScene::SetCameraInteraction(Interaction::None)),
-            );
-        }
-
-        let cursor_position = if let Some(cursor_position) = cursor_position {
-            cursor_position
-        } else {
-            return (event::Status::Ignored, None);
+    pub fn handle_translate(&mut self, pressmove: events::Pressmove) {
+        let translation = match self.interaction {
+            Interaction::Panning { translation, start } => {
+                if pressmove.start == start {
+                    translation
+                }
+                else{
+                    self.interaction = Interaction::Panning {
+                        translation: self.translation,
+                        start: pressmove.start,
+                    };
+                    self.translation
+                }
+            }
+            _ => {
+                self.interaction = Interaction::Panning {
+                    translation: self.translation,
+                    start: pressmove.start,
+                };
+                self.translation
+            }
         };
 
-        match event {
-            Event::Mouse(mouse_event) => match mouse_event {
-                mouse::Event::ButtonPressed(mouse::Button::Right) => {
-                    let interaction = Interaction::Panning {
-                        translation: self.translation,
-                        start: cursor_position,
-                    };
-                    (
-                        event::Status::Captured,
-                        Some(MsgScene::SetCameraInteraction(interaction)),
-                    )
-                }
-
-                mouse::Event::CursorMoved { .. } => {
-                    let message = match *interaction {
-                        Interaction::Panning { translation, start } => Some(MsgScene::Translated(
-                            translation + (cursor_position - start) * (1.0 / self.scaling),
-                        )),
-                        _ => None,
-                    };
-
-                    let event_status = match interaction {
-                        Interaction::None => event::Status::Ignored,
-                        _ => event::Status::Captured,
-                    };
-
-                    (event_status, message)
-                }
-                _ => (event::Status::Ignored, None),
-            },
-            Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
-                let message = match key_code {
-                    keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
-                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::PageDown => Some(MsgScene::Scaled(
-                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::Home => Some(MsgScene::Scaled(1.0, Some(self.home))),
-                    _ => None,
-                };
-
-                (event::Status::Captured, message)
-            }
-
-            _ => (event::Status::Ignored, None),
-        }
+        self.translation = translation+(pressmove.current_coord - pressmove.start) * (1.0 / self.scaling);
     }
 
     pub fn transform_frame(&self, frame: &mut Frame, bounds: Rectangle) {
@@ -176,4 +129,6 @@ impl Camera {
     pub fn fixed_length(&self, length_px: f32) -> f32 {
         length_px / self.scaling / Self::WIDTH
     }
+
+   
 }
