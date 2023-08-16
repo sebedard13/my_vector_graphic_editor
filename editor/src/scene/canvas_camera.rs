@@ -7,6 +7,8 @@ use iced::{
     Point, Rectangle, Size, Vector,
 };
 
+use super::events;
+
 #[derive(Debug, Clone)]
 pub enum Interaction {
     None,
@@ -24,7 +26,7 @@ pub struct Camera {
     home: Vector,
     ratio: f32,
     pub pixel_region: Rectangle,
-    pub interaction : Interaction
+    pub interaction: Interaction,
 }
 
 impl Camera {
@@ -41,18 +43,18 @@ impl Camera {
             home: default_translate,
             ratio: ratio,
             pixel_region: Rectangle::default(),
-            interaction: Interaction::default()
+            interaction: Interaction::default(),
         }
     }
 
     pub fn region(&self) -> Rectangle {
         let size = self.pixel_region.size();
-        let width = size.width / self.scaling/ Self::WIDTH;
-        let height = size.height / self.scaling/ (Self::WIDTH / self.ratio);
+        let width = size.width / self.scaling / Self::WIDTH;
+        let height = size.height / self.scaling / (Self::WIDTH / self.ratio);
 
         Rectangle {
-            x: (-self.translation.x/ Self::WIDTH - (width / 2.0)),
-            y: (-self.translation.y/ (Self::WIDTH / self.ratio) - (height / 2.0)),
+            x: (-self.translation.x / Self::WIDTH - (width / 2.0)),
+            y: (-self.translation.y / (Self::WIDTH / self.ratio) - (height / 2.0)),
             width,
             height,
         }
@@ -62,61 +64,48 @@ impl Camera {
         let region = &self.region();
 
         Point::new(
-            (position.x / self.scaling/ Self::WIDTH) + region.x ,
-            (position.y / self.scaling/ (Self::WIDTH / self.ratio)) + region.y ,
+            (position.x / self.scaling / Self::WIDTH) + region.x,
+            (position.y / self.scaling / (Self::WIDTH / self.ratio)) + region.y,
         )
     }
 
-    fn handle_scroll(
-        &self,
-        y: f32,
-        cursor: Cursor,
-        bounds: Rectangle,
-    ) -> (iced::event::Status, Option<MsgScene>) {
-        if y < 0.0 && self.scaling > Self::MIN_SCALING
-            || y > 0.0 && self.scaling < Self::MAX_SCALING
+    pub fn handle_scroll(&mut self, scroll: events::Scroll) {
+        if scroll.movement.y < 0.0 && self.scaling > Self::MIN_SCALING
+            || scroll.movement.y > 0.0 && self.scaling < Self::MAX_SCALING
         {
             let old_scaling = self.scaling;
 
-            let scaling =
-                (self.scaling * (1.0 + y / 30.0)).clamp(Self::MIN_SCALING, Self::MAX_SCALING);
+            let scaling = (self.scaling * (1.0 + scroll.movement.y / 30.0))
+                .clamp(Self::MIN_SCALING, Self::MAX_SCALING);
 
-            let translation = if let Some(cursor_to_center) = cursor.position_from(bounds.center())
-            {
-                let factor = scaling - old_scaling;
+            let cursor_to_center = scroll.coord - self.pixel_region.center();
 
-                Some(
-                    self.translation
-                        - Vector::new(
-                            cursor_to_center.x * factor / (old_scaling * old_scaling),
-                            cursor_to_center.y * factor / (old_scaling * old_scaling),
-                        ),
-                )
-            } else {
-                None
-            };
+            let factor = scaling - old_scaling;
 
-            (
-                event::Status::Captured,
-                Some(MsgScene::Scaled(scaling, translation)),
-            )
-        } else {
-            (event::Status::Captured, None)
-        }
+            self.translation = self.translation
+                - Vector::new(
+                    cursor_to_center.x * factor / (old_scaling * old_scaling),
+                    cursor_to_center.y * factor / (old_scaling * old_scaling),
+                );
+
+            self.scaling = scaling;
+        };
     }
 
     pub fn handle_event_camera(
         &self,
         event: Event,
         cursor_position: Option<Point>,
-        cursor: Cursor,
-        bounds: Rectangle,
+        _: Cursor,
+        _: Rectangle,
     ) -> (iced::event::Status, Option<MsgScene>) {
-
-        let  interaction = &self.interaction;
+        let interaction = &self.interaction;
 
         if let Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Right)) = event {
-            return (event::Status::Captured, Some(MsgScene::SetCameraInteraction(Interaction::None)))
+            return (
+                event::Status::Captured,
+                Some(MsgScene::SetCameraInteraction(Interaction::None)),
+            );
         }
 
         let cursor_position = if let Some(cursor_position) = cursor_position {
@@ -132,7 +121,10 @@ impl Camera {
                         translation: self.translation,
                         start: cursor_position,
                     };
-                    (event::Status::Captured, Some(MsgScene::SetCameraInteraction(interaction)))
+                    (
+                        event::Status::Captured,
+                        Some(MsgScene::SetCameraInteraction(interaction)),
+                    )
                 }
 
                 mouse::Event::CursorMoved { .. } => {
@@ -150,11 +142,6 @@ impl Camera {
 
                     (event_status, message)
                 }
-                mouse::Event::WheelScrolled { delta } => match delta {
-                    mouse::ScrollDelta::Lines { y, .. } | mouse::ScrollDelta::Pixels { y, .. } => {
-                        self.handle_scroll(y, cursor, bounds)
-                    }
-                },
                 _ => (event::Status::Ignored, None),
             },
             Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
