@@ -4,7 +4,7 @@ mod selected_shape;
 mod coord_position_tooltip;
 mod events;
 
-use iced::mouse;
+use iced::{mouse, keyboard};
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
@@ -17,6 +17,8 @@ use move_coord::MoveCoord;
 use move_coord::MoveCoordStep;
 use selected_shape::SelectedShape;
 use selected_shape::SelectedShapeEvent;
+
+use self::events::MergeEvent;
 
 pub struct Scene {
     draw_cache: Cache,
@@ -34,7 +36,8 @@ pub enum MsgScene {
     MoveCoord(MoveCoordStep),
     HoverCoord(SelectedShapeEvent),
     ChangeBounds(Size<f32>),
-    SetCameraInteraction(canvas_camera::Interaction)
+    SetCameraInteraction(canvas_camera::Interaction),
+    DragMain(events::Scroll),
 }
 
 impl Default for Scene {
@@ -53,12 +56,14 @@ impl Default for Scene {
 
 pub struct CanvasState{
     scene_size: Size,
+    event_merger: events::EventsMerger,
 }
 
 impl Default for CanvasState{
     fn default() -> Self{
         Self{
             scene_size: Size::new(0.0,0.0),
+            event_merger: events::EventsMerger::default(),
         }
     }
 }
@@ -92,6 +97,9 @@ impl Scene {
                 self.camera.region =self.camera.visible_region(size);
             }
             MsgScene::SetCameraInteraction(interaction) =>self.camera.interaction = interaction,
+            MsgScene::DragMain(scroll) => {
+                
+            },
         }
     }
 
@@ -132,6 +140,50 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
+
+
+       /*  match event{
+            Event::Mouse(e) => {
+                let event = canvas_state.event_merger.match_mouse_event(cursor.position(),e);
+                match event {
+                    events::EventStatus::Used(evts) => {
+                        match evts{
+                            Some(merge_event) => match merge_event{
+                                events::MergeEvent::Click(click) if click.button == mouse::Button::Left => {},// Lunch click main event,
+                                events::MergeEvent::Pressmove(pressmove) if pressmove.button == mouse::Button::Right => {},// Lunch drag camera
+                                events::MergeEvent::Pressmove(pressmove) if pressmove.button == mouse::Button::Left => {},// Lunch drag coord
+                                events::MergeEvent::Pressmove(pressmove) if pressmove.button == mouse::Button::Middle => {},// Lunch drag coord
+                                events::MergeEvent::Scroll(scroll) =>{
+                                    return (event::Status::Captured, Some(MsgScene::DragMain(scroll)));
+                                } // Lunch zoom
+                                _ => return (event::Status::Captured, None),
+                            },
+                            None => return (event::Status::Captured, None),
+                        }
+                    },
+                    events::EventStatus::Free => return (event::Status::Ignored, None),
+                }
+
+            }
+            
+            Event::Touch(_) => {},
+            Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
+                /*let message = match key_code {
+                    keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
+                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        None,
+                    )),
+                    keyboard::KeyCode::PageDown => Some(MsgScene::Scaled(
+                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        None,
+                    )),
+                    keyboard::KeyCode::Home => Some(MsgScene::Scaled(1.0, Some(self.home))),
+                    _ => None,
+                };*/
+            },
+            _ =>{}
+        }*/
+
         
         if canvas_state.scene_size != bounds.size(){
             canvas_state.scene_size = bounds.size();
