@@ -28,7 +28,22 @@ impl EventsMerger {
         match event {
             Event::Mouse(mouse_event) => self.match_mouse_event(cursor_position, mouse_event),
             Event::Touch(touch_event) => EventStatus::Free,
-            Event::Keyboard(key_board) => EventStatus::Free,
+            Event::Keyboard(key_board) => {
+                  /*let message = match key_code {
+                    keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
+                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        None,
+                    )),
+                    keyboard::KeyCode::PageDown => Some(MsgScene::Scaled(
+                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
+                        None,
+                    )),
+                    keyboard::KeyCode::Home => Some(MsgScene::Scaled(1.0, Some(self.home))),
+                    _ => None,
+                };*/
+                
+                EventStatus::Free
+            },
         }
     }
 

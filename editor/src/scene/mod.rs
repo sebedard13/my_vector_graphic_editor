@@ -7,18 +7,17 @@ mod selected_shape;
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
-use iced::{keyboard, mouse};
-use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme, Vector};
+use iced::mouse;
+use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
 use vgc::generate_exemple;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
 use move_coord::MoveCoord;
-use move_coord::MoveCoordStep;
 use selected_shape::SelectedShape;
-use selected_shape::SelectedShapeEvent;
 
-use self::events::MergeEvent;
+
+
 
 pub struct Scene {
     draw_cache: Cache,
@@ -31,15 +30,10 @@ pub struct Scene {
 
 #[derive(Debug, Clone)]
 pub enum MsgScene {
-    Translated(Vector),
-    Scaled(f32, Option<Vector>),
-    MoveCoord(MoveCoordStep),
-    HoverCoord(SelectedShapeEvent),
-    SetCameraInteraction(canvas_camera::Interaction),
-
     ChangeBounds(Rectangle),
     ScrollZoom(events::Scroll),
     DragCamera(events::Pressmove),
+    DragMain(events::Pressmove),
 }
 
 impl Default for Scene {
@@ -73,30 +67,20 @@ impl Default for CanvasState {
 impl Scene {
     pub fn update(&mut self, message: MsgScene) {
         self.draw_cache.clear();
-        match message {
-            MsgScene::Translated(translation) => {
-                self.camera.translation = translation;
-            }
-            MsgScene::Scaled(scaling, translation) => {
-                self.camera.scaling = scaling;
 
-                if let Some(translation) = translation {
-                    self.camera.translation = translation;
-                }
-            }
-            MsgScene::MoveCoord(step) => {
-                move_coord::update(self, step);
-            }
-            MsgScene::HoverCoord(message) => selected_shape::update(self, message),
+        //camera
+        match message {
             MsgScene::ChangeBounds(bounds) => {
                 self.camera.pixel_region = bounds;
             }
-            MsgScene::SetCameraInteraction(interaction) => self.camera.interaction = interaction,
             MsgScene::ScrollZoom(scroll) => {
                 self.camera.handle_zoom(scroll);
             }
             MsgScene::DragCamera(pressmove) => {
                 self.camera.handle_translate(pressmove);
+            }
+            _ => {
+                move_coord::handle_move(self, &message);
             }
         }
     }
@@ -107,19 +91,6 @@ impl Scene {
             .height(Length::Fill)
             .into()
     }
-}
-
-macro_rules! return_if_captured {
-    // first arm match add!(1,2), add!(2,3) etc
-    ($a:expr, $event:expr) => {{
-        let rtn = $a;
-        match rtn.0 {
-            event::Status::Captured => {
-                return rtn;
-            }
-            _ => {}
-        }
-    }};
 }
 
 impl canvas::Program<MsgScene> for Scene {
@@ -140,78 +111,34 @@ impl canvas::Program<MsgScene> for Scene {
             );
         }
 
-        match event {
-            Event::Mouse(e) => {
-                let event = canvas_state
-                    .event_merger
-                    .match_mouse_event(cursor.position(), e);
-                match event {
-                    events::EventStatus::Used(evts) => {
-                        match evts {
-                            Some(merge_event) => match merge_event {
-                                events::MergeEvent::Click(click)
-                                    if click.button == mouse::Button::Left => {} // Lunch click main event,
-                                events::MergeEvent::Pressmove(pressmove)
-                                    if pressmove.button == mouse::Button::Right =>
-                                {
-                                    return (
-                                        event::Status::Captured,
-                                        Some(MsgScene::DragCamera(pressmove)),
-                                    );
-                                } // Lunch drag camera
-                                events::MergeEvent::Pressmove(pressmove)
-                                    if pressmove.button == mouse::Button::Left => {} // Lunch drag coord
-                                events::MergeEvent::Pressmove(pressmove)
-                                    if pressmove.button == mouse::Button::Middle =>
-                                {
-                                    return (
-                                        event::Status::Captured,
-                                        Some(MsgScene::DragCamera(pressmove)),
-                                    );
-                                } // Lunch drag coord
-                                events::MergeEvent::Scroll(scroll) => {
-                                    return (
-                                        event::Status::Captured,
-                                        Some(MsgScene::ScrollZoom(scroll)),
-                                    );
-                                } // Lunch zoom
-                                _ => {}
-                            },
-                            None => {}
-                        }
-                    }
-                    events::EventStatus::Free => {}
-                }
-            }
+        let event = canvas_state
+            .event_merger
+            .push_event(cursor.position(), event);
 
-            Event::Touch(_) => {}
-            Event::Keyboard(keyboard::Event::KeyPressed { key_code, .. }) => {
-                /*let message = match key_code {
-                    keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
-                        (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::PageDown => Some(MsgScene::Scaled(
-                        (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
-                        None,
-                    )),
-                    keyboard::KeyCode::Home => Some(MsgScene::Scaled(1.0, Some(self.home))),
-                    _ => None,
-                };*/
+        if let events::EventStatus::Used(Some(merge_event)) = event {
+            use events::MergeEvent as eMe;
+            match merge_event {
+                eMe::Click(click) if click.button == mouse::Button::Left => {} // Lunch click main event,
+                eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Right => {
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::DragCamera(pressmove)),
+                    );
+                } // Lunch drag camera
+                eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Left => {
+                    return (event::Status::Captured, Some(MsgScene::DragMain(pressmove)));
+                } // Lunch drag coord
+                eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Middle => {
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::DragCamera(pressmove)),
+                    );
+                } // Lunch drag coord
+                eMe::Scroll(scroll) => {
+                    return (event::Status::Captured, Some(MsgScene::ScrollZoom(scroll)));
+                } // Lunch zoom
+                _ => {}
             }
-            _ => {}
-        }
-
-        let cursor_position = cursor.position_in(bounds);
-        if let Some(cursor_position) = cursor_position {
-            return_if_captured!(
-                move_coord::handle_event(self, event, cursor_position),
-                event
-            );
-            return_if_captured!(
-                selected_shape::handle_event(self, event, cursor_position),
-                event
-            );
         }
 
         (event::Status::Ignored, None)
@@ -252,7 +179,7 @@ impl canvas::Program<MsgScene> for Scene {
         let overlay = {
             let mut frame = Frame::new(renderer, bounds.size());
 
-            let cursor_pos = cursor.position_in(bounds);
+            let cursor_pos = cursor.position();
 
             if let Some(pos) = cursor_pos {
                 coord_position_tooltip::draw(self, &mut frame, pos);

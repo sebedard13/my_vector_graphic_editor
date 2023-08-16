@@ -44,6 +44,7 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
     }
 }
 
+/* 
 pub fn handle_event(
     scene: &Scene,
     _event: Event,
@@ -77,4 +78,4 @@ pub fn update(scene: &mut Scene, msg: SelectedShapeEvent) {
     match msg {
         SelectedShapeEvent::HoverCoord(index) => scene.selected_shape.index_selected_coord = index,
     }
-}
+}*/

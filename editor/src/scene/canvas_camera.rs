@@ -1,10 +1,6 @@
-use crate::scene::MsgScene;
 use iced::widget::canvas::Frame;
 use iced::{
-    event, keyboard,
-    mouse::{self, Cursor},
-    widget::canvas::Event,
-    Point, Rectangle, Size, Vector,
+    Point, Rectangle, Vector,
 };
 
 use super::events;
@@ -60,13 +56,25 @@ impl Camera {
         }
     }
 
+    /// Return the canvas coordinates of a given pixel point of the apps window.
+    /// (0,0) is the top left corner of the window.
+    /// 
     pub fn project(&self, position: Point) -> Point {
         let region = &self.region();
 
         Point::new(
-            (position.x / self.scaling / Self::WIDTH) + region.x,
-            (position.y / self.scaling / (Self::WIDTH / self.ratio)) + region.y,
+            ((position.x -self.pixel_region.x)/ self.scaling / Self::WIDTH) + region.x,
+            ((position.y-self.pixel_region.y) / self.scaling / (Self::WIDTH / self.ratio)) + region.y,
         )
+    }
+
+    pub fn project_in_canvas(&self, position: Point) -> Option<Point> {
+        let point = self.project(position);
+
+        match self.region().contains(point){
+            true => Some(point),
+            false => None
+        }
     }
 
     pub fn handle_zoom(&mut self, scroll: events::Scroll) {
