@@ -47,12 +47,12 @@ impl Camera {
 
     pub fn region(&self) -> Rectangle {
         let size = self.pixel_region.size();
-        let width = size.width / self.scaling;
-        let height = size.height / self.scaling;
+        let width = size.width / self.scaling/ Self::WIDTH;
+        let height = size.height / self.scaling/ (Self::WIDTH / self.ratio);
 
         Rectangle {
-            x: -self.translation.x - width / 2.0,
-            y: -self.translation.y - height / 2.0,
+            x: (-self.translation.x/ Self::WIDTH - (width / 2.0)),
+            y: (-self.translation.y/ (Self::WIDTH / self.ratio) - (height / 2.0)),
             width,
             height,
         }
@@ -62,8 +62,8 @@ impl Camera {
         let region = &self.region();
 
         Point::new(
-            (position.x / self.scaling + region.x) / Self::WIDTH,
-            (position.y / self.scaling + region.y) / (Self::WIDTH / self.ratio),
+            (position.x / self.scaling/ Self::WIDTH) + region.x ,
+            (position.y / self.scaling/ (Self::WIDTH / self.ratio)) + region.y ,
         )
     }
 
