@@ -35,7 +35,7 @@ pub enum MsgScene {
     Scaled(f32, Option<Vector>),
     MoveCoord(MoveCoordStep),
     HoverCoord(SelectedShapeEvent),
-    ChangeBounds(Size<f32>),
+    ChangeBounds(Rectangle),
     SetCameraInteraction(canvas_camera::Interaction),
     DragMain(events::Scroll),
 }
@@ -93,8 +93,8 @@ impl Scene {
                 self.draw_cache.clear();
             }
             MsgScene::HoverCoord(message) => selected_shape::update(self,message),
-            MsgScene::ChangeBounds(size) => {
-                self.camera.region =self.camera.visible_region(size);
+            MsgScene::ChangeBounds(bounds) => {
+                self.camera.pixel_region =bounds;
             }
             MsgScene::SetCameraInteraction(interaction) =>self.camera.interaction = interaction,
             MsgScene::DragMain(scroll) => {
@@ -189,7 +189,7 @@ impl canvas::Program<MsgScene> for Scene {
             canvas_state.scene_size = bounds.size();
             return (
                 event::Status::Captured,
-                Some(MsgScene::ChangeBounds(bounds.size())),
+                Some(MsgScene::ChangeBounds(bounds))
             );
         }
         
