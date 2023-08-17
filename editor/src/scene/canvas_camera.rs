@@ -138,5 +138,17 @@ impl Camera {
         length_px / self.scaling / Self::WIDTH
     }
 
-   
+    pub fn home(&mut self){
+        self.translation = self.home;
+        self.scaling = 1.0;
+    }
+
+    pub fn handle_btn_zoom(&mut self, zoom: &f32){
+        if *zoom>0.0{
+            self.scaling =  (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING)
+        }
+        else{
+            self.scaling = (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING)
+        }
+    }
 }

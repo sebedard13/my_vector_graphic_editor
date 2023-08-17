@@ -7,7 +7,7 @@ mod selected_shape;
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
-use iced::mouse;
+use iced::{mouse, keyboard};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
 use vgc::generate_exemple;
 use vgc::Vgc;
@@ -33,6 +33,8 @@ pub enum MsgScene {
     ChangeBounds(Rectangle),
     ScrollZoom(events::Scroll),
     DragCamera(events::Pressmove),
+    HomeCamera(),
+    BtnScrollZoom(f32), // 1.0 or -1.0 so Forward or Backward
     
     DragMain(events::Pressmove),
     MousedownMain(events::Mousedown),
@@ -82,6 +84,12 @@ impl Scene {
             MsgScene::DragCamera(pressmove) => {
                 self.camera.handle_translate(pressmove);
             }
+            MsgScene::HomeCamera() => {
+                self.camera.home();
+            }
+            MsgScene::BtnScrollZoom(zoom) => {
+                self.camera.handle_btn_zoom(zoom);
+            }
             _ => {}
         }
 
@@ -120,6 +128,7 @@ impl canvas::Program<MsgScene> for Scene {
 
         if let events::EventStatus::Used(Some(merge_event)) = event {
             use events::MergeEvent as eMe;
+            
             match merge_event {
                 eMe::Click(click) if click.button == mouse::Button::Left => {
                     return (
@@ -150,7 +159,16 @@ impl canvas::Program<MsgScene> for Scene {
                 } 
                 eMe::Scroll(scroll) => {
                     return (event::Status::Captured, Some(MsgScene::ScrollZoom(scroll)));
-                } 
+                }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::Home =>{
+                    return (event::Status::Captured, Some(MsgScene::HomeCamera()));
+                }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageUp =>{
+                    return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(1.0)));
+                }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown =>{
+                    return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(-1.0)));
+                }
                 _ => {}
             }
         }
