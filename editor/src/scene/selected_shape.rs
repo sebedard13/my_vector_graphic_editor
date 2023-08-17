@@ -1,19 +1,12 @@
 use iced::{
-    widget::canvas::{Event, Fill, Frame, Path},
+    widget::canvas::{Fill, Frame, Path},
     Color, Point,
 };
 
 use crate::scene::{point_in_radius, Scene};
 
-use super::MsgScene;
-
 pub struct SelectedShape {
     index_selected_coord: usize,
-}
-
-#[derive(Debug, Clone)]
-pub enum SelectedShapeEvent {
-    HoverCoord(usize),
 }
 
 impl Default for SelectedShape {
@@ -22,6 +15,22 @@ impl Default for SelectedShape {
             index_selected_coord: 9999,
         }
     }
+}
+
+pub fn change_hover(scene: &mut Scene, cursor_position: Point) {
+    let coords = scene.vgc_data.list_coord();
+    for coord in coords {
+        if point_in_radius(
+            &scene.camera.project(cursor_position),
+            &Point::new(coord.coord.x, coord.coord.y),
+            scene.camera.fixed_length(12.0),
+        ) {
+            scene.selected_shape.index_selected_coord = coord.i;
+            return;
+        }
+    }
+
+    scene.selected_shape.index_selected_coord = 9999;
 }
 
 pub fn draw(scene: &Scene, frame: &mut Frame) {
@@ -43,39 +52,3 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
         );
     }
 }
-
-/* 
-pub fn handle_event(
-    scene: &Scene,
-    _event: Event,
-    cursor_position: Point,
-) -> (iced::event::Status, Option<MsgScene>) {
-    let coords = scene.vgc_data.list_coord();
-    for coord in coords {
-        if point_in_radius(
-            &scene.camera.project(cursor_position),
-            &Point::new(coord.coord.x, coord.coord.y),
-            scene.camera.fixed_length(12.0),
-        ) {
-            return (
-                iced::event::Status::Captured,
-                Some(MsgScene::HoverCoord(SelectedShapeEvent::HoverCoord(coord.i))),
-            );
-        }       
-    }
-
-    if scene.selected_shape.index_selected_coord != 9999 {
-        return (
-            iced::event::Status::Captured,
-            Some(MsgScene::HoverCoord(SelectedShapeEvent::HoverCoord(9999))),
-        );
-    }
-
-    (iced::event::Status::Ignored, None)
-}
-
-pub fn update(scene: &mut Scene, msg: SelectedShapeEvent) {
-    match msg {
-        SelectedShapeEvent::HoverCoord(index) => scene.selected_shape.index_selected_coord = index,
-    }
-}*/

@@ -7,7 +7,7 @@ mod selected_shape;
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
-use iced::{mouse, keyboard};
+use iced::{keyboard, mouse};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
 use vgc::generate_exemple;
 use vgc::Vgc;
@@ -15,9 +15,6 @@ use vgc::Vgc;
 use canvas_camera::Camera;
 use move_coord::MoveCoord;
 use selected_shape::SelectedShape;
-
-
-
 
 pub struct Scene {
     draw_cache: Cache,
@@ -35,7 +32,8 @@ pub enum MsgScene {
     DragCamera(events::Pressmove),
     HomeCamera(),
     BtnScrollZoom(f32), // 1.0 or -1.0 so Forward or Backward
-    
+    Mousemove(events::Mousemove),
+
     DragMain(events::Pressmove),
     MousedownMain(events::Mousedown),
     ClickMain(events::Click),
@@ -93,6 +91,14 @@ impl Scene {
             _ => {}
         }
 
+        //What to hover
+        match &message {
+            MsgScene::Mousemove(mousemove) => {
+                selected_shape::change_hover(self, mousemove.current_coord);
+            }
+            _ => {}
+        }
+
         move_coord::handle_move(self, &message);
     }
 
@@ -128,47 +134,51 @@ impl canvas::Program<MsgScene> for Scene {
 
         if let events::EventStatus::Used(Some(merge_event)) = event {
             use events::MergeEvent as eMe;
-            
+
             match merge_event {
                 eMe::Click(click) if click.button == mouse::Button::Left => {
-                    return (
-                        event::Status::Captured,
-                        Some(MsgScene::ClickMain(click)),
-                    );
-                } 
-                eMe::Mousedown(mousedown) if mousedown.button == mouse::Button::Left => {   
+                    return (event::Status::Captured, Some(MsgScene::ClickMain(click)));
+                }
+                eMe::Mousedown(mousedown) if mousedown.button == mouse::Button::Left => {
                     return (
                         event::Status::Captured,
                         Some(MsgScene::MousedownMain(mousedown)),
                     );
-                } 
+                }
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Right => {
                     return (
                         event::Status::Captured,
                         Some(MsgScene::DragCamera(pressmove)),
                     );
-                } 
+                }
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Left => {
                     return (event::Status::Captured, Some(MsgScene::DragMain(pressmove)));
-                } 
+                }
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Middle => {
                     return (
                         event::Status::Captured,
                         Some(MsgScene::DragCamera(pressmove)),
                     );
-                } 
+                }
                 eMe::Scroll(scroll) => {
                     return (event::Status::Captured, Some(MsgScene::ScrollZoom(scroll)));
                 }
-                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::Home =>{
+                eMe::Mousemove(mouseMove) => {
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::Mousemove(mouseMove)),
+                    );
+                }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::Home => {
                     return (event::Status::Captured, Some(MsgScene::HomeCamera()));
                 }
-                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageUp =>{
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageUp => {
                     return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(1.0)));
                 }
-                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown =>{
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown => {
                     return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(-1.0)));
                 }
+
                 _ => {}
             }
         }
