@@ -11,10 +11,12 @@ pub struct EventsMerger {
 /// It should handle to create key combo but it is not implemented yet.
 #[derive(Debug, Clone, PartialEq)]
 pub enum MergeEvent {
-    Click(Click),
+    Click(Click), //Can be used as pressup
     Pressmove(Pressmove),
-    Press(Press),
+    Mousedown(Mousedown),
     Scroll(Scroll),
+    Mousemove(Mousemove)
+
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -27,8 +29,8 @@ impl EventsMerger {
     pub fn push_event(&mut self, cursor_position: Option<Point>, event: Event) -> EventStatus {
         match event {
             Event::Mouse(mouse_event) => self.match_mouse_event(cursor_position, mouse_event),
-            Event::Touch(touch_event) => EventStatus::Free,
-            Event::Keyboard(key_board) => {
+            Event::Touch(_) => EventStatus::Free,
+            Event::Keyboard(_) => {
                   /*let message = match key_code {
                     keyboard::KeyCode::PageUp => Some(MsgScene::Scaled(
                         (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING),
@@ -60,34 +62,41 @@ impl EventsMerger {
                     .past_events
                     .iter()
                     .filter(|event| match event {
-                        MergeEvent::Press { .. } => true,
+                        MergeEvent::Mousedown { .. } => true,
                         _ => false,
                     })
                     .collect_vec();
 
                 match valid_event.first() {
                     Some(event) => match event {
-                        MergeEvent::Press(press) => {
+                        MergeEvent::Mousedown(press) => {
                             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
                                 start: press.start_press.clone(),
-                                button: press.mouse_button.clone(),
+                                button: press.button.clone(),
                                 current_coord: position,
                             })))
                         }
                         _ => EventStatus::Free,
                     },
-                    None => EventStatus::Free,
+                    None => {
+                        EventStatus::Used(Some(MergeEvent::Mousemove(Mousemove{
+                            current_coord: position,
+                        })))
+                    },
                 }
             }
             mouse::Event::ButtonPressed(mouse_button) => {
                 if let Some(cursor_position) = cursor_position {
-                    let v = MergeEvent::Press(Press {
+                    let v = MergeEvent::Mousedown(Mousedown {
                         start_press: cursor_position,
-                        mouse_button: mouse_button.clone(),
+                        button: mouse_button.clone(),
                     });
-                    self.past_events.push(v);
+                    self.past_events.push(v.clone());
+                    EventStatus::Used(Some(v))
                 }
-                EventStatus::Used(None)
+                else{
+                    EventStatus::Used(None)
+                }
             }
             mouse::Event::ButtonReleased(mouse_button) => {
                 let end_press = match cursor_position {
@@ -99,7 +108,7 @@ impl EventsMerger {
                     .past_events
                     .iter()
                     .filter(|event| match event {
-                        MergeEvent::Press(press) if mouse_button == press.mouse_button => true,
+                        MergeEvent::Mousedown(press) if mouse_button == press.button => true,
                         _ => false,
                     })
                     .collect_vec();
@@ -107,7 +116,7 @@ impl EventsMerger {
                 let rtn = match valid_event.first() {
                     Some(event) => {
                         let start_press = match event {
-                            MergeEvent::Press(press) => press.start_press,
+                            MergeEvent::Mousedown(press) => press.start_press,
                             _ => return EventStatus::Free,
                         };
 
@@ -121,7 +130,7 @@ impl EventsMerger {
                 };
 
                 self.past_events.retain(|event| match event {
-                    MergeEvent::Press(press) if mouse_button == press.mouse_button => false,
+                    MergeEvent::Mousedown(press) if mouse_button == press.button => false,
                     _ => true,
                 });
                 rtn
@@ -239,9 +248,9 @@ pub struct Scroll {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Press {
+pub struct Mousedown {
     pub start_press: Point,
-    pub mouse_button: mouse::Button,
+    pub button: mouse::Button,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pressmove {
@@ -254,4 +263,9 @@ pub struct Click {
     pub start_press: Point,
     pub end_press: Point,
     pub button: mouse::Button,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Mousemove{
+    pub current_coord: Point,
 }

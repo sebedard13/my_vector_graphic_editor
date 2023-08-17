@@ -33,7 +33,10 @@ pub enum MsgScene {
     ChangeBounds(Rectangle),
     ScrollZoom(events::Scroll),
     DragCamera(events::Pressmove),
+    
     DragMain(events::Pressmove),
+    MousedownMain(events::Mousedown),
+    ClickMain(events::Click),
 }
 
 impl Default for Scene {
@@ -69,9 +72,9 @@ impl Scene {
         self.draw_cache.clear();
 
         //camera
-        match message {
+        match &message {
             MsgScene::ChangeBounds(bounds) => {
-                self.camera.pixel_region = bounds;
+                self.camera.pixel_region = bounds.clone();
             }
             MsgScene::ScrollZoom(scroll) => {
                 self.camera.handle_zoom(scroll);
@@ -79,10 +82,10 @@ impl Scene {
             MsgScene::DragCamera(pressmove) => {
                 self.camera.handle_translate(pressmove);
             }
-            _ => {
-                move_coord::handle_move(self, &message);
-            }
+            _ => {}
         }
+
+        move_coord::handle_move(self, &message);
     }
 
     pub fn view(&self) -> Element<MsgScene> {
@@ -118,25 +121,36 @@ impl canvas::Program<MsgScene> for Scene {
         if let events::EventStatus::Used(Some(merge_event)) = event {
             use events::MergeEvent as eMe;
             match merge_event {
-                eMe::Click(click) if click.button == mouse::Button::Left => {} // Lunch click main event,
+                eMe::Click(click) if click.button == mouse::Button::Left => {
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::ClickMain(click)),
+                    );
+                } 
+                eMe::Mousedown(mousedown) if mousedown.button == mouse::Button::Left => {   
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::MousedownMain(mousedown)),
+                    );
+                } 
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Right => {
                     return (
                         event::Status::Captured,
                         Some(MsgScene::DragCamera(pressmove)),
                     );
-                } // Lunch drag camera
+                } 
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Left => {
                     return (event::Status::Captured, Some(MsgScene::DragMain(pressmove)));
-                } // Lunch drag coord
+                } 
                 eMe::Pressmove(pressmove) if pressmove.button == mouse::Button::Middle => {
                     return (
                         event::Status::Captured,
                         Some(MsgScene::DragCamera(pressmove)),
                     );
-                } // Lunch drag coord
+                } 
                 eMe::Scroll(scroll) => {
                     return (event::Status::Captured, Some(MsgScene::ScrollZoom(scroll)));
-                } // Lunch zoom
+                } 
                 _ => {}
             }
         }

@@ -77,7 +77,7 @@ impl Camera {
         }
     }
 
-    pub fn handle_zoom(&mut self, scroll: events::Scroll) {
+    pub fn handle_zoom(&mut self, scroll: &events::Scroll) {
         if scroll.movement.y < 0.0 && self.scaling > Self::MIN_SCALING
             || scroll.movement.y > 0.0 && self.scaling < Self::MAX_SCALING
         {
@@ -100,7 +100,7 @@ impl Camera {
         };
     }
 
-    pub fn handle_translate(&mut self, pressmove: events::Pressmove) {
+    pub fn handle_translate(&mut self, pressmove: &events::Pressmove) {
         let translation = match self.interaction {
             Interaction::Panning { translation, start } => {
                 if pressmove.start == start {
