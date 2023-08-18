@@ -10,7 +10,7 @@ Made with iced
 - Pressdown Ctrl for bend tool and Pressup to come back
 If handle is a pair
 - can move handle direction as a pair but grandeur individually
-- Press alt to break pair
+- Press alt to break pair on handle
 
 ### Pen
 
@@ -18,6 +18,7 @@ If handle is a pair
 - tool to create new form if not selected
 - Can create new form from existing point
 - Pressdown Ctrl for bend tool and Pressup to come back
+- Press alt remove point
 
 ### Bend tool
 

@@ -9,17 +9,52 @@ use crate::Message;
 use crate::scene::{MsgScene, Functionality};
 
 pub fn left_toolbar<'a>() -> Element<'a, Message> {
-    let content = Image::<image::Handle>::new("editor/data/flower.png")
+
+   
+    let btn_move = {
+        let btn_style_normal = Box::<BtnStyle>::default();
+
+        let img = Image::<image::Handle>::new("editor/data/arrow_pointer.png")
         .width(20)
-        .height(16);
-    let btn_style = Box::<BtnStyle>::default();
-    let btn_play = button(content)
+        .height(20);
+
+        button(img)
         .on_press(Message::Scene(MsgScene::ChangeFunctionality(
             Functionality::MoveCoord_default()),
         ))
-        .style(Button::Custom(btn_style));
+        .style(Button::Custom(btn_style_normal))
+    };
 
-    column![btn_play]
+    let btn_pen = {
+        let btn_style_normal = Box::<BtnStyle>::default();
+
+        let img = Image::<image::Handle>::new("editor/data/pen_nib.png")
+        .width(20)
+        .height(20);
+
+        button(img)
+        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+            Functionality::CreateOrAddPoint_default()),
+        ))
+        .style(Button::Custom(btn_style_normal))
+    };
+
+    let btn_bend_tools = {
+        let btn_style_normal = Box::<BtnStyle>::default();
+
+        let img = Image::<image::Handle>::new("editor/data/bezier_curve.png")
+        .width(20)
+        .height(20);
+    
+
+        button(img)
+        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+            Functionality::CreateOrAddPoint_default()),
+        ))
+        .style(Button::Custom(btn_style_normal))
+    };
+
+    column![btn_move, btn_pen, btn_bend_tools]
         .padding(2)
         .spacing(5)
         .align_items(Alignment::Start)
