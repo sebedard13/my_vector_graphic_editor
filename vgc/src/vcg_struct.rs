@@ -19,18 +19,18 @@ impl Shape {
         self.curves.insert(index, curve);
     }
     pub fn separate_handle(&mut self, coord_ds: &mut CoordDS, index: usize) {
-        let c0 = {
+        let p0 = {
             if index == 0 {
                 coord_ds.get(&self.start)
             } else {
                 coord_ds.get(&self.curves[index - 1].p1)
             }
         };
-        let h0 = coord_ds.get(&self.curves[index].cp0);
-        let h1 = coord_ds.get(&self.curves[index].cp1);
+        let cp0 = coord_ds.get(&self.curves[index].cp0);
+        let cp1 = coord_ds.get(&self.curves[index].cp1);
         let c1 = coord_ds.get(&self.curves[index].p1);
 
-        let coords_separate = tangent_pts(1.0, c0, h0, h1, c1);
+        let coords_separate = tangent_pts(1.0, p0, cp0, cp1, c1);
 
         let coord_index0 = coord_ds.insert(coords_separate[0].clone()); //TODO clone not good
         self.curves[index].cp1 = coord_index0;

@@ -49,7 +49,7 @@ pub fn left_toolbar<'a>() -> Element<'a, Message> {
 
         button(img)
         .on_press(Message::Scene(MsgScene::ChangeFunctionality(
-            Functionality::CreateOrAddPoint_default()),
+            Functionality::MoveHandle_default()),
         ))
         .style(Button::Custom(btn_style_normal))
     };

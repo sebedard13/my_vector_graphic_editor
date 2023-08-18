@@ -87,17 +87,42 @@ impl Vgc {
         let mut coord_ds = CoordDS::new();
 
         
-        for shape in &mut self.shapes {
+        for (index, shape) in self.shapes.iter_mut().enumerate() {
             shape.start = optimize_coord_index(&shape.start, &mut coord_map, &mut coord_ds, &self.coord_ds);
-            for curve in &mut shape.curves {
+            for (index, curve) in shape.curves.iter_mut().enumerate() {
                 curve.cp0 = optimize_coord_index(&curve.cp0, &mut coord_map, &mut coord_ds, &self.coord_ds);
-                curve.cp1 = optimize_coord_index(&curve.cp1, &mut coord_map, &mut coord_ds, &self.coord_ds);               
+                curve.cp1 = optimize_coord_index(&curve.cp1, &mut coord_map, &mut coord_ds, &self.coord_ds);
                 curve.p1 = optimize_coord_index(&curve.p1, &mut coord_map, &mut coord_ds, &self.coord_ds);
             }
         }
 
         self.coord_ds = coord_ds;
     }
+
+    pub fn visit(&self, f: &mut dyn FnMut(usize, CoordType)) {
+        for (shape_index, shape) in self.shapes.iter().enumerate() {
+            f(shape_index, CoordType::Start(self.coord_ds.get(&shape.start)));
+            for (curve_index, curve) in shape.curves.iter().enumerate() {
+                f(shape_index, CoordType::Cp0(curve_index, self.coord_ds.get(&curve.cp0)));
+                f(shape_index, CoordType::Cp1(curve_index, self.coord_ds.get(&curve.cp1)));
+                f(shape_index, CoordType::P1(curve_index, self.coord_ds.get(&curve.p1)));
+            }
+        }
+    }
+
+    pub fn separate_handle(&mut self, shape_index: usize, curve_index: usize) {
+        self.shapes[shape_index].separate_handle(&mut self.coord_ds, curve_index);
+    }
+}
+
+pub enum CoordType<'a> {
+    Start(&'a Coord),
+    /// Curve index, coord
+    Cp0(usize, &'a Coord),
+    /// Curve index, coord
+    Cp1(usize, &'a Coord),
+    /// Curve index, coord
+    P1(usize, &'a Coord),
 }
 
 

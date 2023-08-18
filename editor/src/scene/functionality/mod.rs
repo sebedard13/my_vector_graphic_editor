@@ -7,8 +7,6 @@ mod move_coord;
 #[derive(Debug, Clone)]
 pub enum Functionality {
     MoveCoord(MoveCoord),
-
-    MoveHandle,
    
 
     SeparateHandle,
@@ -31,7 +29,7 @@ impl Functionality {
     }
 
     pub fn MoveHandle_default() -> Functionality {
-        Functionality::MoveHandle
+        Functionality::SeparateHandle
     }
 
     pub fn CreateOrAddPoint_default() -> Functionality {
@@ -44,6 +42,7 @@ impl Functionality {
 pub fn match_functionality(scene: &mut Scene, event: &MsgScene) {
     match &mut scene.functionality {
         Functionality::MoveCoord(move_coord) => move_coord::handle_move(event, move_coord, &mut scene.camera,&mut scene.vgc_data),
+        Functionality::SeparateHandle => { move_coord::handle_seprate_handle(event, &mut scene.camera, &mut scene.vgc_data); }
         _ => {}
     }
 }
