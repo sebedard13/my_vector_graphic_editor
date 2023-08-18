@@ -5,20 +5,18 @@ use iced::{
     Alignment, Background, BorderRadius, Color, Element, Length, Vector,
 };
 
-#[derive(Clone, Debug)]
-pub enum MsgLeftToolbar {
-    MoveCoordCursor,
-    // AddCoordCursor,
-    // ToggleHandleCursor,
-}
+use crate::Message;
+use crate::scene::{MsgScene, Functionality};
 
-pub fn left_toolbar<'a>() -> Element<'a, MsgLeftToolbar> {
+pub fn left_toolbar<'a>() -> Element<'a, Message> {
     let content = Image::<image::Handle>::new("editor/data/flower.png")
         .width(20)
         .height(16);
     let btn_style = Box::<BtnStyle>::default();
     let btn_play = button(content)
-        .on_press(MsgLeftToolbar::MoveCoordCursor)
+        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+            Functionality::MoveCoord_default()),
+        ))
         .style(Button::Custom(btn_style));
 
     column![btn_play]

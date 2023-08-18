@@ -11,7 +11,7 @@ use iced::widget::{column, container, row, button, text};
 use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
-use toolbars::left::{left_toolbar, MsgLeftToolbar};
+use toolbars::left::{left_toolbar};
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
@@ -40,9 +40,8 @@ struct VgcEditor {
 }
 
 #[derive(Debug, Clone)]
-enum Message {
+pub enum Message {
     Scene(scene::MsgScene),
-    LeftToolbar(MsgLeftToolbar),
     NewEmptyScene,
 }
 
@@ -68,7 +67,6 @@ impl Application for VgcEditor {
                     None => println!("No scene"),
                 };
             }
-            Message::LeftToolbar(_message) => {}
             Message::NewEmptyScene => {
                 self.current_scene = self.scene.len();
                 self.scene.push(Scene::default());
@@ -79,7 +77,7 @@ impl Application for VgcEditor {
     }
 
     fn view(&self) -> Element<Message> {
-        let controls = left_toolbar().map(move |message| Message::LeftToolbar(message));
+        let controls = left_toolbar();
 
         
 

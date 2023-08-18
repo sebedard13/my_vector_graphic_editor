@@ -1,7 +1,7 @@
 mod canvas_camera;
 mod coord_position_tooltip;
 mod events;
-mod move_coord;
+pub mod functionality;
 mod selected_shape;
 
 use iced::widget::canvas;
@@ -13,14 +13,15 @@ use vgc::generate_exemple;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
-use move_coord::MoveCoord;
 use selected_shape::SelectedShape;
+
+pub use functionality::Functionality;
 
 pub struct Scene {
     draw_cache: Cache,
     pub camera: Camera,
     pub vgc_data: Vgc,
-    pub move_coord: MoveCoord,
+    functionality: Functionality,
 
     selected_shape: SelectedShape,
 }
@@ -37,6 +38,8 @@ pub enum MsgScene {
     DragMain(events::Pressmove),
     MousedownMain(events::Mousedown),
     ClickMain(events::Click),
+
+    ChangeFunctionality(functionality::Functionality),
 }
 
 impl Default for Scene {
@@ -47,7 +50,7 @@ impl Default for Scene {
             draw_cache: Cache::default(),
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data: vgc_data,
-            move_coord: MoveCoord::new(),
+            functionality: Functionality::default(),
             selected_shape: SelectedShape::default(),
         }
     }
@@ -88,6 +91,11 @@ impl Scene {
             MsgScene::BtnScrollZoom(zoom) => {
                 self.camera.handle_btn_zoom(zoom);
             }
+
+            MsgScene::ChangeFunctionality(functionality) => {
+                self.functionality = functionality.clone();
+                return;
+            }
             _ => {}
         }
 
@@ -99,7 +107,7 @@ impl Scene {
             _ => {}
         }
 
-        move_coord::handle_move(self, &message);
+        functionality::match_functionality(self, &message);
     }
 
     pub fn view(&self) -> Element<MsgScene> {
