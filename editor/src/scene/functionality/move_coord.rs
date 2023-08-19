@@ -72,7 +72,6 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
             });
 
             for (shape_index, curve_index) in to_do {
-                println!("separate handle shape {} curve {}", shape_index, curve_index);
                 vgc_data.toggle_separate_join_handle(shape_index, curve_index);
             }
         }

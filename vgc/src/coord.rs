@@ -44,7 +44,6 @@ impl CoordDS {
     }
 
     pub fn modify(&mut self, coord_index: usize, c: Coord) {
-        //TODO couple with CoordIndex?
         self.array[coord_index] = Some(c);
     }
 
@@ -65,6 +64,10 @@ impl CoordDS {
             array: arr,
             is_normalize: false,
         }
+    }
+
+    pub fn remove(&mut self, coord_index: &CoordIndex) {
+        self.array[coord_index.i] = None;
     }
 }
 

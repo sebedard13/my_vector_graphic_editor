@@ -11,7 +11,7 @@ use iced::widget::{column, container, row, button, text};
 use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
-use toolbars::left::{left_toolbar};
+use toolbars::left::left_toolbar;
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();

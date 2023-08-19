@@ -4,14 +4,12 @@ mod events;
 pub mod functionality;
 mod selected_shape;
 
-use std::panic;
-
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
 use iced::{keyboard, mouse};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
-use vgc::generate_exemple;
+use vgc::generate_simple_exemple;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
@@ -46,7 +44,7 @@ pub enum MsgScene {
 
 impl Default for Scene {
     fn default() -> Self {
-        let vgc_data = generate_exemple();
+        let vgc_data = generate_simple_exemple();
 
         Self {
             draw_cache: Cache::default(),
@@ -188,6 +186,14 @@ impl canvas::Program<MsgScene> for Scene {
                 eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown => {
                     return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(-1.0)));
                 }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::D && 
+                key_change.active_keys.contains(&keyboard::KeyCode::LControl) &&
+                key_change.active_keys.contains(&keyboard::KeyCode::LAlt) => {
+                    println!("{}",self.vgc_data.debug_string());
+                    return (event::Status::Captured, None);
+            
+                }
+
 
                 _ => {}
             }

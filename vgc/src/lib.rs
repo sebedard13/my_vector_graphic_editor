@@ -239,3 +239,57 @@ pub fn generate_exemple() -> Vgc {
 
     canvas
 }
+
+
+pub fn generate_simple_exemple() -> Vgc {
+    let color = Rgba {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 255,
+    };
+
+    let mut canvas = Vgc::new(16.0 / 9.0, color);
+
+    let p0 = Coord { x: 0.5, y: 0.0 };
+
+    let shape_index = canvas.add_shape(ShapeInstruction {
+        start: p0,
+        curves: Vec::default(),
+        color: Rgba {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 255,
+        },
+    });
+
+
+    let curve: CurveInstruction = {
+        let c1 = Coord { x: 0.5, y: 1.0 };
+        let c2 = Coord { x: 0.5, y: 1.0 };
+        let p = Coord { x: 0.5, y: 1.0 };
+        CurveInstruction { c1, c2, p }
+    };
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 0,
+    });
+    let curve: CurveInstruction = {
+        let c1 = Coord { x: 1.0, y: 1.0 };
+        let c2 = Coord { x: 1.0, y: 1.0 };
+        let p = Coord { x: 1.0, y: 1.0 };
+        CurveInstruction { c1, c2, p }
+    };
+    canvas.add_coord(AddCurve {
+        curve,
+        index_shape: shape_index,
+        index_curve: 1,
+    });
+    
+
+    canvas.optimize_coord();
+
+    canvas
+}
