@@ -5,7 +5,7 @@ use std::ops::{Add, Div, Mul, Sub};
 use crate::instructions::{CurveInstruction, ShapeInstruction};
 use crate::vcg_struct::{Curve, Shape};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct CoordIndex {
     pub i: usize,
 }
@@ -140,6 +140,18 @@ impl Coord {
         let into:u64 = self.y.to_bits().into();
         key |= into;
         key
+    }
+
+    pub fn norm(&self) -> f32 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
+
+    pub fn normalize(&self) -> Coord {
+        let norm = self.norm();
+        Coord {
+            x: self.x / norm,
+            y: self.y / norm,
+        }
     }
 }
 

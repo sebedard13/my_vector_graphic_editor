@@ -4,6 +4,8 @@ mod events;
 pub mod functionality;
 mod selected_shape;
 
+use std::panic;
+
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
@@ -21,7 +23,7 @@ pub struct Scene {
     draw_cache: Cache,
     pub camera: Camera,
     pub vgc_data: Vgc,
-    functionality: Functionality,
+    pub functionality: Functionality,
 
     selected_shape: SelectedShape,
 }
@@ -171,10 +173,10 @@ impl canvas::Program<MsgScene> for Scene {
                 eMe::Scroll(scroll) => {
                     return (event::Status::Captured, Some(MsgScene::ScrollZoom(scroll)));
                 }
-                eMe::Mousemove(mouseMove) => {
+                eMe::Mousemove(mousemove) => {
                     return (
                         event::Status::Captured,
-                        Some(MsgScene::Mousemove(mouseMove)),
+                        Some(MsgScene::Mousemove(mousemove)),
                     );
                 }
                 eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::Home => {
@@ -221,8 +223,9 @@ impl canvas::Program<MsgScene> for Scene {
                 );
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
-
+               
                 self.vgc_data.frame_render(frame);
+                   
             });
         });
 

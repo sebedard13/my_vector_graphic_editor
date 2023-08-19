@@ -110,8 +110,17 @@ impl Vgc {
         }
     }
 
-    pub fn separate_handle(&mut self, shape_index: usize, curve_index: usize) {
-        self.shapes[shape_index].separate_handle(&mut self.coord_ds, curve_index);
+    pub fn toggle_separate_join_handle(&mut self, shape_index: usize, curve_index: usize) {
+        self.shapes[shape_index].toggle_separate_join_handle(&mut self.coord_ds, curve_index);
+    }
+
+    pub fn debug_string(&self)->String{
+        let mut string = "".to_string();
+        for shape in &self.shapes{
+            string.push_str(&shape.to_path(&self.coord_ds));
+            string.push_str("\n");
+        }
+        string
     }
 }
 

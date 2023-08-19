@@ -24,14 +24,17 @@ impl Default for Functionality {
 }
 
 impl Functionality {
+    #[allow(non_snake_case)]
     pub fn MoveCoord_default() -> Functionality {
         Functionality::MoveCoord(MoveCoord::new())
     }
-
+    
+    #[allow(non_snake_case)]
     pub fn MoveHandle_default() -> Functionality {
         Functionality::SeparateHandle
     }
 
+    #[allow(non_snake_case)]
     pub fn CreateOrAddPoint_default() -> Functionality {
         Functionality::CreateOrAddPoint
     }

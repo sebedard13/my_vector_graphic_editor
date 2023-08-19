@@ -18,6 +18,22 @@ impl Shape {
         swap(&mut curve.cp0, &mut curve_after.cp0);
         self.curves.insert(index, curve);
     }
+
+    pub fn toggle_separate_join_handle(&mut self, coord_ds: &mut CoordDS, index: usize) {
+        if self.is_handle(index) {
+            println!("separate");
+            self.separate_handle(coord_ds, index);
+        } else {
+            println!("join");
+            self.join_handle(coord_ds, index);
+        }
+    }
+
+    fn is_handle(&self, index: usize) -> bool {
+        let curve = &self.curves[index];
+        curve.cp0 == curve.p1 || curve.cp1 == curve.p1
+    }
+
     pub fn separate_handle(&mut self, coord_ds: &mut CoordDS, index: usize) {
         let p0 = {
             if index == 0 {
@@ -31,6 +47,10 @@ impl Shape {
         let c1 = coord_ds.get(&self.curves[index].p1);
 
         let coords_separate = tangent_pts(1.0, p0, cp0, cp1, c1);
+
+
+        println!("coords_separate: {:?}", coords_separate);
+
 
         let coord_index0 = coord_ds.insert(coords_separate[0].clone()); //TODO clone not good
         self.curves[index].cp1 = coord_index0;
@@ -118,26 +138,54 @@ fn cubic_bezier(t: f32, c0: &Coord, h0: &Coord, h1: &Coord, p1: &Coord) -> Coord
         + t * t * t * p1
 }
 
-fn cubic_bezier_derivative(t: f32, c0: &Coord, h0: &Coord, h1: &Coord, c1: &Coord) -> Coord {
-    3.0 * (1.0 - t) * (1.0 - t) * (h0 - c0)
-        + 6.0 * (1.0 - t) * t * (h1 - h0)
-        + 3.0 * t * t * (c1 - h1)
+fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
+    3.0 * (1.0 - t) * (1.0 - t) * (cp0 - p0)
+        + 6.0 * (1.0 - t) * t * (cp1 - cp0)
+        + 3.0 * t * t * (p1 - cp1)
 }
 
-fn tangent_pts(t: f32, c0: &Coord, h0: &Coord, h1: &Coord, c1: &Coord) -> [Coord; 2] {
-    if c0 == c1 && c0 == h0 && c0 == h1 {
+/// Return the normalized tangent vector at t of curve defined by p0, cp0, cp1, p1
+/// Panic if no tangent vector found by having the same point for p0, cp0, cp1 and p1 
+fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
+    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
+    if tangent_vector != (Coord { x: 0.0, y: 0.0 }) {
+        //Normalize vector
+        return tangent_vector.normalize();
+    }
+
+    //Exception with (t = 1 and cp1 == p1) or (t = 0 and cp0 == p0)
+    let t = t.clamp(0.0001, 0.9999);
+
+    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
+    if tangent_vector != (Coord { x: 0.0, y: 0.0 }) {
+        //Normalize vector
+        return tangent_vector.normalize();
+    }
+
+
+    panic!("No tangent vector found for t: {}, c0: {:?}, h0: {:?}, h1: {:?}, c1: {:?}", t, p0, cp0, cp1, p1);
+}
+
+
+/// Return two points to create a smooth curve at t of curve defined by p0, cp0, cp1, p1
+/// if t = 0.0 or 1.0 use tangent_cornor_pts() to use the sum of vector of two curve
+fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> [Coord; 2] {
+  
+    if p0 == p1 && p0 == cp0 && p0 == cp1 {
         return [
-            c0 - &Coord { x: 0.1, y: 0.1 },
-            c0 + &Coord { x: 0.1, y: 0.1 },
+            p0 - &Coord { x: 0.1, y: 0.1 },
+            p0 + &Coord { x: 0.1, y: 0.1 },
         ];
     }
 
-    let vector = cubic_bezier_derivative(t, c0, h0, h1, c1);
-    let coord = cubic_bezier(t, c0, h0, h1, c1);
+
+    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
+
+    let coord = cubic_bezier(t, p0, cp0, cp1, p1);
 
     let t_at = {
-        let t_x = (c0.x - c1.x).abs();
-        let t_y = (c0.y - c1.y).abs();
+        let t_x = (p0.x - p1.x).abs();
+        let t_y = (p0.y - p1.y).abs();
         if t_x > t_y {
             t_x / 2.0
         } else {
@@ -145,16 +193,38 @@ fn tangent_pts(t: f32, c0: &Coord, h0: &Coord, h1: &Coord, c1: &Coord) -> [Coord
         }
     };
 
-    let vector = &vector / (vector.x.powi(2) + vector.y.powi(2)).sqrt();
-
+   
     [
         Coord {
-            x: coord.x - t_at * vector.x,
-            y: coord.y - t_at * vector.y,
+            x: coord.x - t_at * tangent_vector.x,
+            y: coord.y - t_at * tangent_vector.y,
         },
         Coord {
-            x: coord.x + t_at * vector.x,
-            y: coord.y + t_at * vector.y,
+            x: coord.x + t_at * tangent_vector.x,
+            y: coord.y + t_at * tangent_vector.y,
         },
     ]
+}
+
+
+#[cfg(test)]
+mod test{
+    use crate::{vcg_struct::tangent_vector, coord::Coord};
+
+
+    #[test]
+    fn tangent_vector_corner_same() {
+        let p0 = Coord { x: 1.0, y: 1.0 };
+        let cp0 = Coord { x: 1.0, y: 1.0 };
+        let cp1 = Coord { x: 1.0, y: 1.0 };
+        let p1 = Coord { x: 1.0, y: 1.0 };
+
+        let tangent = tangent_vector(1.0, &p0, &cp0, &cp1, &p1);
+
+        println!("tangent: {:?}", tangent);
+        assert!(!tangent.x.is_nan());
+        assert!(!tangent.y.is_nan());
+
+        assert_ne!(tangent,  Coord { x: 0.0, y: 0.0 });
+    }
 }

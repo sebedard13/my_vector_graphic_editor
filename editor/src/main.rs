@@ -77,7 +77,12 @@ impl Application for VgcEditor {
     }
 
     fn view(&self) -> Element<Message> {
-        let controls = left_toolbar();
+        let current_functionality = match self.scene.get(self.current_scene){
+            Some(scene) => &scene.functionality,
+            None => &scene::Functionality::None,
+        };
+
+        let controls = left_toolbar(current_functionality);
 
         
 
