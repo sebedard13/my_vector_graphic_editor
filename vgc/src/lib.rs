@@ -142,6 +142,17 @@ impl Vgc {
         vec
     }
 
+    pub fn get_coords_of_shape<'a>(&'a self, shape_index: usize) -> Vec< &'a Coord> {
+        let mut vec = Vec::new();
+        vec.push(self.coord_ds.get(&self.shapes[shape_index].start));
+        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
+            vec.push(self.coord_ds.get(&curve.cp0));
+            vec.push(self.coord_ds.get(&curve.cp1));
+            vec.push(self.coord_ds.get(&curve.p1));
+        }
+        vec
+    }
+
     pub fn toggle_separate_join_handle(&mut self, shape_index: usize, curve_index: usize) {
         self.shapes[shape_index].toggle_separate_join_handle(&mut self.coord_ds, curve_index);
     }

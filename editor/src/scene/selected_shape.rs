@@ -52,54 +52,73 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
         );
     }
 
+    // Render lines between control points and points
     let selected_shape = 0;
 
     let p_coords = scene.vgc_data.get_p_of_shape(selected_shape);
     let cp_coords = scene.vgc_data.get_cp_of_shape(selected_shape);
 
     for cp in cp_coords {
-        match cp{
+        match cp {
             vgc::CoordType::Cp0(curve_index, coord) => {
                 let from = Point::new(
                     p_coords[curve_index].x,
                     p_coords[curve_index].y * 1.0 / scene.vgc_data.ratio as f32,
                 );
 
-                let to = Point::new(
-                    coord.x,
-                    coord.y * 1.0 / scene.vgc_data.ratio as f32,
-                );
+                let to = Point::new(coord.x, coord.y * 1.0 / scene.vgc_data.ratio as f32);
 
                 let stroke = Stroke::default()
                     .with_width(2.0)
                     .with_color(Color::from_rgb8(0x3A, 0xD1, 0xEF));
-                frame.stroke(
-                    & Path::line(from, to),
-                    stroke,
-                );
-            },
+                frame.stroke(&Path::line(from, to), stroke);
+            }
             vgc::CoordType::Cp1(curve_index, coord) => {
                 let from = Point::new(
-                    p_coords[curve_index+1].x,
-                    p_coords[curve_index+1].y * 1.0 / scene.vgc_data.ratio as f32,
+                    p_coords[curve_index + 1].x,
+                    p_coords[curve_index + 1].y * 1.0 / scene.vgc_data.ratio as f32,
                 );
 
-                let to = Point::new(
-                    coord.x,
-                    coord.y * 1.0 / scene.vgc_data.ratio as f32,
-                );
+                let to = Point::new(coord.x, coord.y * 1.0 / scene.vgc_data.ratio as f32);
                 let stroke = Stroke::default()
-                .with_width(2.0)
-                .with_color(Color::from_rgb8(0x3A, 0xD1, 0xEF));
-                frame.stroke(
-                    & Path::line(from, to),
-                    stroke,
-                );
-            },
+                    .with_width(1.0)
+                    .with_color(Color::from_rgba8(0x3A, 0xD1, 0xEF,0.5));
+                frame.stroke(&Path::line(from, to), stroke);
+            }
             _ => {}
         }
     }
 
+    // Render path stroke overlay
+    let coords = scene.vgc_data.get_coords_of_shape(selected_shape);
+    let path = Path::new(|p| {
+        p.move_to(Point::new(
+            coords[0].x,
+            coords[0].y * 1.0 / scene.vgc_data.ratio as f32,
+        ));
 
+        for i in 0..((coords.len() - 1) / 3) {
+            let index = i*3+1;
+            p.bezier_curve_to(
+                Point::new(
+                    coords[index].x,
+                    coords[index].y * 1.0 / scene.vgc_data.ratio as f32,
+                ),
+                Point::new(
+                    coords[index+1].x,
+                    coords[index+1].y * 1.0 / scene.vgc_data.ratio as f32,
+                )
+                ,Point::new(
+                    coords[index+2].x,
+                    coords[index+2].y * 1.0 / scene.vgc_data.ratio as f32,
+                )
+            );
+        }
 
+    });
+
+    let stroke = Stroke::default()
+    .with_width(1.0)
+    .with_color(Color::from_rgba8(0x3A, 0xD1, 0xEF,0.5));
+    frame.stroke(&path, stroke);
 }
