@@ -122,6 +122,17 @@ pub struct Rgba {
     pub a: u8,
 }
 
+impl From<[u8;4]> for Rgba{
+    fn from(value: [u8;4]) -> Self {
+        Rgba{
+            r: value[0],
+            g: value[1],
+            b: value[2],
+            a: value[3],
+        }
+    }
+}
+
 impl Curve {
     pub fn new(c1: CoordIndex, c2: CoordIndex, p: CoordIndex) -> Curve {
         Curve {

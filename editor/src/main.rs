@@ -1,10 +1,11 @@
 
 mod scene;
+mod utils;
 mod toolbars;
 
 use scene::Scene;
 
-use iced::{executor, Renderer, Alignment};
+use iced::{executor, Renderer, Alignment, Color};
 use iced::theme::Theme;
 
 use iced::widget::{column, container, row, button, text};
@@ -34,15 +35,22 @@ pub fn main() -> iced::Result {
 }
 
 #[derive(Default)]
-struct VgcEditor {
+pub struct VgcEditor {
     scene: Vec<Scene>,
     current_scene: usize,
+    show_color_picker: bool,
+    pub color_picker: utils::ColorImage,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     Scene(scene::MsgScene),
     NewEmptyScene,
+    
+    OpenColorPicker,
+    SubmitColor(Color),
+    CancelColor,
+
 }
 
 impl Application for VgcEditor {
@@ -61,6 +69,8 @@ impl Application for VgcEditor {
 
     fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
+
+
             Message::Scene(message) => {
                 match self.scene.get_mut(self.current_scene){
                     Some(scene) => scene.update(message),
@@ -71,6 +81,23 @@ impl Application for VgcEditor {
                 self.current_scene = self.scene.len();
                 self.scene.push(Scene::default());
             },
+
+            Message::OpenColorPicker => {
+                self.show_color_picker = true;
+            },
+            Message::SubmitColor(color) => {
+                match self.scene.get_mut(self.current_scene){
+                    Some(scene) => {
+                        self.color_picker.set_color(color);
+                        scene.update(scene::MsgScene::SubmitColor(color))
+                    },
+                    None => println!("No scene"),
+                };
+                self.show_color_picker = false;
+            }
+            Message::CancelColor => {
+                self.show_color_picker = false;
+            }
         }
 
         Command::none()
@@ -82,7 +109,7 @@ impl Application for VgcEditor {
             None => &scene::Functionality::None,
         };
 
-        let controls = left_toolbar(current_functionality);
+        let controls = left_toolbar(self, current_functionality);
 
         
 

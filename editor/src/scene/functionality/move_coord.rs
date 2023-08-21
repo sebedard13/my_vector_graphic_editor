@@ -64,7 +64,11 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
                         &Point::new(coord.x, coord.y),
                         &camera.project(click.start_press),
                         camera.fixed_length(12.0),
-                    ) {
+                    ) && point_in_radius(
+                        &Point::new(coord.x, coord.y),
+                        &camera.project(click.end_press),
+                        camera.fixed_length(12.0),
+                    ){
                         to_do.push((shape_index, curve_index));
                     }
                 }

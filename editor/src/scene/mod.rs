@@ -40,6 +40,8 @@ pub enum MsgScene {
     ClickMain(events::Click),
 
     ChangeFunctionality(functionality::Functionality),
+
+    SubmitColor(Color),
 }
 
 impl Default for Scene {
@@ -96,7 +98,11 @@ impl Scene {
                 self.functionality = functionality.clone();
                 return;
             }
-            _ => {}
+            MsgScene::SubmitColor(color) => {
+                let shape = 0;
+                self.vgc_data.set_shape_background(shape, color.into_rgba8().into());
+            }
+            _=>{}
         }
 
         //What to hover

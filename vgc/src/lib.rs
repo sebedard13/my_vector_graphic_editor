@@ -122,6 +122,10 @@ impl Vgc {
         }
         string
     }
+
+    pub fn set_shape_background(&mut self, shape_index: usize, color: Rgba) {
+        self.shapes[shape_index].color = color;
+    }
 }
 
 pub enum CoordType<'a> {

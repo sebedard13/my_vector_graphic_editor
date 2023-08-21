@@ -4,13 +4,14 @@ use iced::{
     widget::{button, column, image, Image},
     Alignment, Background, BorderRadius, Color, Element, Length, Vector,
 };
+use iced_aw::color_picker;
 
-use crate::Message;
+use crate::{Message, VgcEditor};
 use crate::scene::{MsgScene, Functionality};
 
-pub fn left_toolbar<'a>(current_functionality: &Functionality) -> Element<'a, Message> {
+pub fn left_toolbar<'a>(vgc_editor: &'a VgcEditor, current_functionality: &Functionality) -> Element<'a, Message> {
 
-   
+
     let btn_move = {
         let btn_style: Box::<dyn button::StyleSheet<Style = Theme>> = match current_functionality{
             Functionality::MoveCoord(..) => Box::<BtnStyleSelected>::default(),
@@ -64,7 +65,24 @@ pub fn left_toolbar<'a>(current_functionality: &Functionality) -> Element<'a, Me
         .style(Button::Custom(btn_style))
     };
 
-    column![btn_move, btn_pen, btn_bend_tools]
+
+    let color_picker = {
+             
+        let but = button(vgc_editor.color_picker.view())
+            .on_press(Message::OpenColorPicker)
+            .style(Button::Custom(Box::<BtnStyleNormal>::default()));
+        
+        
+        color_picker(
+        vgc_editor.show_color_picker,
+        vgc_editor.color_picker.get_color(),
+        but,
+        Message::CancelColor,
+        Message::SubmitColor,
+    )};
+
+    
+    column![btn_move, btn_pen, btn_bend_tools ,color_picker]
         .padding(2)
         .spacing(5)
         .align_items(Alignment::Start)
