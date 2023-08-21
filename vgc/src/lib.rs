@@ -110,6 +110,38 @@ impl Vgc {
         }
     }
 
+    pub fn visit_vec(&self)->Vec<(usize, CoordType)>{
+        let mut vec = Vec::new();
+        for (shape_index, shape) in self.shapes.iter().enumerate() {
+            vec.push((shape_index, CoordType::Start(self.coord_ds.get(&shape.start))));
+            for (curve_index, curve) in shape.curves.iter().enumerate() {
+                vec.push((shape_index, CoordType::Cp0(curve_index, self.coord_ds.get(&curve.cp0))));
+                vec.push((shape_index, CoordType::Cp1(curve_index, self.coord_ds.get(&curve.cp1))));
+                vec.push((shape_index, CoordType::P1(curve_index, self.coord_ds.get(&curve.p1))));
+            }
+        }
+        
+        vec
+    }
+
+    pub fn get_cp_of_shape<'a>(&'a self, shape_index: usize) -> Vec<CoordType<'a>> {
+        let mut vec = Vec::new();
+        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
+            vec.push(CoordType::Cp0(curve_index, self.coord_ds.get(&curve.cp0)));
+            vec.push(CoordType::Cp1(curve_index, self.coord_ds.get(&curve.cp1)));
+        }
+        vec
+    }
+
+    pub fn get_p_of_shape<'a>(&'a self, shape_index: usize) -> Vec< &'a Coord> {
+        let mut vec = Vec::new();
+        vec.push(self.coord_ds.get(&self.shapes[shape_index].start));
+        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
+            vec.push(self.coord_ds.get(&curve.p1));
+        }
+        vec
+    }
+
     pub fn toggle_separate_join_handle(&mut self, shape_index: usize, curve_index: usize) {
         self.shapes[shape_index].toggle_separate_join_handle(&mut self.coord_ds, curve_index);
     }

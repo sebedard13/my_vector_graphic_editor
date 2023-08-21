@@ -5,7 +5,7 @@ mod toolbars;
 
 use scene::Scene;
 
-use iced::{executor, Renderer, Alignment, Color};
+use iced::{executor, Renderer, Alignment, Color, font};
 use iced::theme::Theme;
 
 use iced::widget::{column, container, row, button, text};
@@ -51,6 +51,7 @@ pub enum Message {
     SubmitColor(Color),
     CancelColor,
 
+    FontLoaded(Result<(), font::Error>),
 }
 
 impl Application for VgcEditor {
@@ -60,7 +61,8 @@ impl Application for VgcEditor {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (Self { ..Self::default() }, Command::none())
+        (Self { ..Self::default() },font::load(iced_aw::graphics::icons::ICON_FONT_BYTES).map(Message::FontLoaded))
+        
     }
 
     fn title(&self) -> String {
@@ -69,8 +71,6 @@ impl Application for VgcEditor {
 
     fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-
-
             Message::Scene(message) => {
                 match self.scene.get_mut(self.current_scene){
                     Some(scene) => scene.update(message),
@@ -97,6 +97,12 @@ impl Application for VgcEditor {
             }
             Message::CancelColor => {
                 self.show_color_picker = false;
+            },
+            Message::FontLoaded(res) => {
+                match res{
+                    Ok(_) => println!("Font loaded"),
+                    Err(err) => println!("Font error: {:?}", err),
+                }
             }
         }
 
