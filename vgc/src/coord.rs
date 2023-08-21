@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
+use crate::curve::Curve;
 
 use crate::instructions::{CurveInstruction, ShapeInstruction};
-use crate::vcg_struct::{Curve, Shape};
+use crate::vgc_struct::Shape;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct CoordIndex {

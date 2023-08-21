@@ -8,13 +8,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
 use crate::instructions::{AddCurve, CoordWithIndex, CurveInstruction, ShapeInstruction};
-use crate::vcg_struct::{Rgba, Shape};
+use crate::vgc_struct::{Rgba, Shape};
 use iced::widget::canvas::Frame;
 
 mod coord;
 mod instructions;
 pub mod render;
-mod vcg_struct;
+mod vgc_struct;
+mod curve;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Vgc {
