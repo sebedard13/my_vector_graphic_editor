@@ -119,18 +119,44 @@ impl Shape {
     }
 
 
-    pub fn closest_curve(&self,coord_ds: &CoordDS, coord: Coord)-> usize{
+    pub fn closest_curve(&self,coord_ds: &CoordDS, coord: &Coord)-> (usize, f32,f32, Coord){
         let mut min_distance = std::f32::MAX;
         let mut min_index = 0;
+        let mut min_t = 0.0;
+        let mut min_coord = coord_ds.get(&self.start).clone();
 
         self.visit_full_curves(coord_ds, |curve_index, p0, cp0, cp1, p1|{
-            let (distance, t_min) = curve::approx_distance_to_curve(&coord, p0, cp0, cp1, p1);
+            let (t_min, distance, coord) = curve::t_closest(&coord, p0, cp0, cp1, p1);
+
             if distance < min_distance{
                 min_distance = distance;
                 min_index = curve_index;
+                min_t = t_min;
+                min_coord = coord;
             }
         });
-        min_index
+        (min_index, min_t, min_distance, min_coord)
+    }
+
+    pub fn get_coords_of_curve<'a>(&self,coord_ds: &'a CoordDS, curve_index:usize)->(&'a Coord, &'a Coord, &'a Coord, &'a Coord){
+        let mut prev_coord = coord_ds.get(&self.start);
+
+        if curve_index > 0{
+            let prev_curve = self.curves.get(curve_index - 1).expect("Index should be valid");
+            prev_coord = coord_ds.get(&prev_curve.p1);
+        }
+        let curve = self.curves.get(curve_index).expect("Index should be valid");
+        let cp0 = coord_ds.get(&curve.cp0);
+        let cp1 = coord_ds.get(&curve.cp1);
+        let p1 = coord_ds.get(&curve.p1);
+          
+        return (prev_coord, cp0, cp1, p1);
+    }
+
+    pub fn closest_coord_on(&self,coord_ds: &CoordDS, coord: Coord)-> Coord{
+    
+        let  (_,_,_,closest_coord) = self.closest_curve(coord_ds, &coord);
+        closest_coord
     }
 }
 

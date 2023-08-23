@@ -9,7 +9,7 @@ use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
 use iced::{keyboard, mouse};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
-use vgc::generate_simple_exemple;
+use vgc::generate_triangle_exemple;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
@@ -46,7 +46,7 @@ pub enum MsgScene {
 
 impl Default for Scene {
     fn default() -> Self {
-        let vgc_data = generate_simple_exemple();
+        let vgc_data = generate_triangle_exemple();
 
         Self {
             draw_cache: Cache::default(),
@@ -254,6 +254,10 @@ impl canvas::Program<MsgScene> for Scene {
                 self.camera.transform_frame(frame, bounds);
 
                 selected_shape::draw(self, frame);
+                if let Some(pos) = cursor_pos {
+                    selected_shape::draw_closest_pt(self, frame,pos);
+                }
+               
             });
             frame.into_geometry()
         };

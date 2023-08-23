@@ -23,30 +23,6 @@ impl Curve {
     }
 }
 
-/// Approximate the distance between a point and a curve defined by p0, cp0, cp1, p1
-/// Return the approximate distance (no sqrt where use) and the closest t value of the curve
-pub fn approx_distance_to_curve(
-    coord: &Coord,
-    p0: &Coord,
-    cp0: &Coord,
-    cp1: &Coord,
-    p1: &Coord,
-) -> (f32, f32) {
-    let mut min_distance = std::f32::MAX;
-    let mut min_t = 0.0;
-    for t in 0..=10 {
-        let t = t as f32 / 10.0;
-        let curve_coord = cubic_bezier(t, p0, cp0, cp1, p1);
-        let distance = coord.approx_distance(&curve_coord);
-        if distance < min_distance {
-            min_distance = distance;
-            min_t = t;
-        }
-    }
-
-    (min_distance, min_t)
-}
-
 /// Find the closest point on a curve defined by p0, cp0, cp1, p1
 /// It return the t value of the curve, the distance and the closest point
 ///
@@ -57,7 +33,7 @@ pub fn t_closest(
     cp0: &Coord,
     cp1: &Coord,
     p1: &Coord,
-) -> Option<(f32, f32, Coord)> {
+) -> (f32, f32, Coord) {
 
     let a = -1.0*p0 + 3.0 * cp0 - 3.0 * cp1 + p1;
     let b = 3.0 * p0 - 6.0 * cp0 + 3.0 * cp1;
@@ -111,11 +87,8 @@ pub fn t_closest(
             min = curve_coord;
         }
     });
-   
-   if min_distance == std::f32::MAX {
-       return None;
-    }
-    Some((min_t, min_distance.sqrt(), min))
+ 
+    (min_t, min_distance.sqrt(), min)
 }
 
 /// Evaluate the point at t of curve defined by p0, cp0, cp1, p1
@@ -245,6 +218,7 @@ pub fn tangent_cornor_pts(
 #[cfg(test)]
 mod test {
     use std::f32::consts::PI;
+    use std::time::Instant;
 
     use crate::coord::Coord;
     use crate::curve::{tangent_cornor_pts, tangent_vector};
@@ -301,11 +275,47 @@ mod test {
         let p1 = Coord { x: 1.0, y: 0.0 };
 
 
-        let option = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
-        assert!(option.is_some());
-        let (t, distance, closest) = option.unwrap();
+        let (t, distance, closest)  = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+
         assert_eq!(t, 0.5);
         assert_eq!(distance, 0.176776695297);
         assert_eq!(closest, Coord { x: 0.125, y: 0.125 });
+    }
+
+    #[test]
+    fn bench_approx_distance_to_curve_and_t_closest_cornor(){
+        let coord = Coord { x: 0.0, y: 0.0 };
+        let p0 = Coord { x: 0.0, y: 1.0 };
+        let cp0 = Coord { x: 0.0, y: 0.0 };
+        let cp1 = Coord { x: 0.0, y: 0.0 };
+        let p1 = Coord { x: 1.0, y: 0.0 };
+
+        let now_approx = Instant::now();
+        for _ in 0..1000 {
+            // approx_distance_to_curve by divinding the curve equaly to find an approximation of the closest point
+           // let option = super::approx_distance_to_curve(&coord, &p0, &cp0, &cp1, &p1);
+        }
+        let elapsed_approx = now_approx.elapsed().as_micros();
+        println!("approx_distance_to_curve: {:?} us", elapsed_approx);
+
+        let now_t_closest = Instant::now();
+        for _ in 0..1000 {
+            let option = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+        }
+        let elapsed_t_closest = now_t_closest.elapsed().as_micros();
+        println!("t_closest: {:?} us", elapsed_t_closest);
+        if elapsed_approx < elapsed_t_closest {
+           let percent = (elapsed_t_closest as f32 / elapsed_approx as f32) * 100.0;
+            println!("approx_distance_to_curve is {}% faster", percent);
+        }else{
+            let percent = (elapsed_approx as f32 / elapsed_t_closest as f32) * 100.0;
+            println!("t_closest is {}% faster", percent);
+        }
+       
+        // The approx_distance_to_curve is faster if the number of iteration is not to big
+        // at 20, 358% faster
+        // at 50, 151% faster
+        // at 100, 128% slower
+        // the approx is not that good and create a grabing effect in the corner of two curve
     }
 }

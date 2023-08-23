@@ -170,6 +170,10 @@ impl Vgc {
     pub fn set_shape_background(&mut self, shape_index: usize, color: Rgba) {
         self.shapes[shape_index].color = color;
     }
+
+    pub fn get_closest_coord_on_shape(&self, shape_index: usize, x: f32, y: f32) -> Coord {
+        self.shapes[shape_index].closest_coord_on(&self.coord_ds, Coord {x, y})
+    }
 }
 
 pub enum CoordType<'a> {
@@ -208,9 +212,25 @@ mod tests {
 
         assert_eq!(canvas.shapes[0].to_path(&canvas.coord_ds),"M 0.5 0 C 0.6 0.25 0.6 0.25 0.5 0.5 C 0.4 0.75 0.4 0.75 0.5 1 C 1 1 1 1 1 1 C 1 0 1 0 1 0 C 1 0 0.5 0 0.5 0 Z");
     }
+
+    #[test]
+    fn get_closest_coord_on_shape_triangle() {
+        let canvas = generate_from_line(&[
+            Coord { x: 0.0, y: 0.0 },
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 1.0, y: 1.0 },
+        ]);
+
+        let coord = canvas.get_closest_coord_on_shape(0, 1.0, 0.0);
+        assert_eq!(coord.x, 0.5);
+        assert_eq!(coord.y, 0.5);
+    }
+
+    
 }
 
 pub fn generate_exemple() -> Vgc {
+    
     let color = Rgba {
         r: 255,
         g: 255,
@@ -289,7 +309,7 @@ pub fn generate_exemple() -> Vgc {
 }
 
 
-pub fn generate_simple_exemple() -> Vgc {
+fn generate_from_line(y: &[Coord]) -> Vgc {
     let color = Rgba {
         r: 255,
         g: 255,
@@ -297,9 +317,52 @@ pub fn generate_simple_exemple() -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(16.0 / 9.0, color);
+    let mut canvas = Vgc::new(16.0 / 16.0, color);
 
-    let p0 = Coord { x: 0.5, y: 0.0 };
+    if y.len() >0 {
+        let p0 = &y[0];
+
+        let shape_index = canvas.add_shape(ShapeInstruction {
+            start: p0.clone(),
+            curves: Vec::default(),
+            color: Rgba {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 255,
+            },
+        });
+    
+        for i in 1..y.len() {
+            let curve = {
+                let c1 = y[i].clone();
+                let c2 = y[i].clone();
+                let p = y[i].clone();
+                CurveInstruction { c1, c2, p }
+            };
+            canvas.add_coord(AddCurve {
+                curve,
+                index_shape: shape_index,
+                index_curve: i - 1,
+            });
+        }
+    }
+   
+
+    canvas
+
+}
+pub fn generate_triangle_exemple() -> Vgc {
+    let color = Rgba {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 255,
+    };
+
+    let mut canvas = Vgc::new(16.0 / 16.0, color);
+
+    let p0 = Coord { x: 0.0, y: 0.0 };
 
     let shape_index = canvas.add_shape(ShapeInstruction {
         start: p0,
@@ -314,9 +377,9 @@ pub fn generate_simple_exemple() -> Vgc {
 
 
     let curve: CurveInstruction = {
-        let c1 = Coord { x: 0.5, y: 1.0 };
-        let c2 = Coord { x: 0.5, y: 1.0 };
-        let p = Coord { x: 0.5, y: 1.0 };
+        let c1 = Coord { x: 0.0, y: 1.0 };
+        let c2 = Coord { x: 0.0, y: 1.0 };
+        let p = Coord { x: 0.0, y: 1.0 };
         CurveInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
