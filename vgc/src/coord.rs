@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 use crate::curve::Curve;
 
-use crate::instructions::{CurveInstruction, ShapeInstruction};
+use crate::instructions::{CoordInstruction, ShapeInstruction};
 use crate::vgc_struct::Shape;
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
@@ -72,7 +72,7 @@ impl CoordDS {
     }
 }
 
-pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CurveInstruction) -> Curve {
+pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
     let c1 = coord_ds.insert(curve_instruction.c1);
     let c2 = coord_ds.insert(curve_instruction.c2);
     let p = coord_ds.insert(curve_instruction.p);
@@ -82,7 +82,7 @@ pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CurveInstruction)
 pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction) -> Shape {
     let start = coord_ds.insert(shape_instruction.start);
 
-    let mut curves: Vec<Curve> = shape_instruction
+    let curves: Vec<Curve> = shape_instruction
         .curves
         .iter()
         .map(|curve_instruction| {
@@ -90,18 +90,13 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
         })
         .collect();
 
-    //Create last curve at start point for closing shape
-    curves.push(Curve {
-        cp0: start.clone(),
-        cp1: start.clone(),
-        p1: start.clone(),
-    }); //TODO: clone is not good
-
-    Shape {
+    let mut shape = Shape {
         start,
         curves,
         color: shape_instruction.color,
-    }
+    };
+    shape.close();
+    shape
 }
 
 #[cfg(test)]

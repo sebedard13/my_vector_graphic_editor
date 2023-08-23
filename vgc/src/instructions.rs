@@ -3,12 +3,12 @@ use crate::vgc_struct::Rgba;
 
 pub struct ShapeInstruction {
     pub start: Coord,
-    pub curves: Vec<CurveInstruction>,
+    pub curves: Vec<CoordInstruction>,
     pub color: Rgba,
 }
 
 #[derive(Clone)]
-pub struct CurveInstruction {
+pub struct CoordInstruction {
     //c1 become c1 in curve after
     pub c1: Coord, // become c2 in current curve
     pub p: Coord,  // stay point
@@ -16,7 +16,7 @@ pub struct CurveInstruction {
 }
 
 pub struct AddCurve {
-    pub curve: CurveInstruction,
+    pub curve: CoordInstruction,
     pub index_shape: usize,
     pub index_curve: usize,
 }

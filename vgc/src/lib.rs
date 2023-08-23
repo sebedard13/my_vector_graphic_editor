@@ -7,7 +7,7 @@ use coord::CoordIndex;
 use serde::{Deserialize, Serialize};
 
 use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
-use crate::instructions::{AddCurve, CoordWithIndex, CurveInstruction, ShapeInstruction};
+use crate::instructions::{AddCurve, CoordWithIndex, CoordInstruction, ShapeInstruction};
 use crate::vgc_struct::{Rgba, Shape};
 use iced::widget::canvas::Frame;
 
@@ -33,6 +33,16 @@ impl Vgc {
             shapes: Vec::new(),
             coord_ds: CoordDS::new(),
         }
+    }
+
+    pub fn create_shape(&mut self, start: Coord, color: Rgba) -> usize {
+        let shape = Shape {
+            start: self.coord_ds.insert(start),
+            curves: Vec::new(),
+            color,
+        };
+        self.shapes.push(shape);
+        self.shapes.len() - 1
     }
 
     pub fn from_byte(byte: &[u8]) -> Result<Vgc, String> {
@@ -74,6 +84,14 @@ impl Vgc {
             &mut self.coord_ds,
             curve,
             add_curve_coord.index_curve,
+        );
+    }
+
+    pub fn push_coord(&mut self, index_shape: usize, cp0 : Coord, cp1 : Coord, p1 : Coord) {
+       
+        self.shapes[index_shape].push_coord(
+            &mut self.coord_ds,
+            cp0, cp1, p1
         );
     }
 
@@ -226,6 +244,27 @@ mod tests {
         assert_eq!(coord.y, 0.5);
     }
 
+    #[test]
+    fn genreate_from_push() {
+        let canvas = generate_from_push(&[
+            Coord { x: 0.0, y: 0.0 },
+           
+            Coord { x: -0.46193975, y: 0.19134173 },
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 0.0, y: 1.0 },
+            
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 1.0, y: 1.0 },
+            Coord { x: 1.0, y: 1.0 },
+            
+            Coord { x: 1.0, y: 1.0 },
+            Coord { x: 0.46193975, y: -0.19134173 },
+            Coord { x: 0.0, y: 0.0 },
+        ]);
+       
+        assert_eq!(canvas.debug_string(), "M 0 0 C -0.46193975 0.19134173 0 1 0 1 C 0 1 1 1 1 1 C 1 1 0.46193975 -0.19134173 0 0 Z\n");
+    }
+
     
 }
 
@@ -258,44 +297,44 @@ pub fn generate_exemple() -> Vgc {
     canvas.coord_ds.modify(1, Coord { x: 0.5, y: 0.0 });
     canvas.coord_ds.modify(2, Coord { x: 0.6, y: 0.25 });
 
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 0.6, y: 0.25 };
         let c2 = Coord { x: 0.4, y: 0.75 };
         let p = Coord { x: 0.5, y: 0.5 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
         index_shape: shape_index,
         index_curve: 0,
     });
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 0.4, y: 0.75 };
         let c2 = Coord { x: 1.0, y: 1.0 };
         let p = Coord { x: 0.5, y: 1.0 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
         index_shape: shape_index,
         index_curve: 1,
     });
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 1.0, y: 1.0 };
         let c2 = Coord { x: 1.0, y: 0.0 };
         let p = Coord { x: 1.0, y: 1.0 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
         index_shape: shape_index,
         index_curve: 2,
     });
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 1.0, y: 0.0 };
         let c2 = Coord { x: 1.0, y: 0.0 };
         let p = Coord { x: 1.0, y: 0.0 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
@@ -338,7 +377,7 @@ fn generate_from_line(y: &[Coord]) -> Vgc {
                 let c1 = y[i].clone();
                 let c2 = y[i].clone();
                 let p = y[i].clone();
-                CurveInstruction { c1, c2, p }
+                CoordInstruction { c1, c2, p }
             };
             canvas.add_coord(AddCurve {
                 curve,
@@ -348,10 +387,38 @@ fn generate_from_line(y: &[Coord]) -> Vgc {
         }
     }
    
-
     canvas
-
 }
+
+fn generate_from_push(y: &[Coord]) -> Vgc {
+    let color = Rgba {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 255,
+    };
+
+    let mut canvas = Vgc::new(16.0 / 16.0, color);
+
+    if y.len() >0 {
+        let p0 = &y[0];
+
+        let shape_index = canvas.create_shape(p0.clone(), Rgba {
+                r: 0,
+                g: 0,
+                b: 0,
+                a: 255,
+            });
+    
+        for i in 0..((y.len()-1)/3) {
+            let index = i*3+1;
+            canvas.push_coord(shape_index, y[index].clone(), y[index+1].clone(), y[index+2].clone());
+        }
+    }
+   
+    canvas
+}
+
 pub fn generate_triangle_exemple() -> Vgc {
     let color = Rgba {
         r: 255,
@@ -376,22 +443,22 @@ pub fn generate_triangle_exemple() -> Vgc {
     });
 
 
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 0.0, y: 1.0 };
         let c2 = Coord { x: 0.0, y: 1.0 };
         let p = Coord { x: 0.0, y: 1.0 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
         index_shape: shape_index,
         index_curve: 0,
     });
-    let curve: CurveInstruction = {
+    let curve: CoordInstruction = {
         let c1 = Coord { x: 1.0, y: 1.0 };
         let c2 = Coord { x: 1.0, y: 1.0 };
         let p = Coord { x: 1.0, y: 1.0 };
-        CurveInstruction { c1, c2, p }
+        CoordInstruction { c1, c2, p }
     };
     canvas.add_coord(AddCurve {
         curve,
@@ -404,3 +471,6 @@ pub fn generate_triangle_exemple() -> Vgc {
 
     canvas
 }
+
+
+// TODO : How to create a stable api for this?

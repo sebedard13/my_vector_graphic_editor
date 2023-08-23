@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// - cp1 is the control point before the current point
 /// - p1 is the current point
 ///
-/// The curve is drawn from the previous curve point [i-1].p1, with [i].h1 and [i].h2 as control points and [i].p1 for the final points.
+/// The curve is drawn from the previous curve point [i-1].p1, with [i].cp1 and [i].cph2 as control points and [i].cp1 for the final points.
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Curve {
     pub cp0: CoordIndex,

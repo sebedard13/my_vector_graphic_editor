@@ -34,6 +34,24 @@ impl Shape {
         curve.cp0 == curve.p1 || curve.cp1 == curve.p1
     }
 
+    pub fn is_closed(&self) -> bool {
+        if self.curves.len() == 0 {
+            return false;
+        }
+        let last_curve = self.curves.last().expect("Shape should have at least one curve ");
+        last_curve.p1 == self.start
+    }
+
+    pub fn close(&mut self) {
+        if !self.is_closed(){
+            self.curves.push(Curve {
+                cp0: self.start.clone(),
+                cp1: self.start.clone(),
+                p1: self.start.clone(),
+            });//TODO: clone is not good
+        }
+    }
+
     pub fn separate_handle(&mut self, coord_ds: &mut CoordDS, index: usize) {
         //Todo check if index is not the last curve and what not
         let p0 = {
@@ -157,6 +175,17 @@ impl Shape {
     
         let  (_,_,_,closest_coord) = self.closest_curve(coord_ds, &coord);
         closest_coord
+    }
+
+    pub fn push_coord(&mut self, coord_ds: &mut CoordDS, cp0: Coord, cp1: Coord, p1: Coord) {
+        let cp0 = coord_ds.insert(cp0);
+        let cp1 = coord_ds.insert(cp1);
+        let p1 = coord_ds.insert(p1);
+        self.curves.push(Curve {
+            cp0,
+            cp1,
+            p1,
+        });
     }
 }
 

@@ -196,6 +196,10 @@ impl canvas::Program<MsgScene> for Scene {
                 key_change.active_keys.contains(&keyboard::KeyCode::LControl) &&
                 key_change.active_keys.contains(&keyboard::KeyCode::LAlt) => {
                     println!("{}",self.vgc_data.debug_string());
+                    let cursor_position = cursor.position();
+                    if let Some(pos) = cursor_position {
+                        println!("cursor: {:?}",self.camera.project(pos));
+                    }
                     return (event::Status::Captured, None);
             
                 }
