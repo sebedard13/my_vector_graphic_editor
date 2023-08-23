@@ -88,9 +88,9 @@ impl Vgc {
         let mut coord_ds = CoordDS::new();
 
         
-        for (index, shape) in self.shapes.iter_mut().enumerate() {
+        for shape in self.shapes.iter_mut() {
             shape.start = optimize_coord_index(&shape.start, &mut coord_map, &mut coord_ds, &self.coord_ds);
-            for (index, curve) in shape.curves.iter_mut().enumerate() {
+            for curve in shape.curves.iter_mut() {
                 curve.cp0 = optimize_coord_index(&curve.cp0, &mut coord_map, &mut coord_ds, &self.coord_ds);
                 curve.cp1 = optimize_coord_index(&curve.cp1, &mut coord_map, &mut coord_ds, &self.coord_ds);
                 curve.p1 = optimize_coord_index(&curve.p1, &mut coord_map, &mut coord_ds, &self.coord_ds);
@@ -137,7 +137,7 @@ impl Vgc {
     pub fn get_p_of_shape<'a>(&'a self, shape_index: usize) -> Vec< &'a Coord> {
         let mut vec = Vec::new();
         vec.push(self.coord_ds.get(&self.shapes[shape_index].start));
-        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
+        for curve in  self.shapes[shape_index].curves.iter() {
             vec.push(self.coord_ds.get(&curve.p1));
         }
         vec
@@ -146,7 +146,7 @@ impl Vgc {
     pub fn get_coords_of_shape<'a>(&'a self, shape_index: usize) -> Vec< &'a Coord> {
         let mut vec = Vec::new();
         vec.push(self.coord_ds.get(&self.shapes[shape_index].start));
-        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
+        for curve in  self.shapes[shape_index].curves.iter(){
             vec.push(self.coord_ds.get(&curve.cp0));
             vec.push(self.coord_ds.get(&curve.cp1));
             vec.push(self.coord_ds.get(&curve.p1));

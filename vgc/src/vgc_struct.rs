@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::mem::swap;
 
-use crate::coord::{CoordDS, CoordIndex};
+use crate::coord::{CoordDS, CoordIndex, Coord};
 use crate::curve;
 use crate::curve::Curve;
 
@@ -101,7 +101,40 @@ impl Shape {
         path.push_str(" Z");
         path
     }
+
+
+    /// Visit each curve of the shape and call the visitor function with the curve index and 4 coords of the curve so p0, cp0, cp1, p1
+    pub fn visit_full_curves(&self, coord_ds: &CoordDS, mut visitor: impl FnMut(usize, &Coord, &Coord, &Coord, &Coord)) {
+        let start = coord_ds.get(&self.start);
+        let mut prev_coord = start;
+        for (index,curve) in self.curves.iter().enumerate() {
+            let cp0 = coord_ds.get(&curve.cp0);
+            let cp1 = coord_ds.get(&curve.cp1);
+            let p1 = coord_ds.get(&curve.p1);
+          
+            visitor(index, prev_coord, cp0, cp1, p1);
+
+            prev_coord = p1;
+        }
+    }
+
+
+    pub fn closest_curve(&self,coord_ds: &CoordDS, coord: Coord)-> usize{
+        let mut min_distance = std::f32::MAX;
+        let mut min_index = 0;
+
+        self.visit_full_curves(coord_ds, |curve_index, p0, cp0, cp1, p1|{
+            let (distance, t_min) = curve::approx_distance_to_curve(&coord, p0, cp0, cp1, p1);
+            if distance < min_distance{
+                min_distance = distance;
+                min_index = curve_index;
+            }
+        });
+        min_index
+    }
 }
+
+
 
 
 #[derive(Deserialize, Serialize, Debug)]

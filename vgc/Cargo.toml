@@ -12,3 +12,4 @@ postcard = { version = "1.0.0", features = ["alloc"] }
 serde = { version = "1.0.*", default-features = false }
 
 iced = { version = "0.10.0", features = ["canvas"] }
+roots = "0.0.8"

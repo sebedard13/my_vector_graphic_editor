@@ -157,6 +157,19 @@ impl Coord {
             y: self.y / norm,
         }
     }
+
+    pub fn distance(&self, curve_coord: &Coord) -> f32 {
+        let dx = self.x - curve_coord.x;
+        let dy = self.y - curve_coord.y;
+        (dx * dx + dy * dy).sqrt()
+    }
+
+    /// Approximate distance, without sqrt
+    pub fn approx_distance(&self, curve_coord: &Coord) -> f32 {
+        let dx = self.x - curve_coord.x;
+        let dy = self.y - curve_coord.y;
+        dx * dx + dy * dy
+    }
 }
 
 impl Display for Coord {
@@ -164,6 +177,7 @@ impl Display for Coord {
         write!(f, "({},{})", self.x, self.y)
     }
 }
+
 
 impl Add<Coord> for Coord {
     type Output = Coord;
@@ -186,6 +200,29 @@ impl Add<&Coord> for &Coord {
         }
     }
 }
+
+impl Add<&Coord> for Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: &Coord) -> Self::Output {
+        Coord {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
+impl Add<Coord> for &Coord {
+    type Output = Coord;
+
+    fn add(self, rhs: Coord) -> Self::Output {
+        Coord {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
+    }
+}
+
 
 impl Sub<Coord> for Coord {
     type Output = Coord;
