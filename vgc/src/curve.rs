@@ -1,12 +1,11 @@
 use crate::coord::{Coord, CoordIndex};
-use serde::{Deserialize, Serialize};
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
 /// - p1 is the current point
 ///
 /// The curve is drawn from the previous curve point [i-1].p1, with [i].cp1 and [i].cph2 as control points and [i].cp1 for the final points.
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug)]
 pub struct Curve {
     pub cp0: CoordIndex,
     pub cp1: CoordIndex,

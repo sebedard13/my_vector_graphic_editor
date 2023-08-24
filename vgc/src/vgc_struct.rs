@@ -1,11 +1,10 @@
-use serde::{Deserialize, Serialize};
 use std::mem::swap;
 
 use crate::coord::{CoordDS, CoordIndex, Coord};
 use crate::curve;
 use crate::curve::Curve;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug)]
 pub struct Shape {
     pub start: CoordIndex,
     pub curves: Vec<Curve>,
@@ -192,7 +191,7 @@ impl Shape {
 
 
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,

@@ -4,7 +4,6 @@
 use std::collections::HashMap;
 
 use coord::CoordIndex;
-use serde::{Deserialize, Serialize};
 
 use crate::coord::{insert_curve, insert_shape, Coord, CoordDS};
 use crate::instructions::{AddCurve, CoordWithIndex, CoordInstruction, ShapeInstruction};
@@ -17,8 +16,8 @@ pub mod render;
 mod vgc_struct;
 mod curve;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Vgc {
+#[derive(Debug)]
+pub struct Vgc{
     pub ratio: f64, //width/height 16/9
     pub background: Rgba,
     shapes: Vec<Shape>,
@@ -43,14 +42,6 @@ impl Vgc {
         };
         self.shapes.push(shape);
         self.shapes.len() - 1
-    }
-
-    pub fn from_byte(byte: &[u8]) -> Result<Vgc, String> {
-        postcard::from_bytes(byte).map_err(|e| e.to_string())
-    }
-
-    pub fn to_byte(&self) -> Result<Vec<u8>, String> {
-        postcard::to_allocvec(self).map_err(|e| e.to_string())
     }
 
     pub fn add_shape(&mut self, shape_instruction: ShapeInstruction) -> usize {

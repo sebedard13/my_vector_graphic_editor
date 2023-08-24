@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 use crate::curve::Curve;
@@ -6,12 +5,12 @@ use crate::curve::Curve;
 use crate::instructions::{CoordInstruction, ShapeInstruction};
 use crate::vgc_struct::Shape;
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CoordIndex {
     pub i: usize,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Debug)]
 pub struct CoordDS {
     pub array: Vec<Option<Coord>>,
     pub is_normalize: bool,
@@ -127,7 +126,7 @@ mod tests {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Coord {
     pub x: f32,
     pub y: f32,
