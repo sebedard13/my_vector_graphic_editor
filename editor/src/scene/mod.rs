@@ -51,7 +51,6 @@ impl Default for Scene {
             Coord { x: 0.0, y: 0.0 },
             Coord { x: 0.0, y: 1.0 },
             Coord { x: 1.0, y: 1.0 },
-            Coord { x: 0.0, y: 0.0 },
         ]);
 
         Self {
@@ -106,7 +105,7 @@ impl Scene {
             }
             MsgScene::SubmitColor(color) => {
                 let shape = 0;
-                self.vgc_data.set_shape_background(shape, color.into_rgba8().into());
+                self.vgc_data.get_mut_shape(shape).unwrap().color = color.into_rgba8().into();
             }
             _=>{}
         }

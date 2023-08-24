@@ -2,12 +2,11 @@ use std::cell::{RefCell, Ref};
 use std::rc::Rc;
 
 use crate::coord::Coord;
-use crate::instructions::{AddCurve};
 use crate::vgc_struct::{Rgba, Shape};
+use coord::{CoordType, RefCoordType};
 use iced::widget::canvas::Frame;
 
 pub mod coord;
-mod instructions;
 pub mod render;
 mod vgc_struct;
 mod curve;
@@ -64,43 +63,17 @@ impl Vgc {
 
     }
 
-    pub fn add_coord(&mut self, _: AddCurve) {
-        // TODO
-        /*let curve = insert_curve(&mut self.coord_ds, add_curve_coord.curve);
 
-        self.shapes[add_curve_coord.index_shape].add_coord(
-            &mut self.coord_ds,
-            curve,
-            add_curve_coord.index_curve,
-        );*/
+    pub fn get_shape(&self, index_shape: usize) -> Option<&Shape>{
+        self.shapes.get(index_shape)
     }
 
-    pub fn push_coord(&mut self, index_shape: usize, cp0 : Coord, cp1 : Coord, p1 : Coord) {
-       
-        self.shapes[index_shape].push_coord(cp0, cp1, p1);
+    pub fn get_mut_shape(&mut self, index_shape: usize) -> Option<&mut Shape>{
+        self.shapes.get_mut(index_shape)
     }
 
     pub fn frame_render(&self, frame: &mut Frame) {
         render::frame_render(self, frame);
-    }
-
-    pub fn optimize_coord(&mut self) {
-        //TODO
-        // TODO Maybe Coord implement Hash and be use in HashMap directly
-        /*let mut coord_map: HashMap<u64, Rc<RefCell<Coord>>> = HashMap::new();
-
-
-        
-        for shape in self.shapes.iter_mut() {
-            shape.start = optimize_coord_index(&shape.start, &mut coord_map, &mut coord_ds, &self.coord_ds);
-            for curve in shape.curves.iter_mut() {
-                curve.cp0 = optimize_coord_index(&curve.cp0, &mut coord_map, &mut coord_ds, &self.coord_ds);
-                curve.cp1 = optimize_coord_index(&curve.cp1, &mut coord_map, &mut coord_ds, &self.coord_ds);
-                curve.p1 = optimize_coord_index(&curve.p1, &mut coord_map, &mut coord_ds, &self.coord_ds);
-            }
-        }
-
-        self.coord_ds = coord_ds;*/
     }
 
     pub fn visit(&self, f: &mut dyn FnMut(usize, RefCoordType)) {
@@ -128,39 +101,6 @@ impl Vgc {
         vec
     }
 
-    pub fn get_cp_of_shape<'a>(&'a self, shape_index: usize) -> Vec<RefCoordType<'a>> {
-        let mut vec = Vec::new();
-        for (curve_index, curve) in  self.shapes[shape_index].curves.iter().enumerate() {
-            vec.push(RefCoordType::Cp0(curve_index, curve.cp0.borrow()));
-            vec.push(RefCoordType::Cp1(curve_index, curve.cp1.borrow()));
-        }
-        vec
-    }
-
-    pub fn get_p_of_shape(&self, shape_index: usize) -> Vec<Ref<Coord>> {
-        let mut vec = Vec::new();
-        vec.push(self.shapes[shape_index].start.borrow());
-        for curve in  self.shapes[shape_index].curves.iter() {
-            vec.push(curve.p1.borrow());
-        }
-        vec
-    }
-
-    pub fn get_coords_of_shape(&self, shape_index: usize) -> Vec<Ref<Coord>> {
-        let mut vec = Vec::new();
-        vec.push(self.shapes[shape_index].start.borrow());
-        for curve in  self.shapes[shape_index].curves.iter(){
-            vec.push(curve.cp0.borrow());
-            vec.push(curve.cp1.borrow());
-            vec.push(curve.p1.borrow());
-        }
-        vec
-    }
-
-    pub fn toggle_separate_join_handle(&mut self, shape_index: usize, curve_index: usize) {
-        self.shapes[shape_index].toggle_separate_join_handle(curve_index);
-    }
-
     pub fn debug_string(&self)->String{
         let mut string = "".to_string();
         for shape in &self.shapes{
@@ -169,55 +109,9 @@ impl Vgc {
         }
         string
     }
-
-    pub fn set_shape_background(&mut self, shape_index: usize, color: Rgba) {
-        self.shapes[shape_index].color = color;
-    }
-
-    pub fn get_closest_coord_on_shape(&self, shape_index: usize, x: f32, y: f32) -> Coord {
-        self.shapes[shape_index].closest_coord_on(Coord {x, y})
-    }
 }
 
-pub enum RefCoordType<'a> {
-    Start(Ref<'a, Coord>),
-    /// Curve index, coord
-    Cp0(usize, Ref<'a, Coord>),
-    /// Curve index, coord
-    Cp1(usize, Ref<'a, Coord>),
-    /// Curve index, coord
-    P1(usize, Ref<'a, Coord>),
-}
 
-#[derive(Debug, Clone)]
-pub enum CoordType{
-    Start,
-    Cp0(usize),
-    /// Curve index
-    Cp1(usize),
-    /// Curve index
-    P1(usize),
-}
-
-impl RefCoordType<'_> {
-    pub fn get_coord(&self) -> &Coord {
-        match self {
-            RefCoordType::Start(coord) => coord,
-            RefCoordType::Cp0(_, coord) => coord,
-            RefCoordType::Cp1(_, coord) => coord,
-            RefCoordType::P1(_, coord) => coord,
-        }
-    }
-
-    pub fn to_coord_type(&self)->CoordType{
-        match self {
-            RefCoordType::Start(_) => CoordType::Start,
-            RefCoordType::Cp0(index, _) => CoordType::Cp0(*index),
-            RefCoordType::Cp1(index, _) => CoordType::Cp1(*index),
-            RefCoordType::P1(index, _) => CoordType::P1(*index),
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -231,7 +125,8 @@ mod tests {
             Coord { x: 1.0, y: 1.0 },
         ]);
 
-        let coord = canvas.get_closest_coord_on_shape(0, 1.0, 0.0);
+        let shape = canvas.get_shape(0).unwrap();
+        let (_,_,_,coord) = shape.closest_curve(&Coord::new(1.0, 0.0));
         assert_eq!(coord.x, 0.5);
         assert_eq!(coord.y, 0.5);
     }
@@ -282,10 +177,15 @@ pub fn generate_from_line(y: &[Coord]) -> Vgc {
                 a: 255,
             },
         );
-    
+
+        let shape = canvas.get_mut_shape(shape_index).unwrap();
+        let mut previous = shape.start.clone();
         for i in 1..y.len() {
-            canvas.push_coord(shape_index, y[i-1].clone(), y[i].clone(), y[i].clone())
+            let p1 = Rc::new(RefCell::new(y[i].clone()));
+            shape.push_coord(previous,p1.clone(), p1.clone());
+            previous = p1;
         }
+        shape.close()
     }
    
     canvas
@@ -310,11 +210,14 @@ pub fn generate_from_push(y: &[Coord]) -> Vgc {
                 b: 0,
                 a: 255,
             });
+
+        let shape = canvas.get_mut_shape(shape_index).unwrap();
     
         for i in 0..((y.len()-1)/3) {
             let index = i*3+1;
-            canvas.push_coord(shape_index, y[index].clone(), y[index+1].clone(), y[index+2].clone());
+            shape.push_coord(Rc::new(RefCell::new(y[index].clone())), Rc::new(RefCell::new(y[index+1].clone())), Rc::new(RefCell::new(y[index+2].clone())));
         }
+        shape.close()
     }
    
     canvas

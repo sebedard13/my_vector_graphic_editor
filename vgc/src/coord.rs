@@ -1,9 +1,6 @@
+use std::cell::Ref;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
-use crate::curve::Curve;
-
-use crate::instructions::{CoordInstruction, ShapeInstruction};
-use crate::vgc_struct::Shape;
 
 /* 
 pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
@@ -40,6 +37,10 @@ pub struct Coord {
     pub y: f32,
 }
 impl Coord {
+    pub fn new(x: f32, y: f32) -> Coord {
+        Coord { x, y }
+    }
+
     pub fn key(&self) -> u64 {
         let mut key:u64 = self.x.to_bits().into();
         key <<= 32;
@@ -87,6 +88,45 @@ impl Display for Coord {
     }
 }
 
+pub enum RefCoordType<'a> {
+    Start(Ref<'a, Coord>),
+    /// Curve index, coord
+    Cp0(usize, Ref<'a, Coord>),
+    /// Curve index, coord
+    Cp1(usize, Ref<'a, Coord>),
+    /// Curve index, coord
+    P1(usize, Ref<'a, Coord>),
+}
+
+#[derive(Debug, Clone)]
+pub enum CoordType{
+    Start,
+    Cp0(usize),
+    /// Curve index
+    Cp1(usize),
+    /// Curve index
+    P1(usize),
+}
+
+impl RefCoordType<'_> {
+    pub fn get_coord(&self) -> &Coord {
+        match self {
+            RefCoordType::Start(coord) => coord,
+            RefCoordType::Cp0(_, coord) => coord,
+            RefCoordType::Cp1(_, coord) => coord,
+            RefCoordType::P1(_, coord) => coord,
+        }
+    }
+
+    pub fn to_coord_type(&self)->CoordType{
+        match self {
+            RefCoordType::Start(_) => CoordType::Start,
+            RefCoordType::Cp0(index, _) => CoordType::Cp0(*index),
+            RefCoordType::Cp1(index, _) => CoordType::Cp1(*index),
+            RefCoordType::P1(index, _) => CoordType::P1(*index),
+        }
+    }
+}
 
 impl Add<Coord> for Coord {
     type Output = Coord;

@@ -2,6 +2,8 @@ use iced::{
     widget::canvas::{Fill, Frame, Path, Stroke},
     Color, Point,
 };
+use vgc::coord::Coord;
+use vgc::coord::RefCoordType;
 
 use crate::scene::{point_in_radius, Scene};
 
@@ -21,10 +23,10 @@ pub fn change_hover(scene: &mut Scene, cursor_position: Point) {
     let coords = scene.vgc_data.visit_vec();
     for (_, coord) in coords {
         let coord = match coord {
-            vgc::RefCoordType::Cp0(_, coord) => coord,
-            vgc::RefCoordType::Cp1(_, coord) => coord,
-            vgc::RefCoordType::P1(_, coord) => coord,
-            vgc::RefCoordType::Start(coord) => coord,
+            RefCoordType::Cp0(_, coord) => coord,
+            RefCoordType::Cp1(_, coord) => coord,
+            RefCoordType::P1(_, coord) => coord,
+            RefCoordType::Start(coord) => coord,
         };
 
         if point_in_radius(
@@ -45,8 +47,8 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
     let selected_shape = 0;
 
     // Render p
-    let p_coords = scene.vgc_data.get_p_of_shape(selected_shape);
-    let cp_coords = scene.vgc_data.get_cp_of_shape(selected_shape);
+    let p_coords = scene.vgc_data.get_shape(selected_shape).unwrap().get_p_of_shape();
+    let cp_coords = scene.vgc_data.get_shape(selected_shape).unwrap().get_cp_of_shape();
 
     for coord in &p_coords{
         let color = match scene.selected_shape.index_selected_coord {
@@ -68,10 +70,10 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
 
     for coord in &cp_coords{
         let coord = match coord {
-            vgc::RefCoordType::Cp0(_, coord) => coord,
-            vgc::RefCoordType::Cp1(_, coord) => coord,
-            vgc::RefCoordType::P1(_, coord) => coord,
-            vgc::RefCoordType::Start(coord) => coord,
+            RefCoordType::Cp0(_, coord) => coord,
+            RefCoordType::Cp1(_, coord) => coord,
+            RefCoordType::P1(_, coord) => coord,
+            RefCoordType::Start(coord) => coord,
         };
 
         let color = match scene.selected_shape.index_selected_coord {
@@ -95,7 +97,7 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
     // Render lines between control points and points
     for cp in cp_coords {
         match cp {
-            vgc::RefCoordType::Cp0(curve_index, coord) => {
+            RefCoordType::Cp0(curve_index, coord) => {
                 let from = Point::new(
                     p_coords[curve_index].x,
                     p_coords[curve_index].y * 1.0 / scene.vgc_data.ratio as f32,
@@ -108,7 +110,7 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
                     .with_color(Color::from_rgb8(0x3A, 0xD1, 0xEF));
                 frame.stroke(&Path::line(from, to), stroke);
             }
-            vgc::RefCoordType::Cp1(curve_index, coord) => {
+            RefCoordType::Cp1(curve_index, coord) => {
                 let from = Point::new(
                     p_coords[curve_index + 1].x,
                     p_coords[curve_index + 1].y * 1.0 / scene.vgc_data.ratio as f32,
@@ -125,7 +127,7 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
     }
 
     // Render path stroke overlay
-    let coords = scene.vgc_data.get_coords_of_shape(selected_shape);
+    let coords = scene.vgc_data.get_shape(selected_shape).unwrap().get_coords_of_shape();
     let path = Path::new(|p| {
         p.move_to(Point::new(
             coords[0].x,
@@ -161,7 +163,8 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
 pub fn draw_closest_pt(scene: &Scene, frame: &mut Frame, pos: Point)  {
     let shape_index = 0;
     let pos = scene.camera.project(pos);
-    let coord = scene.vgc_data.get_closest_coord_on_shape(shape_index, pos.x, pos.y);
+    let shape = scene.vgc_data.get_shape(shape_index).unwrap();
+    let (_,_,_,coord) = shape.closest_curve(&Coord::new(pos.x, pos.y));
 
     let color = Color::from_rgb8(0x0E, 0x90, 0xAA);
    

@@ -15,12 +15,22 @@ pub struct Curve {
 }
 
 impl Curve {
-    pub fn new(c1: Rc<RefCell<Coord>>, c2: Rc<RefCell<Coord>>, p: Rc<RefCell<Coord>>) -> Curve {
+    pub fn new(cp0: Rc<RefCell<Coord>>, cp1: Rc<RefCell<Coord>>, p1: Rc<RefCell<Coord>>) -> Curve {
         Curve {
-            cp0: c1,
-            cp1: c2,
-            p1: p,
+            cp0,
+            cp1,
+            p1,
         }
+    }
+
+    pub fn to_path(&self) -> String {
+        let cp0 = self.cp0.borrow();
+        let cp1 = self.cp1.borrow();
+        let p1 =  self.p1.borrow();
+        format!(
+            "C {} {} {} {} {} {}",
+            cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y
+        )
     }
 }
 
@@ -301,7 +311,7 @@ mod test {
 
         let now_t_closest = Instant::now();
         for _ in 0..1000 {
-            let option = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+            let _ = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
         }
         let elapsed_t_closest = now_t_closest.elapsed().as_micros();
         println!("t_closest: {:?} us", elapsed_t_closest);

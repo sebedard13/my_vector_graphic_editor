@@ -1,5 +1,5 @@
 use iced::Point;
-use vgc::{RefCoordType, Vgc, CoordType};
+use vgc::{coord::{RefCoordType, CoordType}, Vgc};
 
 use crate::scene::canvas_camera::Camera;
 
@@ -32,10 +32,10 @@ pub fn handle_move(
             let coords: Vec<(usize, RefCoordType<'_>)> = vgc_data.visit_vec();
             let coord_on_vec: Vec<CoordType> = coords.iter().filter_map(|(_,ref_coord)|  {
                 let coord = match ref_coord {
-                    vgc::RefCoordType::Cp0(_, coord) => coord,
-                    vgc::RefCoordType::Cp1(_, coord) => coord,
-                    vgc::RefCoordType::P1(_, coord) => coord,
-                    vgc::RefCoordType::Start(coord) => coord,
+                    RefCoordType::Cp0(_, coord) => coord,
+                    RefCoordType::Cp1(_, coord) => coord,
+                    RefCoordType::P1(_, coord) => coord,
+                    RefCoordType::Start(coord) => coord,
                 };
 
                 let point = &camera.project(mousedown.start_press);
@@ -88,7 +88,7 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
             });
 
             for (shape_index, curve_index) in to_do {
-                vgc_data.toggle_separate_join_handle(shape_index, curve_index);
+                vgc_data.get_mut_shape(shape_index).unwrap().toggle_separate_join_handle(curve_index);
             }
         }
         _ => {}
