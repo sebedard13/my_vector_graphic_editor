@@ -1,5 +1,8 @@
 use std::{rc::Rc, cell::RefCell};
 
+use itertools::Itertools;
+use polynomen::Poly;
+
 use crate::coord::Coord;
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
@@ -73,28 +76,28 @@ pub fn t_closest(
 
 
     //Division by da, because function accept only monic polynomials
-    let vec = &[db/da, dc/da, dd/da, de/da, df/da];
-    
-    let mut real_roots =roots::find_roots_sturm(vec, &mut 1e-8f64);
+    let mut vec = vec![1.0, db/da, dc/da, dd/da, de/da, df/da];
 
+    vec.reverse();
 
-    real_roots.push(Ok(0.0));
-    real_roots.push(Ok(1.0));
+    let poly = Poly::new_from_coeffs(&vec);
+
+    let real_roots_raw = poly.complex_roots();
+
+    let mut real_roots = real_roots_raw.iter().map(|x| x.0).collect::<Vec<f64>>();
+
+    real_roots.push(0.0);
+    real_roots.push(1.0);
 
     let mut min_distance = std::f32::MAX;
     let mut min_t = 0.0;
     let mut min = Coord { x: 0.0, y: 0.0 };
-    real_roots.iter().filter_map(|x| 
-        match x{
-            Ok(r) => Some(*r as f32),
-            _ => None
-        }
-    ).filter(|x|  {x >= &&0.0 && x <= &&1.0}).for_each(|t| {
-        let curve_coord = cubic_bezier(t, p0, cp0, cp1, p1);
+    real_roots.iter().filter(|x|  {x >= &&0.0 && x <= &&1.0}).for_each(|t| {
+        let curve_coord = cubic_bezier(*t as f32, p0, cp0, cp1, p1);
         let distance = coord.approx_distance(&curve_coord);
         if distance < min_distance {
             min_distance = distance;
-            min_t = t;
+            min_t = *t as f32;
             min = curve_coord;
         }
     });
@@ -147,6 +150,7 @@ fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> C
 
 /// Return two control points to create a smooth curve at t of curve defined by p0, cp0, cp1, p1
 /// if t = 0.0 or 1.0 use tangent_cornor_pts() to use the sum of vector of two curve
+#[allow(dead_code)]
 fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> [Coord; 2] {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
         return [
@@ -291,6 +295,20 @@ mod test {
         assert_eq!(t, 0.5);
         assert_eq!(distance, 0.176776695297);
         assert_eq!(closest, Coord { x: 0.125, y: 0.125 });
+    }
+
+    #[test]
+    fn t_closest_weird(){
+        let coord = Coord {x:1.00800002, y:0.611999988};
+        let p0 = Coord { x: 1.0, y: 1.0 };
+        let cp0 = Coord { x: 1.0, y: 1.0 };
+        let cp1 = Coord {x:0.794221878, y:0.246179819};
+        let p1 = Coord {x:0.430000007, y:0.270000011};
+
+
+        let (t,_, _)  = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+
+        assert_eq!(t, 0.45561033);
     }
 
     #[test]

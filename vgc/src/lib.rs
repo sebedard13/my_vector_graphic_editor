@@ -1,19 +1,22 @@
-use std::cell::{RefCell, Ref};
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::coord::Coord;
-use crate::vgc_struct::{Rgba, Shape};
-use coord::{CoordType, RefCoordType};
+use crate::fill::Rgba;
+use coord::RefCoordType;
 use iced::widget::canvas::Frame;
+use shape::Shape;
 
 pub mod coord;
 pub mod render;
-mod vgc_struct;
+mod fill;
 mod curve;
+mod shape;
 
 #[derive(Debug)]
 pub struct Vgc{
-    pub ratio: f64, //width/height 16/9
+    /// width/height
+    pub ratio: f64,
     pub background: Rgba,
     shapes: Vec<Shape>,
 }
@@ -36,33 +39,6 @@ impl Vgc {
         self.shapes.push(shape);
         self.shapes.len() - 1
     }
-
-    pub fn move_coord(&mut self, index_shape: usize, coord_type: &CoordType, x: f32, y: f32) {
-        match coord_type {
-            CoordType::Start => {
-                let mut coord = self.shapes[index_shape].start.borrow_mut();
-                coord.x = x;
-                coord.y = y;
-            }
-            CoordType::Cp0(index_curve) => {
-                let mut coord = self.shapes[index_shape].curves[*index_curve].cp0.borrow_mut();
-                coord.x = x;
-                coord.y = y;
-            }
-            CoordType::Cp1(index_curve) => {
-                let mut coord = self.shapes[index_shape].curves[*index_curve].cp1.borrow_mut();
-                coord.x = x;
-                coord.y = y;
-            }
-            CoordType::P1(index_curve) => {
-                let mut coord = self.shapes[index_shape].curves[*index_curve].p1.borrow_mut();
-                coord.x = x;
-                coord.y = y;
-            }
-        }
-
-    }
-
 
     pub fn get_shape(&self, index_shape: usize) -> Option<&Shape>{
         self.shapes.get(index_shape)
@@ -150,9 +126,7 @@ mod tests {
         ]);
        
         assert_eq!(canvas.debug_string(), "M 0 0 C -0.46193975 0.19134173 0 1 0 1 C 0 1 1 1 1 1 C 1 1 0.46193975 -0.19134173 0 0 Z\n");
-    }
-
-    
+    } 
 }
 
 pub fn generate_from_line(y: &[Coord]) -> Vgc {

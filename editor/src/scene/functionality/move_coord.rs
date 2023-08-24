@@ -59,7 +59,8 @@ pub fn handle_move(
             let index_shape = 0;
             if let Some(coord_type) = &move_coord.id_point {
                 let point = &camera.project(pressmove.current_coord);
-                vgc_data.move_coord(index_shape, coord_type, point.x, point.y);
+                let shape = vgc_data.get_mut_shape(index_shape).unwrap();
+                shape.move_coord(coord_type, point.x, point.y);
             };
         }
         _ => {}

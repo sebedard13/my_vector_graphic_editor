@@ -1,10 +1,10 @@
-use std::cell::{RefCell, Ref};
 use std::mem::swap;
 use std::rc::Rc;
-
-use crate::coord::{Coord, RefCoordType};
+use std::cell::{Ref, RefCell};
+use crate::coord::{Coord, RefCoordType, CoordType};
 use crate::curve;
 use crate::curve::Curve;
+use crate::fill::Rgba;
 
 #[derive(Debug)]
 pub struct Shape {
@@ -45,8 +45,11 @@ impl Shape {
 
     pub fn close(&mut self) {
         if !self.is_closed(){
+
+            let (_,_,_,p1)= self.get_coords_of_curve(self.curves.len() - 1);
+
             self.curves.push(Curve {
-                cp0: self.start.clone(),
+                cp0: p1,
                 cp1: self.start.clone(),
                 p1: self.start.clone(),
             });
@@ -55,7 +58,6 @@ impl Shape {
 
     pub fn separate_handle(&mut self,  curve_index_p1: usize) {
         let (coord_index0, coord_index1) = {
-             //Todo check if index is not the last curve and what not
             let p0 = {
                 if curve_index_p1 == 0 {
                     self.start.borrow()
@@ -72,9 +74,9 @@ impl Shape {
             let cp2 = &next_curve.cp0.borrow();
             let cp3 = &next_curve.cp1.borrow();
             let p2 = &next_curve.p1.borrow();
-            
-            
-            
+
+
+
             curve::tangent_cornor_pts(&p0, cp0, cp1, p1, cp2, cp3, p2)
         };
 
@@ -87,12 +89,12 @@ impl Shape {
        //cp0
        let coord_index = &self.curves[curve_index_p1].p1;
        let curve_after = (curve_index_p1 + 1) % self.curves.len();
-       
+
        self.curves[curve_after].cp0 = coord_index.clone();
-        
+
         //cp1
         let coord_index = &self.curves[curve_index_p1].p1;
-       
+
         self.curves[curve_index_p1].cp1 = coord_index.clone();
     }
 
@@ -119,7 +121,7 @@ impl Shape {
             let cp0 = curve.cp0.borrow();
             let cp1 = curve.cp1.borrow();
             let p1 = curve.p1.borrow();
-          
+
             visitor(index, &prev_coord, &cp0, &cp1, &p1);
 
             prev_coord = p1;
@@ -147,18 +149,18 @@ impl Shape {
         (min_index, min_t, min_distance, min_coord)
     }
 
-    pub fn get_coords_of_curve(&self, curve_index:usize)->(Ref<Coord>, Ref<Coord>, Ref<Coord>, Ref<Coord>){
-        let mut prev_coord =self.start.borrow();
+    pub fn get_coords_of_curve(&self, curve_index:usize)->(Rc<RefCell<Coord>>, Rc<RefCell<Coord>>, Rc<RefCell<Coord>>, Rc<RefCell<Coord>>){
+        let mut prev_coord =self.start.clone();
 
         if curve_index > 0{
             let prev_curve = self.curves.get(curve_index - 1).expect("Index should be valid");
-            prev_coord = prev_curve.p1.borrow();
+            prev_coord = prev_curve.p1.clone();
         }
         let curve = self.curves.get(curve_index).expect("Index should be valid");
-        let cp0 = curve.cp0.borrow();
-        let cp1 = curve.cp1.borrow();
-        let p1 = curve.p1.borrow();
-          
+        let cp0 = curve.cp0.clone();
+        let cp1 = curve.cp1.clone();
+        let p1 = curve.p1.clone();
+
         return (prev_coord, cp0, cp1, p1);
     }
 
@@ -194,26 +196,63 @@ impl Shape {
         }
         vec
     }
-}
 
-
-
-
-#[derive(Debug)]
-pub struct Rgba {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
-    pub a: u8,
-}
-
-impl From<[u8;4]> for Rgba{
-    fn from(value: [u8;4]) -> Self {
-        Rgba{
-            r: value[0],
-            g: value[1],
-            b: value[2],
-            a: value[3],
+    pub fn move_coord(&mut self, coord_type: &CoordType, x: f32, y: f32) {
+        match coord_type {
+            CoordType::Start => {
+                let mut coord = self.start.borrow_mut();
+                coord.x = x;
+                coord.y = y;
+            }
+            CoordType::Cp0(index_curve) => {
+                let mut coord = self.curves[*index_curve].cp0.borrow_mut();
+                coord.x = x;
+                coord.y = y;
+            }
+            CoordType::Cp1(index_curve) => {
+                let mut coord = self.curves[*index_curve].cp1.borrow_mut();
+                coord.x = x;
+                coord.y = y;
+            }
+            CoordType::P1(index_curve) => {
+                let mut coord = self.curves[*index_curve].p1.borrow_mut();
+                coord.x = x;
+                coord.y = y;
+            }
         }
+
+    }
+}
+
+
+#[cfg(test)]
+mod test{
+    use crate::{generate_from_push, coord::Coord};
+
+
+    #[test]
+    fn cloest_pt(){
+        let vgc = generate_from_push(&[
+            Coord::new(0.43,0.27),
+
+            Coord::new(0.06577811, 0.2938202),
+            Coord::new(0.0,1.0),
+            Coord::new(0.0,1.0),
+
+            Coord::new(0.0,1.0),
+            Coord::new(1.0,1.0),
+            Coord::new(1.0,1.0),
+          
+
+            Coord::new(1.0,1.0),
+            Coord::new(0.7942219, 0.24617982),
+            Coord::new(0.43,0.27),
+        ]);
+
+        let shape = vgc.get_shape(0).expect("Shape should exist");
+
+        let (_,_,_,coord) = shape.closest_curve(&Coord::new(1.008, 0.612));
+        dbg!(&coord);
+        assert_ne!(&coord.y, &1.0);
     }
 }
