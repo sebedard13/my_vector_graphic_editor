@@ -5,72 +5,7 @@ use crate::curve::Curve;
 use crate::instructions::{CoordInstruction, ShapeInstruction};
 use crate::vgc_struct::Shape;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct CoordIndex {
-    pub i: usize,
-}
-
-#[derive(Debug)]
-pub struct CoordDS {
-    pub array: Vec<Option<Coord>>,
-    pub is_normalize: bool,
-}
-
-impl Default for CoordDS {
-    fn default() -> Self {
-        CoordDS {
-            is_normalize: true,
-            array: Vec::default(),
-        }
-    }
-}
-
-impl CoordDS {
-    pub fn new() -> Self {
-        CoordDS::default()
-    }
-
-    pub fn insert(&mut self, c: Coord) -> CoordIndex {
-        self.array.push(Some(c));
-        CoordIndex {
-            i: self.array.len() - 1,
-        }
-    }
-
-    pub fn get(&self, coord_index: &CoordIndex) -> &Coord {
-        self.array[coord_index.i]
-            .as_ref()
-            .expect("Coord should be valid from CoordIndex")
-    }
-
-    pub fn modify(&mut self, coord_index: usize, c: Coord) {
-        self.array[coord_index] = Some(c);
-    }
-
-    pub fn scale(&self, w: f32, h: f32) -> Self {
-        let mut arr = self.array.clone();
-
-        arr.iter_mut().for_each(|op_c| {
-            match op_c {
-                Some(c) => {
-                    c.x *= w;
-                    c.y *= h;
-                }
-                None => {}
-            };
-        });
-
-        CoordDS {
-            array: arr,
-            is_normalize: false,
-        }
-    }
-
-    pub fn remove(&mut self, coord_index: &CoordIndex) {
-        self.array[coord_index.i] = None;
-    }
-}
-
+/* 
 pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
     let c1 = coord_ds.insert(curve_instruction.c1);
     let c2 = coord_ds.insert(curve_instruction.c2);
@@ -96,35 +31,8 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     };
     shape.close();
     shape
-}
+}*/
 
-#[cfg(test)]
-mod tests {
-    use float_cmp::approx_eq;
-
-    use crate::coord::{Coord, CoordDS};
-
-    #[test]
-    fn scale_coord_ds() {
-        let mut cds = CoordDS::new();
-        cds.insert(Coord { x: 0.5, y: 0.2 });
-
-        let sc_cds = cds.scale(10.0, 5.0);
-
-        assert!(approx_eq!(
-            f32,
-            sc_cds.array[0].as_ref().unwrap().x,
-            5.0,
-            ulps = 2
-        ));
-        assert!(approx_eq!(
-            f32,
-            sc_cds.array[0].as_ref().unwrap().y,
-            1.0,
-            ulps = 2
-        ));
-    }
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Coord {
@@ -163,6 +71,13 @@ impl Coord {
         let dx = self.x - curve_coord.x;
         let dy = self.y - curve_coord.y;
         dx * dx + dy * dy
+    }
+
+    pub fn scale(&self,scale_x:u32,scale_y:u32)->Coord{
+        Coord{
+            x:self.x*(scale_x as f32),
+            y:self.y*(scale_y as f32)
+        }
     }
 }
 

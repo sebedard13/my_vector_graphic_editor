@@ -1,4 +1,6 @@
-use crate::coord::{Coord, CoordIndex};
+use std::{rc::Rc, cell::RefCell};
+
+use crate::coord::Coord;
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
@@ -7,13 +9,13 @@ use crate::coord::{Coord, CoordIndex};
 /// The curve is drawn from the previous curve point [i-1].p1, with [i].cp1 and [i].cph2 as control points and [i].cp1 for the final points.
 #[derive(Debug)]
 pub struct Curve {
-    pub cp0: CoordIndex,
-    pub cp1: CoordIndex,
-    pub p1: CoordIndex,
+    pub cp0: Rc<RefCell<Coord>>,
+    pub cp1: Rc<RefCell<Coord>>,
+    pub p1: Rc<RefCell<Coord>>,
 }
 
 impl Curve {
-    pub fn new(c1: CoordIndex, c2: CoordIndex, p: CoordIndex) -> Curve {
+    pub fn new(c1: Rc<RefCell<Coord>>, c2: Rc<RefCell<Coord>>, p: Rc<RefCell<Coord>>) -> Curve {
         Curve {
             cp0: c1,
             cp1: c2,
@@ -181,7 +183,7 @@ pub fn tangent_cornor_pts(
     cp2: &Coord,
     cp3: &Coord,
     p2: &Coord,
-) -> [Coord; 2] {
+) -> (Coord, Coord) {
     let tangent_vector_l = tangent_vector(1.0, p0, cp0, cp1, p1);
     let tangent_vector_r = tangent_vector(0.0, p1, cp2, cp3, p2);
 
@@ -202,7 +204,7 @@ pub fn tangent_cornor_pts(
         array_distance[3]
     };
 
-    [
+    (
         Coord {
             x: coord.x - t_at * tangent_vector.x,
             y: coord.y - t_at * tangent_vector.y,
@@ -211,7 +213,7 @@ pub fn tangent_cornor_pts(
             x: coord.x + t_at * tangent_vector.x,
             y: coord.y + t_at * tangent_vector.y,
         },
-    ]
+    )
 }
 
 #[cfg(test)]
@@ -248,7 +250,7 @@ mod test {
         let p2 = Coord { x: 0.0, y: 1.0 };
 
         let sin = (0.25 * PI).sin(); // 45deg
-        let result = [
+        let result = (
             Coord {
                 x: 0.5 * sin,
                 y: -0.5 * sin,
@@ -257,7 +259,7 @@ mod test {
                 x: -0.5 * sin,
                 y: 0.5 * sin,
             },
-        ];
+        );
 
         assert_eq!(
             tangent_cornor_pts(&p0, &cp0, &cp1, &p1, &cp2, &cp3, &p2),
