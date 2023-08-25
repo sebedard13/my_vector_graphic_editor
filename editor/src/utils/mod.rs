@@ -1,6 +1,6 @@
-use iced::widget::{canvas, Canvas};
 use iced::widget::canvas::{Cache, Geometry, Path};
-use iced::{mouse, Length, Element};
+use iced::widget::{canvas, Canvas};
+use iced::{mouse, Element, Length};
 use iced::{Color, Point, Rectangle, Renderer, Theme};
 
 use crate::Message;
@@ -56,10 +56,7 @@ impl Default for ColorImage {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct None{
-
-}
-
+pub struct None {}
 
 impl canvas::Program<Message> for ColorImage {
     type State = None;
@@ -70,7 +67,7 @@ impl canvas::Program<Message> for ColorImage {
         renderer: &Renderer,
         _: &Theme,
         bounds: Rectangle,
-       _: mouse::Cursor,
+        _: mouse::Cursor,
     ) -> Vec<Geometry> {
         let img = self.draw_cache.draw(renderer, bounds.size(), |frame| {
             let background = Path::rectangle(Point::ORIGIN, frame.size());

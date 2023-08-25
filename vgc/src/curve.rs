@@ -1,4 +1,4 @@
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
 use polynomen::Poly;
 
@@ -18,17 +18,13 @@ pub struct Curve {
 
 impl Curve {
     pub fn new(cp0: Rc<RefCell<Coord>>, cp1: Rc<RefCell<Coord>>, p1: Rc<RefCell<Coord>>) -> Curve {
-        Curve {
-            cp0,
-            cp1,
-            p1,
-        }
+        Curve { cp0, cp1, p1 }
     }
 
     pub fn to_path(&self) -> String {
         let cp0 = self.cp0.borrow();
         let cp1 = self.cp1.borrow();
-        let p1 =  self.p1.borrow();
+        let p1 = self.p1.borrow();
         format!(
             "C {} {} {} {} {} {}",
             cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y
@@ -47,8 +43,7 @@ pub fn t_closest(
     cp1: &Coord,
     p1: &Coord,
 ) -> (f32, f32, Coord) {
-
-    let a = -1.0*p0 + 3.0 * cp0 - 3.0 * cp1 + p1;
+    let a = -1.0 * p0 + 3.0 * cp0 - 3.0 * cp1 + p1;
     let b = 3.0 * p0 - 6.0 * cp0 + 3.0 * cp1;
     let c = -3.0 * p0 + 3.0 * cp0;
     let d = p0 - coord;
@@ -56,7 +51,7 @@ pub fn t_closest(
     // function of approximate distance between coord and curve for t
     //d(t):=(a_x*t^(3)+b_x*t^(2)+c_x*t+d_x)^(2)+(a_y*t^(3)+b_y*t^(2)+c_y*t+d_y)^(2)
 
-    // 
+    //
     //d(t) ▸ (a_x^(2)+a_y^(2))*t^(6)
     //+(2*a_x*b_x+2*a_y*b_y)*t^(5)
     //+(2*a_x*c_x+2*a_y*c_y+b_x^(2)+b_y^(2))*t^(4)
@@ -65,17 +60,16 @@ pub fn t_closest(
     //+(2*c_x*d_x+2*c_y*d_y)*t
     //+d_x^(2)+d_y^(2)
 
-    //(d(t),t) ▸ 
+    //(d(t),t) ▸
     let da = 6.0 * (a.x.powi(2) + a.y.powi(2)) as f64; //6*(a_x^(2)+a_y^(2))*t^(5)
-    let db = (10.0*a.x*b.x + 10.0*a.y*b.y) as f64;// 10*(a_x*b_x+a_y*b_y)*t^(4)
-    let dc = 4.0*(2.0*a.x*c.x + 2.0*a.y*c.y + b.x.powi(2) + b.y.powi(2)) as f64;// 4*(2*a_x*c_x+2*a_y*c_y+b_x^(2)+b_y^(2))*t^(3)
-    let dd = 6.0*(a.x*d.x + a.y*d.y + b.x*c.x + b.y*c.y) as f64;// 6*(a_x*d_x+a_y*d_y+b_x*c_x+b_y*c_y)*t^(2)
-    let de = 2.0*(2.0*(b.x*d.x + b.y*d.y) + c.x.powi(2) + c.y.powi(2)) as f64;// 2*(2*b_x*d_x+2*b_y*d_y+c_x^(2)+c_y^(2))*t
-    let df = 2.0*(c.x*d.x + c.y*d.y) as f64;// 2*c_x*d_x+2*c_y*d_y
-
+    let db = (10.0 * a.x * b.x + 10.0 * a.y * b.y) as f64; // 10*(a_x*b_x+a_y*b_y)*t^(4)
+    let dc = 4.0 * (2.0 * a.x * c.x + 2.0 * a.y * c.y + b.x.powi(2) + b.y.powi(2)) as f64; // 4*(2*a_x*c_x+2*a_y*c_y+b_x^(2)+b_y^(2))*t^(3)
+    let dd = 6.0 * (a.x * d.x + a.y * d.y + b.x * c.x + b.y * c.y) as f64; // 6*(a_x*d_x+a_y*d_y+b_x*c_x+b_y*c_y)*t^(2)
+    let de = 2.0 * (2.0 * (b.x * d.x + b.y * d.y) + c.x.powi(2) + c.y.powi(2)) as f64; // 2*(2*b_x*d_x+2*b_y*d_y+c_x^(2)+c_y^(2))*t
+    let df = 2.0 * (c.x * d.x + c.y * d.y) as f64; // 2*c_x*d_x+2*c_y*d_y
 
     //Division by da, because function accept only monic polynomials
-    let mut vec = vec![1.0, db/da, dc/da, dd/da, de/da, df/da];
+    let mut vec = vec![1.0, db / da, dc / da, dd / da, de / da, df / da];
 
     vec.reverse();
 
@@ -91,16 +85,19 @@ pub fn t_closest(
     let mut min_distance = std::f32::MAX;
     let mut min_t = 0.0;
     let mut min = Coord { x: 0.0, y: 0.0 };
-    real_roots.iter().filter(|x|  {x >= &&0.0 && x <= &&1.0}).for_each(|t| {
-        let curve_coord = cubic_bezier(*t as f32, p0, cp0, cp1, p1);
-        let distance = coord.approx_distance(&curve_coord);
-        if distance < min_distance {
-            min_distance = distance;
-            min_t = *t as f32;
-            min = curve_coord;
-        }
-    });
- 
+    real_roots
+        .iter()
+        .filter(|x| x >= &&0.0 && x <= &&1.0)
+        .for_each(|t| {
+            let curve_coord = cubic_bezier(*t as f32, p0, cp0, cp1, p1);
+            let distance = coord.approx_distance(&curve_coord);
+            if distance < min_distance {
+                min_distance = distance;
+                min_t = *t as f32;
+                min = curve_coord;
+            }
+        });
+
     (min_t, min_distance.sqrt(), min)
 }
 
@@ -281,15 +278,14 @@ mod test {
     }
 
     #[test]
-    fn t_closest_cornor(){
+    fn t_closest_cornor() {
         let coord = Coord { x: 0.0, y: 0.0 };
         let p0 = Coord { x: 0.0, y: 1.0 };
         let cp0 = Coord { x: 0.0, y: 0.0 };
         let cp1 = Coord { x: 0.0, y: 0.0 };
         let p1 = Coord { x: 1.0, y: 0.0 };
 
-
-        let (t, distance, closest)  = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+        let (t, distance, closest) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
         assert_eq!(t, 0.5);
         assert_eq!(distance, 0.176776695297);
@@ -297,21 +293,29 @@ mod test {
     }
 
     #[test]
-    fn t_closest_weird(){
-        let coord = Coord {x:1.00800002, y:0.611999988};
+    fn t_closest_weird() {
+        let coord = Coord {
+            x: 1.00800002,
+            y: 0.611999988,
+        };
         let p0 = Coord { x: 1.0, y: 1.0 };
         let cp0 = Coord { x: 1.0, y: 1.0 };
-        let cp1 = Coord {x:0.794221878, y:0.246179819};
-        let p1 = Coord {x:0.430000007, y:0.270000011};
+        let cp1 = Coord {
+            x: 0.794221878,
+            y: 0.246179819,
+        };
+        let p1 = Coord {
+            x: 0.430000007,
+            y: 0.270000011,
+        };
 
-
-        let (t,_, _)  = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
+        let (t, _, _) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
         assert_eq!(t, 0.45561033);
     }
 
     #[test]
-    fn bench_approx_distance_to_curve_and_t_closest_cornor(){
+    fn bench_approx_distance_to_curve_and_t_closest_cornor() {
         let coord = Coord { x: 0.0, y: 0.0 };
         let p0 = Coord { x: 0.0, y: 1.0 };
         let cp0 = Coord { x: 0.0, y: 0.0 };
@@ -321,7 +325,7 @@ mod test {
         let now_approx = Instant::now();
         for _ in 0..1000 {
             // approx_distance_to_curve by divinding the curve equaly to find an approximation of the closest point
-           // let option = super::approx_distance_to_curve(&coord, &p0, &cp0, &cp1, &p1);
+            // let option = super::approx_distance_to_curve(&coord, &p0, &cp0, &cp1, &p1);
         }
         let elapsed_approx = now_approx.elapsed().as_micros();
         println!("approx_distance_to_curve: {:?} us", elapsed_approx);
@@ -333,13 +337,13 @@ mod test {
         let elapsed_t_closest = now_t_closest.elapsed().as_micros();
         println!("t_closest: {:?} us", elapsed_t_closest);
         if elapsed_approx < elapsed_t_closest {
-           let percent = (elapsed_t_closest as f32 / elapsed_approx as f32) * 100.0;
+            let percent = (elapsed_t_closest as f32 / elapsed_approx as f32) * 100.0;
             println!("approx_distance_to_curve is {}% faster", percent);
-        }else{
+        } else {
             let percent = (elapsed_approx as f32 / elapsed_t_closest as f32) * 100.0;
             println!("t_closest is {}% faster", percent);
         }
-       
+
         // The approx_distance_to_curve is faster if the number of iteration is not to big
         // at 20, 358% faster
         // at 50, 151% faster

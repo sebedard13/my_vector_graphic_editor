@@ -6,83 +6,80 @@ use iced::{
 };
 use iced_aw::color_picker;
 
+use crate::scene::{Functionality, MsgScene};
 use crate::{Message, VgcEditor};
-use crate::scene::{MsgScene, Functionality};
 
-pub fn left_toolbar<'a>(vgc_editor: &'a VgcEditor, current_functionality: &Functionality) -> Element<'a, Message> {
-
-
+pub fn left_toolbar<'a>(
+    vgc_editor: &'a VgcEditor,
+    current_functionality: &Functionality,
+) -> Element<'a, Message> {
     let btn_move = {
-        let btn_style: Box::<dyn button::StyleSheet<Style = Theme>> = match current_functionality{
+        let btn_style: Box<dyn button::StyleSheet<Style = Theme>> = match current_functionality {
             Functionality::MoveCoord(..) => Box::<BtnStyleSelected>::default(),
             _ => Box::<BtnStyleNormal>::default(),
         };
 
         let img = Image::<image::Handle>::new("editor/data/arrow_pointer.png")
-        .width(20)
-        .height(20);
+            .width(20)
+            .height(20);
 
         button(img)
-        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
-            Functionality::MoveCoord_default()),
-        ))
-        .style(Button::Custom(btn_style))
+            .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+                Functionality::MoveCoord_default(),
+            )))
+            .style(Button::Custom(btn_style))
     };
 
     let btn_pen = {
-        let btn_style: Box::<dyn button::StyleSheet<Style = Theme>> = match current_functionality{
-            Functionality::CreateOrAddPoint |
-            Functionality::CreateNextPoint |
-            Functionality::RemovePoint => Box::<BtnStyleSelected>::default(),
+        let btn_style: Box<dyn button::StyleSheet<Style = Theme>> = match current_functionality {
+            Functionality::CreateOrAddPoint
+            | Functionality::CreateNextPoint
+            | Functionality::RemovePoint => Box::<BtnStyleSelected>::default(),
             _ => Box::<BtnStyleNormal>::default(),
         };
         let img = Image::<image::Handle>::new("editor/data/pen_nib.png")
-        .width(20)
-        .height(20);
+            .width(20)
+            .height(20);
 
         button(img)
-        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
-            Functionality::CreateOrAddPoint_default()),
-        ))
-        .style(Button::Custom(btn_style))
+            .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+                Functionality::CreateOrAddPoint_default(),
+            )))
+            .style(Button::Custom(btn_style))
     };
 
     let btn_bend_tools = {
-        let btn_style: Box::<dyn button::StyleSheet<Style = Theme>> = match current_functionality{
+        let btn_style: Box<dyn button::StyleSheet<Style = Theme>> = match current_functionality {
             Functionality::SeparateHandle => Box::<BtnStyleSelected>::default(),
             _ => Box::<BtnStyleNormal>::default(),
         };
 
         let img = Image::<image::Handle>::new("editor/data/bezier_curve.png")
-        .width(20)
-        .height(20);
-    
+            .width(20)
+            .height(20);
 
         button(img)
-        .on_press(Message::Scene(MsgScene::ChangeFunctionality(
-            Functionality::MoveHandle_default()),
-        ))
-        .style(Button::Custom(btn_style))
+            .on_press(Message::Scene(MsgScene::ChangeFunctionality(
+                Functionality::MoveHandle_default(),
+            )))
+            .style(Button::Custom(btn_style))
     };
 
-
     let color_picker = {
-             
         let but = button(vgc_editor.color_picker.view())
             .on_press(Message::OpenColorPicker)
             .style(Button::Custom(Box::<BtnStyleNormal>::default()));
-        
-        
-        color_picker(
-        vgc_editor.show_color_picker,
-        vgc_editor.color_picker.get_color(),
-        but,
-        Message::CancelColor,
-        Message::SubmitColor,
-    )};
 
-    
-    column![btn_move, btn_pen, btn_bend_tools ,color_picker]
+        color_picker(
+            vgc_editor.show_color_picker,
+            vgc_editor.color_picker.get_color(),
+            but,
+            Message::CancelColor,
+            Message::SubmitColor,
+        )
+    };
+
+    column![btn_move, btn_pen, btn_bend_tools, color_picker]
         .padding(2)
         .spacing(5)
         .align_items(Alignment::Start)
@@ -90,16 +87,13 @@ pub fn left_toolbar<'a>(vgc_editor: &'a VgcEditor, current_functionality: &Funct
         .into()
 }
 
-
-
-
 struct BtnStyleSelected {
     pub appe: button::Appearance,
 }
 
-impl Default for BtnStyleSelected  {
+impl Default for BtnStyleSelected {
     fn default() -> Self {
-        BtnStyleSelected  {
+        BtnStyleSelected {
             appe: button::Appearance {
                 shadow_offset: Vector::default(),
                 background: Some(Background::Color(Color::from_rgba8(0xD5, 0x58, 0x14, 1.0))),
@@ -112,7 +106,7 @@ impl Default for BtnStyleSelected  {
     }
 }
 
-impl button::StyleSheet for BtnStyleSelected  {
+impl button::StyleSheet for BtnStyleSelected {
     type Style = Theme;
 
     fn active(&self, _style: &Self::Style) -> button::Appearance {
@@ -153,7 +147,6 @@ impl button::StyleSheet for BtnStyleSelected  {
         }
     }
 }
-
 
 struct BtnStyleNormal {
     pub appe: button::Appearance,

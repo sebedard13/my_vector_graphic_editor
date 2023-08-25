@@ -1,4 +1,4 @@
-use iced::{mouse, widget::canvas::Event, Point, keyboard};
+use iced::{keyboard, mouse, widget::canvas::Event, Point};
 use itertools::Itertools;
 
 #[derive(Default)]
@@ -19,7 +19,6 @@ pub enum MergeEvent {
     KeysDown(KeysChange),
     KeysUp(KeysChange),
     KeyDown(keyboard::KeyCode),
-
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,30 +32,37 @@ impl EventsMerger {
         match event {
             Event::Mouse(mouse_event) => self.match_mouse_event(cursor_position, mouse_event),
             Event::Touch(_) => EventStatus::Free, //TODO: Handle touch event, maybe like mouse event
-            Event::Keyboard(keyboard_event) => self.match_keyboard_event(cursor_position, keyboard_event),
+            Event::Keyboard(keyboard_event) => {
+                self.match_keyboard_event(cursor_position, keyboard_event)
+            }
         }
     }
 
-    pub fn match_keyboard_event( &mut self,
+    pub fn match_keyboard_event(
+        &mut self,
         cursor_position: Option<Point>,
-        event: keyboard::Event
+        event: keyboard::Event,
     ) -> EventStatus {
         match event {
-            keyboard::Event::KeyPressed{key_code, modifiers} => {
-
+            keyboard::Event::KeyPressed {
+                key_code,
+                modifiers,
+            } => {
                 let active_keys = self.get_all_keydown(modifiers);
 
                 let keydown = MergeEvent::KeyDown(key_code);
                 self.past_events.push(keydown.clone());
 
-                EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange{
+                EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
                     current_coord: cursor_position,
                     new_keys: key_code,
                     active_keys,
                 })))
             }
-            keyboard::Event::KeyReleased{key_code,modifiers} => {
-            
+            keyboard::Event::KeyReleased {
+                key_code,
+                modifiers,
+            } => {
                 self.past_events.retain(|event| match event {
                     MergeEvent::KeyDown(keydown) if key_code == *keydown => false,
                     _ => true,
@@ -64,17 +70,15 @@ impl EventsMerger {
 
                 let active_keys = self.get_all_keydown(modifiers);
 
-                EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange{
+                EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
                     current_coord: cursor_position,
                     new_keys: key_code,
-                    active_keys
+                    active_keys,
                 })))
             }
-            _ =>{EventStatus::Free}
+            _ => EventStatus::Free,
         }
     }
-
-
 
     pub fn match_mouse_event(
         &mut self,
@@ -105,11 +109,9 @@ impl EventsMerger {
                         }
                         _ => EventStatus::Free,
                     },
-                    None => {
-                        EventStatus::Used(Some(MergeEvent::Mousemove(Mousemove{
-                            current_coord: position,
-                        })))
-                    },
+                    None => EventStatus::Used(Some(MergeEvent::Mousemove(Mousemove {
+                        current_coord: position,
+                    }))),
                 }
             }
             mouse::Event::ButtonPressed(mouse_button) => {
@@ -120,8 +122,7 @@ impl EventsMerger {
                     });
                     self.past_events.push(v.clone());
                     EventStatus::Used(Some(v))
-                }
-                else{
+                } else {
                     EventStatus::Used(None)
                 }
             }
@@ -209,10 +210,13 @@ mod tests {
         let mut cursor_position = Point::new(10.0, 20.0);
         let event = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
         let event_status = events_merger.push_event(Some(cursor_position), event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
-            start_press: cursor_position,
-            button: mouse::Button::Left
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
+                start_press: cursor_position,
+                button: mouse::Button::Left
+            })))
+        );
 
         let event = Event::Mouse(mouse::Event::CursorMoved {
             position: Point::new(1.0, 1.0),
@@ -249,19 +253,24 @@ mod tests {
         let cursor_position = Point::new(10.0, 20.0);
         let event = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left));
         let event_status = events_merger.push_event(Some(cursor_position), event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
-            start_press: cursor_position,
-            button: mouse::Button::Left
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
+                start_press: cursor_position,
+                button: mouse::Button::Left
+            })))
+        );
 
         let cursor_position = Point::new(1.0, 2.0);
         let event = Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Right));
         let event_status = events_merger.push_event(Some(cursor_position), event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
-            start_press: cursor_position,
-            button: mouse::Button::Right
-        }))));
-        
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
+                start_press: cursor_position,
+                button: mouse::Button::Right
+            })))
+        );
 
         let cursor_position = Point::new(11.0, 21.0);
         let event = Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left));
@@ -292,62 +301,94 @@ mod tests {
         assert!(events_merger.past_events.is_empty());
     }
 
-
-
     #[test]
     fn basic_keyboard_copy_paste() {
         let mut events_merger = EventsMerger::default();
 
         //Not using modifiers for now, maybe iced don't send LControl
-        let event = Event::Keyboard(keyboard::Event::KeyPressed { key_code: KeyCode::LControl, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyPressed {
+            key_code: KeyCode::LControl,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::LControl,
-            active_keys: vec![],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::LControl,
+                active_keys: vec![],
+            })))
+        );
 
-        let event = Event::Keyboard(keyboard::Event::KeyPressed { key_code: KeyCode::C, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyPressed {
+            key_code: KeyCode::C,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::C,
-            active_keys: vec![KeyCode::LControl],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::C,
+                active_keys: vec![KeyCode::LControl],
+            })))
+        );
 
-        let event = Event::Keyboard(keyboard::Event::KeyReleased { key_code: KeyCode::C, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyReleased {
+            key_code: KeyCode::C,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::C,
-            active_keys: vec![KeyCode::LControl],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::C,
+                active_keys: vec![KeyCode::LControl],
+            })))
+        );
 
-        
-        let event = Event::Keyboard(keyboard::Event::KeyPressed { key_code: KeyCode::V, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyPressed {
+            key_code: KeyCode::V,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::V,
-            active_keys: vec![KeyCode::LControl],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::V,
+                active_keys: vec![KeyCode::LControl],
+            })))
+        );
 
-        let event = Event::Keyboard(keyboard::Event::KeyReleased { key_code: KeyCode::V, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyReleased {
+            key_code: KeyCode::V,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::V,
-            active_keys: vec![KeyCode::LControl],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::V,
+                active_keys: vec![KeyCode::LControl],
+            })))
+        );
 
-
-        let event = Event::Keyboard(keyboard::Event::KeyReleased { key_code: KeyCode::LControl, modifiers: Modifiers::empty() });
+        let event = Event::Keyboard(keyboard::Event::KeyReleased {
+            key_code: KeyCode::LControl,
+            modifiers: Modifiers::empty(),
+        });
         let event_status = events_merger.push_event(None, event);
-        assert_eq!(event_status, EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange{
-            current_coord: None,
-            new_keys: KeyCode::LControl,
-            active_keys: vec![],
-        }))));
+        assert_eq!(
+            event_status,
+            EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
+                current_coord: None,
+                new_keys: KeyCode::LControl,
+                active_keys: vec![],
+            })))
+        );
 
         assert!(events_merger.past_events.is_empty());
     }
@@ -379,12 +420,12 @@ pub struct Click {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Mousemove{
+pub struct Mousemove {
     pub current_coord: Point,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct KeysChange{
+pub struct KeysChange {
     pub current_coord: Option<Point>,
     pub new_keys: keyboard::KeyCode,
     pub active_keys: Vec<keyboard::KeyCode>,

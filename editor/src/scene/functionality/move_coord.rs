@@ -1,5 +1,8 @@
 use iced::Point;
-use vgc::{coord::{RefCoordType, CoordType}, Vgc};
+use vgc::{
+    coord::{CoordType, RefCoordType},
+    Vgc,
+};
 
 use crate::scene::canvas_camera::Camera;
 
@@ -30,29 +33,30 @@ pub fn handle_move(
             //If handle, move as pair
 
             let coords: Vec<(usize, RefCoordType<'_>)> = vgc_data.visit_vec();
-            let coord_on_vec: Vec<CoordType> = coords.iter().filter_map(|(_,ref_coord)|  {
-                let coord = match ref_coord {
-                    RefCoordType::Cp0(_, coord) => coord,
-                    RefCoordType::Cp1(_, coord) => coord,
-                    RefCoordType::P1(_, coord) => coord,
-                    RefCoordType::Start(coord) => coord,
-                };
+            let coord_on_vec: Vec<CoordType> = coords
+                .iter()
+                .filter_map(|(_, ref_coord)| {
+                    let coord = match ref_coord {
+                        RefCoordType::Cp0(_, coord) => coord,
+                        RefCoordType::Cp1(_, coord) => coord,
+                        RefCoordType::P1(_, coord) => coord,
+                        RefCoordType::Start(coord) => coord,
+                    };
 
-                let point = &camera.project(mousedown.start_press);
-                if point_in_radius(
-                    point,
-                    &Point::new(coord.x, coord.y),
-                    camera.fixed_length(12.0),
-                ){
-                    Some(ref_coord.to_coord_type())
-                }else{
-                    None
-                }
-                
-            }).collect();
+                    let point = &camera.project(mousedown.start_press);
+                    if point_in_radius(
+                        point,
+                        &Point::new(coord.x, coord.y),
+                        camera.fixed_length(12.0),
+                    ) {
+                        Some(ref_coord.to_coord_type())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
 
             move_coord.id_point = coord_on_vec.first().cloned();
-
         }
         MsgScene::DragMain(pressmove) => {
             //If handle, move as pair
@@ -81,7 +85,7 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
                         &Point::new(coord.x, coord.y),
                         &camera.project(click.end_press),
                         camera.fixed_length(12.0),
-                    ){
+                    ) {
                         to_do.push((shape_index, curve_index));
                     }
                 }
@@ -89,7 +93,10 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
             });
 
             for (shape_index, curve_index) in to_do {
-                vgc_data.get_mut_shape(shape_index).unwrap().toggle_separate_join_handle(curve_index);
+                vgc_data
+                    .get_mut_shape(shape_index)
+                    .unwrap()
+                    .toggle_separate_join_handle(curve_index);
             }
         }
         _ => {}

@@ -1,14 +1,13 @@
-
 mod scene;
-mod utils;
 mod toolbars;
+mod utils;
 
 use scene::Scene;
 
-use iced::{executor, Renderer, Alignment, Color, font};
 use iced::theme::Theme;
+use iced::{executor, font, Alignment, Color, Renderer};
 
-use iced::widget::{column, container, row, button, text};
+use iced::widget::{button, column, container, row, text};
 use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
@@ -46,7 +45,7 @@ pub struct VgcEditor {
 pub enum Message {
     Scene(scene::MsgScene),
     NewEmptyScene,
-    
+
     OpenColorPicker,
     SubmitColor(Color),
     CancelColor,
@@ -61,8 +60,10 @@ impl Application for VgcEditor {
     type Flags = ();
 
     fn new(_flags: ()) -> (Self, Command<Message>) {
-        (Self { ..Self::default() },font::load(iced_aw::graphics::icons::ICON_FONT_BYTES).map(Message::FontLoaded))
-        
+        (
+            Self { ..Self::default() },
+            font::load(iced_aw::graphics::icons::ICON_FONT_BYTES).map(Message::FontLoaded),
+        )
     }
 
     fn title(&self) -> String {
@@ -72,7 +73,7 @@ impl Application for VgcEditor {
     fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::Scene(message) => {
-                match self.scene.get_mut(self.current_scene){
+                match self.scene.get_mut(self.current_scene) {
                     Some(scene) => scene.update(message),
                     None => println!("No scene"),
                 };
@@ -80,48 +81,46 @@ impl Application for VgcEditor {
             Message::NewEmptyScene => {
                 self.current_scene = self.scene.len();
                 self.scene.push(Scene::default());
-            },
+            }
 
             Message::OpenColorPicker => {
                 self.show_color_picker = true;
-            },
+            }
             Message::SubmitColor(color) => {
-                match self.scene.get_mut(self.current_scene){
+                match self.scene.get_mut(self.current_scene) {
                     Some(scene) => {
                         self.color_picker.set_color(color);
                         scene.update(scene::MsgScene::SubmitColor(color))
-                    },
+                    }
                     None => println!("No scene"),
                 };
                 self.show_color_picker = false;
             }
             Message::CancelColor => {
                 self.show_color_picker = false;
-            },
-            Message::FontLoaded(res) => {
-                match res{
-                    Ok(_) => println!("Font loaded"),
-                    Err(err) => println!("Font error: {:?}", err),
-                }
             }
+            Message::FontLoaded(res) => match res {
+                Ok(_) => println!("Font loaded"),
+                Err(err) => println!("Font error: {:?}", err),
+            },
         }
 
         Command::none()
     }
 
     fn view(&self) -> Element<Message> {
-        let current_functionality = match self.scene.get(self.current_scene){
+        let current_functionality = match self.scene.get(self.current_scene) {
             Some(scene) => &scene.functionality,
             None => &scene::Functionality::None,
         };
 
         let controls = left_toolbar(self, current_functionality);
 
-        
-
-        let canvas: Element<'_, Message, Renderer<Theme>> = match self.scene.is_empty(){
+        let canvas: Element<'_, Message, Renderer<Theme>> = match self.scene.is_empty() {
             true => new_scene(),
-            false => self.scene[self.current_scene].view().map(move |message| Message::Scene(message)),
+            false => self.scene[self.current_scene]
+                .view()
+                .map(move |message| Message::Scene(message)),
         };
 
         let top_toolbar = container(row![])
@@ -141,13 +140,12 @@ impl Application for VgcEditor {
     }
 }
 
+fn new_scene<'a>() -> Element<'a, Message> {
+    let text =
+        text("No current scene, click on New Scene to create one!").width(Length::Fixed(150.0));
+    let btn_play = button("New Scene").on_press(Message::NewEmptyScene);
 
- fn new_scene<'a>() -> Element<'a, Message> {
-    let text = text("No current scene, click on New Scene to create one!").width(Length::Fixed(150.0));
-    let btn_play = button("New Scene")
-        .on_press(Message::NewEmptyScene);
-
-    column![text,btn_play]
+    column![text, btn_play]
         .padding(50)
         .spacing(10)
         .align_items(Alignment::Center)

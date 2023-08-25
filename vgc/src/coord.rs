@@ -2,7 +2,7 @@ use std::cell::Ref;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 
-/* 
+/*
 pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
     let c1 = coord_ds.insert(curve_instruction.c1);
     let c2 = coord_ds.insert(curve_instruction.c2);
@@ -30,7 +30,6 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     shape
 }*/
 
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct Coord {
     pub x: f32,
@@ -42,9 +41,9 @@ impl Coord {
     }
 
     pub fn key(&self) -> u64 {
-        let mut key:u64 = self.x.to_bits().into();
+        let mut key: u64 = self.x.to_bits().into();
         key <<= 32;
-        let into:u64 = self.y.to_bits().into();
+        let into: u64 = self.y.to_bits().into();
         key |= into;
         key
     }
@@ -74,10 +73,10 @@ impl Coord {
         dx * dx + dy * dy
     }
 
-    pub fn scale(&self,scale_x:u32,scale_y:u32)->Coord{
-        Coord{
-            x:self.x*(scale_x as f32),
-            y:self.y*(scale_y as f32)
+    pub fn scale(&self, scale_x: u32, scale_y: u32) -> Coord {
+        Coord {
+            x: self.x * (scale_x as f32),
+            y: self.y * (scale_y as f32),
         }
     }
 }
@@ -99,7 +98,7 @@ pub enum RefCoordType<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum CoordType{
+pub enum CoordType {
     Start,
     Cp0(usize),
     /// Curve index
@@ -107,8 +106,6 @@ pub enum CoordType{
     /// Curve index
     P1(usize),
 }
-
-
 
 impl RefCoordType<'_> {
     pub fn get_coord(&self) -> &Coord {
@@ -120,7 +117,7 @@ impl RefCoordType<'_> {
         }
     }
 
-    pub fn to_coord_type(&self)->CoordType{
+    pub fn to_coord_type(&self) -> CoordType {
         match self {
             RefCoordType::Start(_) => CoordType::Start,
             RefCoordType::Cp0(index, _) => CoordType::Cp0(*index),
@@ -173,7 +170,6 @@ impl Add<Coord> for &Coord {
         }
     }
 }
-
 
 impl Sub<Coord> for Coord {
     type Output = Coord;

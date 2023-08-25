@@ -107,7 +107,7 @@ impl Scene {
                 let shape = 0;
                 self.vgc_data.get_mut_shape(shape).unwrap().color = color.into_rgba8().into();
             }
-            _=>{}
+            _ => {}
         }
 
         //What to hover
@@ -197,18 +197,20 @@ impl canvas::Program<MsgScene> for Scene {
                 eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown => {
                     return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(-1.0)));
                 }
-                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::D && 
-                key_change.active_keys.contains(&keyboard::KeyCode::LControl) &&
-                key_change.active_keys.contains(&keyboard::KeyCode::LAlt) => {
-                    println!("{}",self.vgc_data.debug_string());
+                eMe::KeysDown(key_change)
+                    if key_change.new_keys == keyboard::KeyCode::D
+                        && key_change
+                            .active_keys
+                            .contains(&keyboard::KeyCode::LControl)
+                        && key_change.active_keys.contains(&keyboard::KeyCode::LAlt) =>
+                {
+                    println!("{}", self.vgc_data.debug_string());
                     let cursor_position = cursor.position();
                     if let Some(pos) = cursor_position {
-                        println!("cursor: {:?}",self.camera.project(pos));
+                        println!("cursor: {:?}", self.camera.project(pos));
                     }
                     return (event::Status::Captured, None);
-            
                 }
-
 
                 _ => {}
             }
@@ -244,9 +246,8 @@ impl canvas::Program<MsgScene> for Scene {
                 );
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
-               
+
                 self.vgc_data.frame_render(frame);
-                   
             });
         });
 
@@ -266,7 +267,6 @@ impl canvas::Program<MsgScene> for Scene {
                 if let Some(pos) = cursor_pos {
                     user_selection::draw_closest_pt(self, frame, pos);
                 }
-               
             });
             frame.into_geometry()
         };

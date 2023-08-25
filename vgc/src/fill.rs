@@ -6,9 +6,9 @@ pub struct Rgba {
     pub a: u8,
 }
 
-impl From<[u8;4]> for Rgba{
-    fn from(value: [u8;4]) -> Self {
-        Rgba{
+impl From<[u8; 4]> for Rgba {
+    fn from(value: [u8; 4]) -> Self {
+        Rgba {
             r: value[0],
             g: value[1],
             b: value[2],

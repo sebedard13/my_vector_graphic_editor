@@ -1,7 +1,5 @@
 use iced::widget::canvas::Frame;
-use iced::{
-    Point, Rectangle, Vector,
-};
+use iced::{Point, Rectangle, Vector};
 
 use super::events;
 
@@ -58,22 +56,23 @@ impl Camera {
 
     /// Return the canvas coordinates of a given pixel point of the apps window.
     /// (0,0) is the top left corner of the window.
-    /// 
+    ///
     pub fn project(&self, position: Point) -> Point {
         let region = &self.region();
 
         Point::new(
-            ((position.x -self.pixel_region.x)/ self.scaling / Self::WIDTH) + region.x,
-            ((position.y-self.pixel_region.y) / self.scaling / (Self::WIDTH / self.ratio)) + region.y,
+            ((position.x - self.pixel_region.x) / self.scaling / Self::WIDTH) + region.x,
+            ((position.y - self.pixel_region.y) / self.scaling / (Self::WIDTH / self.ratio))
+                + region.y,
         )
     }
 
     pub fn project_in_canvas(&self, position: Point) -> Option<Point> {
         let point = self.project(position);
 
-        match self.region().contains(point){
+        match self.region().contains(point) {
             true => Some(point),
-            false => None
+            false => None,
         }
     }
 
@@ -105,8 +104,7 @@ impl Camera {
             Interaction::Panning { translation, start } => {
                 if pressmove.start == start {
                     translation
-                }
-                else{
+                } else {
                     self.interaction = Interaction::Panning {
                         translation: self.translation,
                         start: pressmove.start,
@@ -123,7 +121,8 @@ impl Camera {
             }
         };
 
-        self.translation = translation+(pressmove.current_coord - pressmove.start) * (1.0 / self.scaling);
+        self.translation =
+            translation + (pressmove.current_coord - pressmove.start) * (1.0 / self.scaling);
     }
 
     pub fn transform_frame(&self, frame: &mut Frame, bounds: Rectangle) {
@@ -139,16 +138,15 @@ impl Camera {
         length_px / self.scaling / Self::WIDTH
     }
 
-    pub fn home(&mut self){
+    pub fn home(&mut self) {
         self.translation = self.home;
         self.scaling = 1.0;
     }
 
-    pub fn handle_btn_zoom(&mut self, zoom: &f32){
-        if *zoom>0.0{
-            self.scaling =  (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING)
-        }
-        else{
+    pub fn handle_btn_zoom(&mut self, zoom: &f32) {
+        if *zoom > 0.0 {
+            self.scaling = (self.scaling * 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING)
+        } else {
             self.scaling = (self.scaling / 1.1).clamp(Self::MIN_SCALING, Self::MAX_SCALING)
         }
     }

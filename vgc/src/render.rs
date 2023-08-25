@@ -23,7 +23,6 @@ fn render(canvas: &Vgc, w: u32, h: u32) -> Result<Pixmap, String> {
         );
         paint.anti_alias = true;
 
-
         let path = {
             let mut pb = PathBuilder::new();
             let coord_start = &region.start.borrow().scale(w, h);
@@ -32,15 +31,8 @@ fn render(canvas: &Vgc, w: u32, h: u32) -> Result<Pixmap, String> {
                 let cp0 = region.curves[i_curve].cp0.borrow().scale(w, h);
                 let cp1 = region.curves[i_curve].cp1.borrow().scale(w, h);
                 let p1 = region.curves[i_curve].p1.borrow().scale(w, h);
-                
-                pb.cubic_to(
-                    cp0.x,
-                    cp0.y,
-                    cp1.x,
-                    cp1.y,
-                    p1.x,
-                    p1.y,
-                );
+
+                pb.cubic_to(cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y);
             }
             pb.close();
             pb.finish().unwrap()
