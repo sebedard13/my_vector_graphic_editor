@@ -134,6 +134,7 @@ impl Camera {
         frame.scale(Self::WIDTH);
     }
 
+    /// Return the length of a given fixed pixel length in the canvas.
     pub fn fixed_length(&self, length_px: f32) -> f32 {
         length_px / self.scaling / Self::WIDTH
     }

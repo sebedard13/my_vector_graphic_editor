@@ -98,7 +98,7 @@ pub enum RefCoordType<'a> {
     P1(usize, Ref<'a, Coord>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CoordType{
     Start,
     Cp0(usize),
@@ -107,6 +107,8 @@ pub enum CoordType{
     /// Curve index
     P1(usize),
 }
+
+
 
 impl RefCoordType<'_> {
     pub fn get_coord(&self) -> &Coord {

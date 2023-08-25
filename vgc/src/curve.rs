@@ -1,6 +1,5 @@
 use std::{rc::Rc, cell::RefCell};
 
-use itertools::Itertools;
 use polynomen::Poly;
 
 use crate::coord::Coord;

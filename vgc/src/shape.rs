@@ -1,7 +1,7 @@
 use std::mem::swap;
 use std::rc::Rc;
-use std::cell::{Ref, RefCell};
-use crate::coord::{Coord, RefCoordType, CoordType};
+use std::cell::RefCell;
+use crate::coord::{Coord, CoordType};
 use crate::curve;
 use crate::curve::Curve;
 use crate::fill::Rgba;
@@ -168,31 +168,13 @@ impl Shape {
         self.curves.push(Curve::new(cp0, cp1, p1));
     }
 
-    pub fn get_cp_of_shape(&self) -> Vec<RefCoordType> {
+    pub fn get_coords_of_shape_tmp(&self) -> Vec<Rc<RefCell<Coord>>> {
         let mut vec = Vec::new();
-        for (curve_index, curve) in  self.curves.iter().enumerate() {
-            vec.push(RefCoordType::Cp0(curve_index, curve.cp0.borrow()));
-            vec.push(RefCoordType::Cp1(curve_index, curve.cp1.borrow()));
-        }
-        vec
-    }
-
-    pub fn get_p_of_shape(&self) -> Vec<Ref<Coord>> {
-        let mut vec = Vec::new();
-        vec.push(self.start.borrow());
-        for curve in  self.curves.iter() {
-            vec.push(curve.p1.borrow());
-        }
-        vec
-    }
-
-    pub fn get_coords_of_shape(&self) -> Vec<Ref<Coord>> {
-        let mut vec = Vec::new();
-        vec.push(self.start.borrow());
+        vec.push(self.start.clone());
         for curve in  self.curves.iter(){
-            vec.push(curve.cp0.borrow());
-            vec.push(curve.cp1.borrow());
-            vec.push(curve.p1.borrow());
+            vec.push(curve.cp0.clone());
+            vec.push(curve.cp1.clone());
+            vec.push(curve.p1.clone());
         }
         vec
     }

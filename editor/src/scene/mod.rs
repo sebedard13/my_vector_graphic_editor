@@ -2,7 +2,7 @@ mod canvas_camera;
 mod coord_position_tooltip;
 mod events;
 pub mod functionality;
-mod selected_shape;
+mod user_selection;
 
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};
@@ -14,7 +14,7 @@ use vgc::generate_from_line;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
-use selected_shape::SelectedShape;
+use user_selection::Selected;
 
 pub use functionality::Functionality;
 
@@ -24,7 +24,7 @@ pub struct Scene {
     pub vgc_data: Vgc,
     pub functionality: Functionality,
 
-    selected_shape: SelectedShape,
+    selected: Selected,
 }
 
 #[derive(Debug, Clone)]
@@ -58,7 +58,7 @@ impl Default for Scene {
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data: vgc_data,
             functionality: Functionality::default(),
-            selected_shape: SelectedShape::default(),
+            selected: Selected::default(),
         }
     }
 }
@@ -113,7 +113,7 @@ impl Scene {
         //What to hover
         match &message {
             MsgScene::Mousemove(mousemove) => {
-                selected_shape::change_hover(self, mousemove.current_coord);
+                user_selection::change_hover(self, mousemove.current_coord);
             }
             _ => {}
         }
@@ -262,9 +262,9 @@ impl canvas::Program<MsgScene> for Scene {
             frame.with_save(|frame| {
                 self.camera.transform_frame(frame, bounds);
 
-                selected_shape::draw(self, frame);
+                user_selection::draw(self, frame);
                 if let Some(pos) = cursor_pos {
-                    selected_shape::draw_closest_pt(self, frame,pos);
+                    user_selection::draw_closest_pt(self, frame, pos);
                 }
                
             });
