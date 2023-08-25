@@ -4,7 +4,7 @@ use super::{MsgScene, Scene};
 
 mod move_coord;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Functionality {
     MoveCoord(MoveCoord),
 
@@ -14,12 +14,8 @@ pub enum Functionality {
     CreateNextPoint,
     RemovePoint,
 
+    #[default]
     None,
-}
-impl Default for Functionality {
-    fn default() -> Functionality {
-        Functionality::None
-    }
 }
 
 impl Functionality {

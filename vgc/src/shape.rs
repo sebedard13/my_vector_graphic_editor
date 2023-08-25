@@ -1,4 +1,4 @@
-use crate::coord::{Coord, CoordType};
+use crate::coord::{Coord, CoordType, CoordPtr};
 use crate::curve;
 use crate::curve::Curve;
 use crate::fill::Rgba;
@@ -36,7 +36,7 @@ impl Shape {
     }
 
     pub fn is_closed(&self) -> bool {
-        if self.curves.len() == 0 {
+        if self.curves.is_empty() {
             return false;
         }
         let last_curve = self
@@ -103,7 +103,7 @@ impl Shape {
         let start = self.start.borrow();
         path.push_str(&format!("M {} {}", start.x, start.y));
         for curve in &self.curves {
-            path.push_str(" ");
+            path.push(' ');
             path.push_str(&curve.to_path());
         }
         if self.is_closed() {
@@ -139,7 +139,7 @@ impl Shape {
         let mut min_coord = self.start.borrow().clone();
 
         self.visit_full_curves(|curve_index, p0, cp0, cp1, p1| {
-            let (t_min, distance, coord_closest) = curve::t_closest(&coord, p0, cp0, cp1, p1);
+            let (t_min, distance, coord_closest) = curve::t_closest(coord, p0, cp0, cp1, p1);
 
             if distance < min_distance {
                 min_distance = distance;
@@ -155,10 +155,10 @@ impl Shape {
         &self,
         curve_index: usize,
     ) -> (
-        Rc<RefCell<Coord>>,
-        Rc<RefCell<Coord>>,
-        Rc<RefCell<Coord>>,
-        Rc<RefCell<Coord>>,
+        CoordPtr,
+        CoordPtr,
+        CoordPtr,
+        CoordPtr,
     ) {
         let mut prev_coord = self.start.clone();
 
@@ -174,7 +174,7 @@ impl Shape {
         let cp1 = curve.cp1.clone();
         let p1 = curve.p1.clone();
 
-        return (prev_coord, cp0, cp1, p1);
+        (prev_coord, cp0, cp1, p1)
     }
 
     pub fn push_coord(

@@ -1,6 +1,7 @@
-use std::cell::Ref;
+use std::cell::{Ref, RefCell};
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
+use std::rc::Rc;
 
 /*
 pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
@@ -29,6 +30,8 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     shape.close();
     shape
 }*/
+
+pub type CoordPtr = Rc<RefCell<Coord>>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Coord {

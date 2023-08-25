@@ -87,13 +87,13 @@ pub fn t_closest(
     let mut min = Coord { x: 0.0, y: 0.0 };
     real_roots
         .iter()
-        .filter(|x| x >= &&0.0 && x <= &&1.0)
-        .for_each(|t| {
-            let curve_coord = cubic_bezier(*t as f32, p0, cp0, cp1, p1);
+        .filter(|&&x| (0.0..=1.0).contains(&x))
+        .for_each(|&t| {
+            let curve_coord = cubic_bezier(t as f32, p0, cp0, cp1, p1);
             let distance = coord.approx_distance(&curve_coord);
             if distance < min_distance {
                 min_distance = distance;
-                min_t = *t as f32;
+                min_t = t as f32;
                 min = curve_coord;
             }
         });
@@ -147,12 +147,12 @@ fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> C
 /// Return two control points to create a smooth curve at t of curve defined by p0, cp0, cp1, p1
 /// if t = 0.0 or 1.0 use tangent_cornor_pts() to use the sum of vector of two curve
 #[allow(dead_code)]
-fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> [Coord; 2] {
+fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> (Coord, Coord) {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
-        return [
+        return (
             p0 - &Coord { x: 0.1, y: 0.1 },
             p0 + &Coord { x: 0.1, y: 0.1 },
-        ];
+        );
     }
 
     let tangent_vector = tangent_vector(t, p0, cp0, cp1, p1);
@@ -168,7 +168,7 @@ fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> [Coo
         }
     };
 
-    let rtn = [
+    (
         Coord {
             x: coord.x - t_at * tangent_vector.x,
             y: coord.y - t_at * tangent_vector.y,
@@ -177,9 +177,7 @@ fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> [Coo
             x: coord.x + t_at * tangent_vector.x,
             y: coord.y + t_at * tangent_vector.y,
         },
-    ];
-
-    rtn
+    )
 }
 
 /// Return two control points to create a smooth curve at a ppoint of two curves (p1).

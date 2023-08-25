@@ -1,3 +1,4 @@
+#![allow(clippy::single_match)]
 use iced::{keyboard, mouse, widget::canvas::Event, Point};
 use itertools::Itertools;
 
@@ -63,10 +64,7 @@ impl EventsMerger {
                 key_code,
                 modifiers,
             } => {
-                self.past_events.retain(|event| match event {
-                    MergeEvent::KeyDown(keydown) if key_code == *keydown => false,
-                    _ => true,
-                });
+                self.past_events.retain(|event| !matches!(event, MergeEvent::KeyDown(keydown) if key_code == *keydown));
 
                 let active_keys = self.get_all_keydown(modifiers);
 
@@ -92,18 +90,15 @@ impl EventsMerger {
                 let valid_event = self
                     .past_events
                     .iter()
-                    .filter(|event| match event {
-                        MergeEvent::Mousedown { .. } => true,
-                        _ => false,
-                    })
+                    .filter(|event| matches!(event, MergeEvent::Mousedown { .. }))
                     .collect_vec();
 
                 match valid_event.first() {
                     Some(event) => match event {
                         MergeEvent::Mousedown(press) => {
                             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
-                                start: press.start_press.clone(),
-                                button: press.button.clone(),
+                                start: press.start_press,
+                                button: press.button,
                                 current_coord: position,
                             })))
                         }
@@ -118,7 +113,7 @@ impl EventsMerger {
                 if let Some(cursor_position) = cursor_position {
                     let v = MergeEvent::Mousedown(Mousedown {
                         start_press: cursor_position,
-                        button: mouse_button.clone(),
+                        button: mouse_button,
                     });
                     self.past_events.push(v.clone());
                     EventStatus::Used(Some(v))
@@ -135,10 +130,8 @@ impl EventsMerger {
                 let valid_event = self
                     .past_events
                     .iter()
-                    .filter(|event| match event {
-                        MergeEvent::Mousedown(press) if mouse_button == press.button => true,
-                        _ => false,
-                    })
+                    .filter(|event| matches!(event, 
+                        MergeEvent::Mousedown(press) if mouse_button == press.button))
                     .collect_vec();
 
                 let rtn = match valid_event.first() {
@@ -149,18 +142,16 @@ impl EventsMerger {
                         };
 
                         EventStatus::Used(Some(MergeEvent::Click(Click {
-                            start_press: start_press.clone(),
+                            start_press,
                             end_press,
-                            button: mouse_button.clone(),
+                            button: mouse_button,
                         })))
                     }
                     None => return EventStatus::Free,
                 };
 
-                self.past_events.retain(|event| match event {
-                    MergeEvent::Mousedown(press) if mouse_button == press.button => false,
-                    _ => true,
-                });
+                self.past_events.retain(|event| !matches!(event,
+                    MergeEvent::Mousedown(press) if mouse_button == press.button));
                 rtn
             }
             mouse::Event::WheelScrolled { delta } => {
@@ -180,13 +171,14 @@ impl EventsMerger {
         }
     }
 
+    #[allow(clippy::single_match)]
     fn get_all_keydown(&self, _: keyboard::Modifiers) -> Vec<keyboard::KeyCode> {
         //TODO: Use modifiers to get all active keys with valid control, shift, etc
         let mut active_keys = vec![];
         for event in &self.past_events {
             match event {
                 MergeEvent::KeyDown(keydown) => {
-                    active_keys.push(keydown.clone());
+                    active_keys.push(*keydown);
                 }
                 _ => {}
             }

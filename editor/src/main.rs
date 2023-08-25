@@ -108,6 +108,7 @@ impl Application for VgcEditor {
         Command::none()
     }
 
+    #[allow(clippy::redundant_closure)] // Because it warn for something we can not correct because it is an enum
     fn view(&self) -> Element<Message> {
         let current_functionality = match self.scene.get(self.current_scene) {
             Some(scene) => &scene.functionality,

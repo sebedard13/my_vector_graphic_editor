@@ -35,7 +35,7 @@ enum CoordState {
 impl SelectedShape {
     fn new(shape_index: usize) -> Self {
         Self {
-            shape_index: shape_index,
+            shape_index,
             coords: Vec::new(),
             hover_coord: None,
         }

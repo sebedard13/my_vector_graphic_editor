@@ -56,7 +56,7 @@ impl Default for Scene {
         Self {
             draw_cache: Cache::default(),
             camera: Camera::new(vgc_data.ratio as f32),
-            vgc_data: vgc_data,
+            vgc_data,
             functionality: Functionality::default(),
             selected: Selected::default(),
         }
@@ -78,13 +78,14 @@ impl Default for CanvasState {
 }
 
 impl Scene {
+    #[allow(clippy::single_match)]//Because to future proof adding match arms
     pub fn update(&mut self, message: MsgScene) {
         self.draw_cache.clear();
 
         //camera
         match &message {
             MsgScene::ChangeBounds(bounds) => {
-                self.camera.pixel_region = bounds.clone();
+                self.camera.pixel_region = *bounds;
             }
             MsgScene::ScrollZoom(scroll) => {
                 self.camera.handle_zoom(scroll);

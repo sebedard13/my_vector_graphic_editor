@@ -35,7 +35,7 @@ impl Camera {
             translation: default_translate,
             scaling: 1.0,
             home: default_translate,
-            ratio: ratio,
+            ratio,
             pixel_region: Rectangle::default(),
             interaction: Interaction::default(),
         }

@@ -99,7 +99,7 @@ impl Vgc {
         let mut string = "".to_string();
         for shape in &self.shapes {
             string.push_str(&shape.to_path());
-            string.push_str("\n");
+            string.push('\n');
         }
         string
     }
@@ -148,7 +148,7 @@ mod tests {
     }
 }
 
-pub fn generate_from_line(y: &[Coord]) -> Vgc {
+pub fn generate_from_line(coords: &[Coord]) -> Vgc {
     let color = Rgba {
         r: 255,
         g: 255,
@@ -156,10 +156,10 @@ pub fn generate_from_line(y: &[Coord]) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(16.0 / 16.0, color);
+    let mut canvas = Vgc::new(1.0, color);
 
-    if y.len() > 0 {
-        let p0 = &y[0];
+    if !coords.is_empty() {
+        let p0 = &coords[0];
 
         let shape_index = canvas.create_shape(
             p0.clone(),
@@ -173,8 +173,8 @@ pub fn generate_from_line(y: &[Coord]) -> Vgc {
 
         let shape = canvas.get_mut_shape(shape_index).unwrap();
         let mut previous = shape.start.clone();
-        for i in 1..y.len() {
-            let p1 = Rc::new(RefCell::new(y[i].clone()));
+        for coord in coords.iter().skip(1) {
+            let p1 = Rc::new(RefCell::new(coord.clone()));
             shape.push_coord(previous, p1.clone(), p1.clone());
             previous = p1;
         }
@@ -192,9 +192,9 @@ pub fn generate_from_push(y: &[Coord]) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(16.0 / 16.0, color);
+    let mut canvas = Vgc::new(1.0, color);
 
-    if y.len() > 0 {
+    if !y.is_empty() {
         let p0 = &y[0];
 
         let shape_index = canvas.create_shape(
