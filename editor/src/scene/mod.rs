@@ -78,7 +78,7 @@ impl Default for CanvasState {
 }
 
 impl Scene {
-    #[allow(clippy::single_match)]//Because to future proof adding match arms
+    #[allow(clippy::single_match)] //Because to future proof adding match arms
     pub fn update(&mut self, message: MsgScene) {
         self.draw_cache.clear();
 

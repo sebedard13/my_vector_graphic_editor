@@ -76,17 +76,19 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
     match event {
         MsgScene::ClickMain(click) => {
             let mut to_do: Vec<(usize, usize)> = Vec::new();
-            vgc_data.visit(&mut |shape_index, coord_type| if let RefCoordType::P1(curve_index, coord) = coord_type {
-                if point_in_radius(
-                    &Point::new(coord.x, coord.y),
-                    &camera.project(click.start_press),
-                    camera.fixed_length(12.0),
-                ) && point_in_radius(
-                    &Point::new(coord.x, coord.y),
-                    &camera.project(click.end_press),
-                    camera.fixed_length(12.0),
-                ) {
-                    to_do.push((shape_index, curve_index));
+            vgc_data.visit(&mut |shape_index, coord_type| {
+                if let RefCoordType::P1(curve_index, coord) = coord_type {
+                    if point_in_radius(
+                        &Point::new(coord.x, coord.y),
+                        &camera.project(click.start_press),
+                        camera.fixed_length(12.0),
+                    ) && point_in_radius(
+                        &Point::new(coord.x, coord.y),
+                        &camera.project(click.end_press),
+                        camera.fixed_length(12.0),
+                    ) {
+                        to_do.push((shape_index, curve_index));
+                    }
                 }
             });
 

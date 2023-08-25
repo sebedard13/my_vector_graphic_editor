@@ -1,4 +1,4 @@
-use crate::coord::{Coord, CoordType, CoordPtr};
+use crate::coord::{Coord, CoordPtr, CoordType};
 use crate::curve;
 use crate::curve::Curve;
 use crate::fill::Rgba;
@@ -154,12 +154,7 @@ impl Shape {
     pub fn get_coords_of_curve(
         &self,
         curve_index: usize,
-    ) -> (
-        CoordPtr,
-        CoordPtr,
-        CoordPtr,
-        CoordPtr,
-    ) {
+    ) -> (CoordPtr, CoordPtr, CoordPtr, CoordPtr) {
         let mut prev_coord = self.start.clone();
 
         if curve_index > 0 {

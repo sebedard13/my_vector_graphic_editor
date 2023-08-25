@@ -64,7 +64,9 @@ impl EventsMerger {
                 key_code,
                 modifiers,
             } => {
-                self.past_events.retain(|event| !matches!(event, MergeEvent::KeyDown(keydown) if key_code == *keydown));
+                self.past_events.retain(
+                    |event| !matches!(event, MergeEvent::KeyDown(keydown) if key_code == *keydown),
+                );
 
                 let active_keys = self.get_all_keydown(modifiers);
 
@@ -130,8 +132,10 @@ impl EventsMerger {
                 let valid_event = self
                     .past_events
                     .iter()
-                    .filter(|event| matches!(event, 
-                        MergeEvent::Mousedown(press) if mouse_button == press.button))
+                    .filter(|event| {
+                        matches!(event,
+                        MergeEvent::Mousedown(press) if mouse_button == press.button)
+                    })
                     .collect_vec();
 
                 let rtn = match valid_event.first() {
@@ -150,8 +154,10 @@ impl EventsMerger {
                     None => return EventStatus::Free,
                 };
 
-                self.past_events.retain(|event| !matches!(event,
-                    MergeEvent::Mousedown(press) if mouse_button == press.button));
+                self.past_events.retain(|event| {
+                    !matches!(event,
+                    MergeEvent::Mousedown(press) if mouse_button == press.button)
+                });
                 rtn
             }
             mouse::Event::WheelScrolled { delta } => {
