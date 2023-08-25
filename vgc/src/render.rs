@@ -1,15 +1,13 @@
-use crate::coord::CoordDS;
 use crate::Vgc;
 use iced::widget::canvas::Frame;
 use tiny_skia::Pixmap;
 
 pub fn render_w(canvas: &Vgc, w: u32) -> Result<Pixmap, String> {
     let h = ((w as f64) * (1.0 / canvas.ratio)) as u32;
-    let scaled_coord_ds = canvas.coord_ds.scale(w as f32, h as f32);
-    render(canvas, &scaled_coord_ds, w, h)
+    render(canvas, w, h)
 }
 
-fn render(canvas: &Vgc, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, String> {
+fn render(canvas: &Vgc, w: u32, h: u32) -> Result<Pixmap, String> {
     use tiny_skia::{FillRule, Paint, PathBuilder, Transform};
     let mut image = Pixmap::new(w, h).expect("Valid Size");
 
@@ -25,18 +23,23 @@ fn render(canvas: &Vgc, coord_ds: &CoordDS, w: u32, h: u32) -> Result<Pixmap, St
         );
         paint.anti_alias = true;
 
+
         let path = {
             let mut pb = PathBuilder::new();
-            let coord_start = coord_ds.get(&region.start);
+            let coord_start = &region.start.borrow().scale(w, h);
             pb.move_to(coord_start.x, coord_start.y);
             for i_curve in 0..region.curves.len() {
+                let cp0 = region.curves[i_curve].cp0.borrow().scale(w, h);
+                let cp1 = region.curves[i_curve].cp1.borrow().scale(w, h);
+                let p1 = region.curves[i_curve].p1.borrow().scale(w, h);
+                
                 pb.cubic_to(
-                    coord_ds.get(&region.curves[i_curve].cp0).x,
-                    coord_ds.get(&region.curves[i_curve].cp0).y,
-                    coord_ds.get(&region.curves[i_curve].cp1).x,
-                    coord_ds.get(&region.curves[i_curve].cp1).y,
-                    coord_ds.get(&region.curves[i_curve].p1).x,
-                    coord_ds.get(&region.curves[i_curve].p1).y,
+                    cp0.x,
+                    cp0.y,
+                    cp1.x,
+                    cp1.y,
+                    p1.x,
+                    p1.y,
                 );
             }
             pb.close();
@@ -59,9 +62,6 @@ pub fn frame_render(canvas: &Vgc, frame: &mut Frame) {
     use iced::widget::canvas::{Fill, Path};
     use iced::{Color, Point};
 
-    let h = 1.0 / canvas.ratio;
-    let coord_ds = canvas.coord_ds.scale(1.0, h as f32);
-
     for i_region in 0..canvas.shapes.len() {
         let region = &canvas.shapes[i_region];
 
@@ -73,22 +73,22 @@ pub fn frame_render(canvas: &Vgc, frame: &mut Frame) {
         ));
 
         let path = &Path::new(|builder| {
-            let coord_start = coord_ds.get(&region.start);
+            let coord_start = &region.start.borrow();
             builder.move_to(Point::new(coord_start.x, coord_start.y));
 
             for i_curve in 0..region.curves.len() {
                 builder.bezier_curve_to(
                     Point::new(
-                        coord_ds.get(&region.curves[i_curve].cp0).x,
-                        coord_ds.get(&region.curves[i_curve].cp0).y,
+                        region.curves[i_curve].cp0.borrow().x,
+                        region.curves[i_curve].cp0.borrow().y,
                     ),
                     Point::new(
-                        coord_ds.get(&region.curves[i_curve].cp1).x,
-                        coord_ds.get(&region.curves[i_curve].cp1).y,
+                        region.curves[i_curve].cp1.borrow().x,
+                        region.curves[i_curve].cp1.borrow().y,
                     ),
                     Point::new(
-                        coord_ds.get(&region.curves[i_curve].p1).x,
-                        coord_ds.get(&region.curves[i_curve].p1).y,
+                        region.curves[i_curve].p1.borrow().x,
+                        region.curves[i_curve].p1.borrow().y,
                     ),
                 );
             }

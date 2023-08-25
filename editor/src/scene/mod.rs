@@ -9,7 +9,8 @@ use iced::widget::canvas::event::{self, Event};
 use iced::widget::canvas::{Cache, Canvas, Frame, Geometry, Path};
 use iced::{keyboard, mouse};
 use iced::{Color, Element, Length, Point, Rectangle, Renderer, Size, Theme};
-use vgc::generate_triangle_exemple;
+use vgc::coord::Coord;
+use vgc::generate_from_line;
 use vgc::Vgc;
 
 use canvas_camera::Camera;
@@ -46,7 +47,11 @@ pub enum MsgScene {
 
 impl Default for Scene {
     fn default() -> Self {
-        let vgc_data = generate_triangle_exemple();
+        let vgc_data = generate_from_line(&[
+            Coord { x: 0.0, y: 0.0 },
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 1.0, y: 1.0 },
+        ]);
 
         Self {
             draw_cache: Cache::default(),
@@ -100,7 +105,7 @@ impl Scene {
             }
             MsgScene::SubmitColor(color) => {
                 let shape = 0;
-                self.vgc_data.set_shape_background(shape, color.into_rgba8().into());
+                self.vgc_data.get_mut_shape(shape).unwrap().color = color.into_rgba8().into();
             }
             _=>{}
         }

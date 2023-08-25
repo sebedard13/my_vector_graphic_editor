@@ -1,77 +1,8 @@
-use serde::{Deserialize, Serialize};
+use std::cell::Ref;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
-use crate::curve::Curve;
 
-use crate::instructions::{CoordInstruction, ShapeInstruction};
-use crate::vgc_struct::Shape;
-
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
-pub struct CoordIndex {
-    pub i: usize,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CoordDS {
-    pub array: Vec<Option<Coord>>,
-    pub is_normalize: bool,
-}
-
-impl Default for CoordDS {
-    fn default() -> Self {
-        CoordDS {
-            is_normalize: true,
-            array: Vec::default(),
-        }
-    }
-}
-
-impl CoordDS {
-    pub fn new() -> Self {
-        CoordDS::default()
-    }
-
-    pub fn insert(&mut self, c: Coord) -> CoordIndex {
-        self.array.push(Some(c));
-        CoordIndex {
-            i: self.array.len() - 1,
-        }
-    }
-
-    pub fn get(&self, coord_index: &CoordIndex) -> &Coord {
-        self.array[coord_index.i]
-            .as_ref()
-            .expect("Coord should be valid from CoordIndex")
-    }
-
-    pub fn modify(&mut self, coord_index: usize, c: Coord) {
-        self.array[coord_index] = Some(c);
-    }
-
-    pub fn scale(&self, w: f32, h: f32) -> Self {
-        let mut arr = self.array.clone();
-
-        arr.iter_mut().for_each(|op_c| {
-            match op_c {
-                Some(c) => {
-                    c.x *= w;
-                    c.y *= h;
-                }
-                None => {}
-            };
-        });
-
-        CoordDS {
-            array: arr,
-            is_normalize: false,
-        }
-    }
-
-    pub fn remove(&mut self, coord_index: &CoordIndex) {
-        self.array[coord_index.i] = None;
-    }
-}
-
+/* 
 pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
     let c1 = coord_ds.insert(curve_instruction.c1);
     let c2 = coord_ds.insert(curve_instruction.c2);
@@ -97,42 +28,19 @@ pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction)
     };
     shape.close();
     shape
-}
+}*/
 
-#[cfg(test)]
-mod tests {
-    use float_cmp::approx_eq;
 
-    use crate::coord::{Coord, CoordDS};
-
-    #[test]
-    fn scale_coord_ds() {
-        let mut cds = CoordDS::new();
-        cds.insert(Coord { x: 0.5, y: 0.2 });
-
-        let sc_cds = cds.scale(10.0, 5.0);
-
-        assert!(approx_eq!(
-            f32,
-            sc_cds.array[0].as_ref().unwrap().x,
-            5.0,
-            ulps = 2
-        ));
-        assert!(approx_eq!(
-            f32,
-            sc_cds.array[0].as_ref().unwrap().y,
-            1.0,
-            ulps = 2
-        ));
-    }
-}
-
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Coord {
     pub x: f32,
     pub y: f32,
 }
 impl Coord {
+    pub fn new(x: f32, y: f32) -> Coord {
+        Coord { x, y }
+    }
+
     pub fn key(&self) -> u64 {
         let mut key:u64 = self.x.to_bits().into();
         key <<= 32;
@@ -165,6 +73,13 @@ impl Coord {
         let dy = self.y - curve_coord.y;
         dx * dx + dy * dy
     }
+
+    pub fn scale(&self,scale_x:u32,scale_y:u32)->Coord{
+        Coord{
+            x:self.x*(scale_x as f32),
+            y:self.y*(scale_y as f32)
+        }
+    }
 }
 
 impl Display for Coord {
@@ -173,6 +88,45 @@ impl Display for Coord {
     }
 }
 
+pub enum RefCoordType<'a> {
+    Start(Ref<'a, Coord>),
+    /// Curve index, coord
+    Cp0(usize, Ref<'a, Coord>),
+    /// Curve index, coord
+    Cp1(usize, Ref<'a, Coord>),
+    /// Curve index, coord
+    P1(usize, Ref<'a, Coord>),
+}
+
+#[derive(Debug, Clone)]
+pub enum CoordType{
+    Start,
+    Cp0(usize),
+    /// Curve index
+    Cp1(usize),
+    /// Curve index
+    P1(usize),
+}
+
+impl RefCoordType<'_> {
+    pub fn get_coord(&self) -> &Coord {
+        match self {
+            RefCoordType::Start(coord) => coord,
+            RefCoordType::Cp0(_, coord) => coord,
+            RefCoordType::Cp1(_, coord) => coord,
+            RefCoordType::P1(_, coord) => coord,
+        }
+    }
+
+    pub fn to_coord_type(&self)->CoordType{
+        match self {
+            RefCoordType::Start(_) => CoordType::Start,
+            RefCoordType::Cp0(index, _) => CoordType::Cp0(*index),
+            RefCoordType::Cp1(index, _) => CoordType::Cp1(*index),
+            RefCoordType::P1(index, _) => CoordType::P1(*index),
+        }
+    }
+}
 
 impl Add<Coord> for Coord {
     type Output = Coord;

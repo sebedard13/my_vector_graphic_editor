@@ -1,5 +1,5 @@
 use iced::Point;
-use vgc::{CoordType, Vgc};
+use vgc::{coord::{RefCoordType, CoordType}, Vgc};
 
 use crate::scene::canvas_camera::Camera;
 
@@ -7,7 +7,7 @@ use super::super::{point_in_radius, MsgScene};
 
 #[derive(Debug, Clone)]
 pub struct MoveCoord {
-    id_point: Option<usize>,
+    id_point: Option<CoordType>,
 }
 
 impl MoveCoord {
@@ -29,25 +29,38 @@ pub fn handle_move(
         MsgScene::MousedownMain(mousedown) => {
             //If handle, move as pair
 
-            let coords = &vgc_data.list_coord();
-            let posi = coords.iter().position(|coord| -> bool {
+            let coords: Vec<(usize, RefCoordType<'_>)> = vgc_data.visit_vec();
+            let coord_on_vec: Vec<CoordType> = coords.iter().filter_map(|(_,ref_coord)|  {
+                let coord = match ref_coord {
+                    RefCoordType::Cp0(_, coord) => coord,
+                    RefCoordType::Cp1(_, coord) => coord,
+                    RefCoordType::P1(_, coord) => coord,
+                    RefCoordType::Start(coord) => coord,
+                };
+
                 let point = &camera.project(mousedown.start_press);
-                point_in_radius(
+                if point_in_radius(
                     point,
-                    &Point::new(coord.coord.x, coord.coord.y),
+                    &Point::new(coord.x, coord.y),
                     camera.fixed_length(12.0),
-                )
-            });
-            move_coord.id_point = posi;
+                ){
+                    Some(ref_coord.to_coord_type())
+                }else{
+                    None
+                }
+                
+            }).collect();
+
+            move_coord.id_point = coord_on_vec.first().cloned();
+
         }
         MsgScene::DragMain(pressmove) => {
             //If handle, move as pair
-
-            let coords = &vgc_data.list_coord();
-            if let Some(index) = move_coord.id_point {
-                let index = coords[index].i;
+            let index_shape = 0;
+            if let Some(coord_type) = &move_coord.id_point {
                 let point = &camera.project(pressmove.current_coord);
-                vgc_data.move_coord(index, point.x, point.y);
+                let shape = vgc_data.get_mut_shape(index_shape).unwrap();
+                shape.move_coord(coord_type, point.x, point.y);
             };
         }
         _ => {}
@@ -59,7 +72,7 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
         MsgScene::ClickMain(click) => {
             let mut to_do: Vec<(usize, usize)> = Vec::new();
             vgc_data.visit(&mut |shape_index, coord_type| match coord_type {
-                CoordType::P1(curve_index, coord) => {
+                RefCoordType::P1(curve_index, coord) => {
                     if point_in_radius(
                         &Point::new(coord.x, coord.y),
                         &camera.project(click.start_press),
@@ -76,7 +89,7 @@ pub fn handle_seprate_handle(event: &MsgScene, camera: &mut Camera, vgc_data: &m
             });
 
             for (shape_index, curve_index) in to_do {
-                vgc_data.toggle_separate_join_handle(shape_index, curve_index);
+                vgc_data.get_mut_shape(shape_index).unwrap().toggle_separate_join_handle(curve_index);
             }
         }
         _ => {}
