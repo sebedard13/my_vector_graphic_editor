@@ -43,14 +43,23 @@ pub enum MsgScene {
     ChangeFunctionality(functionality::Functionality),
 
     SubmitColor(Color),
+
+    ClearSelection(user_selection::SelectedLevel),
 }
 
 impl Default for Scene {
     fn default() -> Self {
-        let vgc_data = generate_from_line(&[
-            Coord { x: 0.0, y: 0.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
+        let vgc_data = generate_from_line(vec![
+            vec![
+                Coord { x: 0.0, y: 0.1 },
+                Coord { x: 0.0, y: 1.0 },
+                Coord { x: 0.9, y: 1.0 },
+            ],
+            vec![
+                Coord { x: 1.0, y: 0.9 },
+                Coord { x: 0.1, y: 0.0 },
+                Coord { x: 1.0, y: 0.0 },
+            ],
         ]);
 
         Self {
@@ -111,10 +120,27 @@ impl Scene {
             _ => {}
         }
 
-        //What to hover
+        //User selection
         match &message {
             MsgScene::Mousemove(mousemove) => {
-                user_selection::change_hover(self, mousemove.current_coord);
+                if let Some(cursor_pos) = self.camera.project_in_canvas(mousemove.current_coord) {
+                    user_selection::change_hover(self, cursor_pos);
+                }
+            }
+            MsgScene::MousedownMain(mousedown)
+                if mousedown.active_keys.contains(&keyboard::KeyCode::LShift) =>
+            {
+                if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
+                    user_selection::add_selection(self, cursor_pos);
+                }
+            }
+            MsgScene::MousedownMain(mousedown) => {
+                if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
+                    user_selection::change_selection(self, cursor_pos);
+                }
+            }
+            MsgScene::ClearSelection(level) => {
+                self.selected.clear_to_level(*level);
             }
             _ => {}
         }
@@ -198,6 +224,14 @@ impl canvas::Program<MsgScene> for Scene {
                 eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::PageDown => {
                     return (event::Status::Captured, Some(MsgScene::BtnScrollZoom(-1.0)));
                 }
+                eMe::KeysDown(key_change) if key_change.new_keys == keyboard::KeyCode::Escape => {
+                    return (
+                        event::Status::Captured,
+                        Some(MsgScene::ClearSelection(
+                            self.selected.get_selected_level().minus(),
+                        )),
+                    );
+                }
                 eMe::KeysDown(key_change)
                     if key_change.new_keys == keyboard::KeyCode::D
                         && key_change
@@ -210,6 +244,17 @@ impl canvas::Program<MsgScene> for Scene {
                     if let Some(pos) = cursor_position {
                         println!("cursor: {:?}", self.camera.project(pos));
                     }
+                    return (event::Status::Captured, None);
+                }
+                eMe::KeysDown(key_change)
+                    if key_change.new_keys == keyboard::KeyCode::S
+                        && key_change
+                            .active_keys
+                            .contains(&keyboard::KeyCode::LControl)
+                        && key_change.active_keys.contains(&keyboard::KeyCode::LAlt) =>
+                {
+                    println!("{:?}", self.selected);
+
                     return (event::Status::Captured, None);
                 }
 

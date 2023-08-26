@@ -95,6 +95,21 @@ impl Vgc {
         vec
     }
 
+    pub fn shapes_closest(&self, coord: &Coord) -> Vec<(usize, usize, f32, Coord)> {
+        let mut vec = Vec::new();
+        for (shape_index, shape) in self.shapes.iter().enumerate() {
+            let (curve_index, _, distance, coord) = shape.closest_curve(coord);
+
+            vec.push((shape_index, curve_index, distance, coord));
+        }
+        vec.sort_by(|(_, _, distance1, _), (_, _, distance2, _)| {
+            distance1
+                .partial_cmp(distance2)
+                .expect("No Nan value possible")
+        });
+        vec
+    }
+
     pub fn debug_string(&self) -> String {
         let mut string = "".to_string();
         for shape in &self.shapes {
@@ -111,11 +126,11 @@ mod tests {
 
     #[test]
     fn get_closest_coord_on_shape_triangle() {
-        let canvas = generate_from_line(&[
+        let canvas = generate_from_line(vec![vec![
             Coord { x: 0.0, y: 0.0 },
             Coord { x: 0.0, y: 1.0 },
             Coord { x: 1.0, y: 1.0 },
-        ]);
+        ]]);
 
         let shape = canvas.get_shape(0).unwrap();
         let (_, _, _, coord) = shape.closest_curve(&Coord::new(1.0, 0.0));
@@ -125,7 +140,7 @@ mod tests {
 
     #[test]
     fn genreate_from_push() {
-        let canvas = generate_from_push(&[
+        let canvas = generate_from_push(vec![vec![
             Coord { x: 0.0, y: 0.0 },
             Coord {
                 x: -0.46193975,
@@ -142,13 +157,13 @@ mod tests {
                 y: -0.19134173,
             },
             Coord { x: 0.0, y: 0.0 },
-        ]);
+        ]]);
 
         assert_eq!(canvas.debug_string(), "M 0 0 C -0.46193975 0.19134173 0 1 0 1 C 0 1 1 1 1 1 C 1 1 0.46193975 -0.19134173 0 0 Z\n");
     }
 }
 
-pub fn generate_from_line(coords: &[Coord]) -> Vgc {
+pub fn generate_from_line(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     let color = Rgba {
         r: 255,
         g: 255,
@@ -158,33 +173,35 @@ pub fn generate_from_line(coords: &[Coord]) -> Vgc {
 
     let mut canvas = Vgc::new(1.0, color);
 
-    if !coords.is_empty() {
-        let p0 = &coords[0];
+    for shape_coords in shapes_coords {
+        if !shape_coords.is_empty() {
+            let p0 = &shape_coords[0];
 
-        let shape_index = canvas.create_shape(
-            p0.clone(),
-            Rgba {
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 255,
-            },
-        );
+            let shape_index = canvas.create_shape(
+                p0.clone(),
+                Rgba {
+                    r: 0,
+                    g: 0,
+                    b: 0,
+                    a: 255,
+                },
+            );
 
-        let shape = canvas.get_mut_shape(shape_index).unwrap();
-        let mut previous = shape.start.clone();
-        for coord in coords.iter().skip(1) {
-            let p1 = Rc::new(RefCell::new(coord.clone()));
-            shape.push_coord(previous, p1.clone(), p1.clone());
-            previous = p1;
+            let shape = canvas.get_mut_shape(shape_index).unwrap();
+            let mut previous = shape.start.clone();
+            for coord in shape_coords.iter().skip(1) {
+                let p1 = Rc::new(RefCell::new(coord.clone()));
+                shape.push_coord(previous, p1.clone(), p1.clone());
+                previous = p1;
+            }
+            shape.close()
         }
-        shape.close()
     }
 
     canvas
 }
 
-pub fn generate_from_push(y: &[Coord]) -> Vgc {
+pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     let color = Rgba {
         r: 255,
         g: 255,
@@ -194,30 +211,32 @@ pub fn generate_from_push(y: &[Coord]) -> Vgc {
 
     let mut canvas = Vgc::new(1.0, color);
 
-    if !y.is_empty() {
-        let p0 = &y[0];
+    for shape_coords in shapes_coords {
+        if !shape_coords.is_empty() {
+            let p0 = &shape_coords[0];
 
-        let shape_index = canvas.create_shape(
-            p0.clone(),
-            Rgba {
-                r: 0,
-                g: 0,
-                b: 0,
-                a: 255,
-            },
-        );
-
-        let shape = canvas.get_mut_shape(shape_index).unwrap();
-
-        for i in 0..((y.len() - 1) / 3) {
-            let index = i * 3 + 1;
-            shape.push_coord(
-                Rc::new(RefCell::new(y[index].clone())),
-                Rc::new(RefCell::new(y[index + 1].clone())),
-                Rc::new(RefCell::new(y[index + 2].clone())),
+            let shape_index = canvas.create_shape(
+                p0.clone(),
+                Rgba {
+                    r: 0,
+                    g: 0,
+                    b: 0,
+                    a: 255,
+                },
             );
+
+            let shape = canvas.get_mut_shape(shape_index).unwrap();
+
+            for i in 0..((shape_coords.len() - 1) / 3) {
+                let index = i * 3 + 1;
+                shape.push_coord(
+                    Rc::new(RefCell::new(shape_coords[index].clone())),
+                    Rc::new(RefCell::new(shape_coords[index + 1].clone())),
+                    Rc::new(RefCell::new(shape_coords[index + 2].clone())),
+                );
+            }
+            shape.close()
         }
-        shape.close()
     }
 
     canvas

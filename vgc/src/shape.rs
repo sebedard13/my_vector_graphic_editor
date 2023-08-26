@@ -131,7 +131,8 @@ impl Shape {
     }
 
     /// Visit each curve and calculate the closest point on the curve to the coord
-    /// Return the curve index, the t value of the closest point on the curve, the distance to the closest point and the closest point
+    ///
+    /// Return (curve index, t value , distance, closest point)
     pub fn closest_curve(&self, coord: &Coord) -> (usize, f32, f32, Coord) {
         let mut min_distance = std::f32::MAX;
         let mut min_index = 0;
@@ -224,7 +225,7 @@ mod test {
 
     #[test]
     fn cloest_pt() {
-        let vgc = generate_from_push(&[
+        let vgc = generate_from_push(vec![vec![
             Coord::new(0.43, 0.27),
             Coord::new(0.06577811, 0.2938202),
             Coord::new(0.0, 1.0),
@@ -235,7 +236,7 @@ mod test {
             Coord::new(1.0, 1.0),
             Coord::new(0.7942219, 0.24617982),
             Coord::new(0.43, 0.27),
-        ]);
+        ]]);
 
         let shape = vgc.get_shape(0).expect("Shape should exist");
 

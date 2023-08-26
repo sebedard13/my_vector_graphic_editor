@@ -8,20 +8,68 @@ use vgc::coord::Coord;
 
 use crate::scene::{point_in_radius, Scene};
 
+#[derive(Debug, Default)]
 pub struct Selected {
     pub shapes: Vec<SelectedShape>,
 }
 
+#[derive(Debug, Default)]
 pub struct SelectedShape {
     pub shape_index: usize,
     pub coords: Vec<Rc<RefCell<Coord>>>,
     pub hover_coord: Option<Rc<RefCell<Coord>>>,
 }
 
-impl Default for Selected {
-    fn default() -> Self {
-        Self {
-            shapes: vec![SelectedShape::new(0)],
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SelectedLevel {
+    None,
+    Shape,
+    Coord,
+}
+impl SelectedLevel {
+    pub fn minus(&self) -> Self {
+        match self {
+            SelectedLevel::None => SelectedLevel::None,
+            SelectedLevel::Shape => SelectedLevel::None,
+            SelectedLevel::Coord => SelectedLevel::Shape,
+        }
+    }
+
+    pub fn plus(&self) -> Self {
+        match self {
+            SelectedLevel::None => SelectedLevel::Shape,
+            SelectedLevel::Shape => SelectedLevel::Coord,
+            SelectedLevel::Coord => SelectedLevel::Coord,
+        }
+    }
+}
+
+impl Selected {
+    pub fn get_selected_level(&self) -> SelectedLevel {
+        if self.shapes.is_empty() {
+            return SelectedLevel::None;
+        }
+
+        for shape_selected in &self.shapes {
+            if !shape_selected.coords.is_empty() {
+                return SelectedLevel::Coord;
+            }
+        }
+
+        SelectedLevel::Shape
+    }
+
+    pub fn clear_to_level(&mut self, selected_level: SelectedLevel) {
+        match selected_level {
+            SelectedLevel::None => {
+                self.shapes.clear();
+            }
+            SelectedLevel::Shape => {
+                for shape_selected in &mut self.shapes {
+                    shape_selected.coords.clear();
+                }
+            }
+            SelectedLevel::Coord => {}
         }
     }
 }
@@ -62,7 +110,7 @@ pub fn change_hover(scene: &mut Scene, cursor_position: Point) {
         for ref_coord_type in coords {
             let coord = ref_coord_type.borrow();
             if point_in_radius(
-                &scene.camera.project(cursor_position),
+                &cursor_position,
                 &Point::new(coord.x, coord.y),
                 scene.camera.fixed_length(12.0),
             ) {
@@ -80,24 +128,8 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
             .vgc_data
             .get_shape(shape_selected.shape_index)
             .unwrap();
-        {
-            let refs_coord_type = shape.get_coords_of_shape_tmp();
-            for ref_coord_type in refs_coord_type {
-                let coord_state = shape_selected.coord_state(&ref_coord_type);
-                let coord = ref_coord_type.borrow();
-                let color = match coord_state {
-                    CoordState::Hover => Color::from_rgb8(0x0E, 0x90, 0xAA),
-                    CoordState::Selected => Color::from_rgb8(0x3A, 0xD1, 0xEF),
-                    CoordState::None => Color::from_rgb8(0x3A, 0xD1, 0xEF),
-                };
-                let center = Point::new(coord.x, coord.y * 1.0 / scene.vgc_data.ratio as f32);
-                frame.fill(
-                    &Path::circle(center, scene.camera.fixed_length(5.0)),
-                    Fill::from(color),
-                );
-            }
-        }
 
+        //Draw line between cp and p
         shape.visit_full_curves(|_, p0, cp0, cp1, p1| {
             let from = Point::new(p0.x, p0.y * 1.0 / scene.vgc_data.ratio as f32);
 
@@ -115,6 +147,22 @@ pub fn draw(scene: &Scene, frame: &mut Frame) {
                 .with_color(Color::from_rgb8(0x3A, 0xD1, 0xEF));
             frame.stroke(&Path::line(from, to), stroke);
         });
+
+        let refs_coord_type = shape.get_coords_of_shape_tmp();
+        for ref_coord_type in refs_coord_type {
+            let coord_state = shape_selected.coord_state(&ref_coord_type);
+            let coord = ref_coord_type.borrow();
+            let color = match coord_state {
+                CoordState::Hover => Color::from_rgb8(0x0E, 0x90, 0xAA),
+                CoordState::Selected => Color::from_rgb8(0x3A, 0xD1, 0xEF),
+                CoordState::None => Color::from_rgb8(0xA1, 0xE9, 0xF7),
+            };
+            let center = Point::new(coord.x, coord.y * 1.0 / scene.vgc_data.ratio as f32);
+            frame.fill(
+                &Path::circle(center, scene.camera.fixed_length(5.0)),
+                Fill::from(color),
+            );
+        }
 
         let path = Path::new(|p| {
             let start_coord = shape.start.borrow();
@@ -167,4 +215,112 @@ pub fn draw_closest_pt(scene: &Scene, frame: &mut Frame, pos: Point) {
         &Path::circle(center, scene.camera.fixed_length(3.0)),
         Fill::from(color),
     );
+}
+
+pub fn change_selection(scene: &mut Scene, start_press: Point) {
+    let shapes = &mut scene.selected.shapes;
+    if shapes.is_empty() {
+        //Add shape
+        let closest_shapes = scene
+            .vgc_data
+            .shapes_closest(&Coord::new(start_press.x, start_press.y));
+
+        let first = closest_shapes.first();
+        if let Some((shape_index, ..)) = first {
+            let pos = shapes
+                .iter()
+                .position(|shape_selected| shape_selected.shape_index == *shape_index);
+
+            match pos {
+                Some(index) => {
+                    let elment = shapes.remove(index);
+                    shapes.clear();
+                    shapes.push(elment);
+                }
+                None => {
+                    shapes.clear();
+                    shapes.push(SelectedShape::new(*shape_index));
+                }
+            }
+        }
+    } else {
+        //Coord
+
+        for shape_selected in shapes.iter_mut() {
+            shape_selected.coords.clear();
+        }
+
+        for shape_selected in shapes {
+            let shape = scene
+                .vgc_data
+                .get_shape(shape_selected.shape_index)
+                .unwrap();
+            let coords = shape.get_coords_of_shape_tmp();
+            for ref_coord_type in coords {
+                let coord = ref_coord_type.borrow();
+                if point_in_radius(
+                    &start_press,
+                    &Point::new(coord.x, coord.y),
+                    scene.camera.fixed_length(12.0),
+                ) {
+                    shape_selected.coords.push(ref_coord_type.clone());
+                    return;
+                }
+            }
+        }
+    }
+}
+
+pub fn add_selection(scene: &mut Scene, start_press: Point) {
+    //Coord
+    for shape_selected in &mut scene.selected.shapes {
+        let shape = scene
+            .vgc_data
+            .get_shape(shape_selected.shape_index)
+            .unwrap();
+        let coords = shape.get_coords_of_shape_tmp();
+        for ref_coord_type in coords {
+            let coord = ref_coord_type.borrow();
+            if point_in_radius(
+                &start_press,
+                &Point::new(coord.x, coord.y),
+                scene.camera.fixed_length(12.0),
+            ) {
+                let pos = shape_selected
+                    .coords
+                    .iter()
+                    .position(|coord| *coord == ref_coord_type);
+                match pos {
+                    Some(index) => {
+                        shape_selected.coords.swap_remove(index);
+                    }
+                    None => {
+                        shape_selected.coords.push(ref_coord_type.clone());
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    let shapes = scene
+        .vgc_data
+        .shapes_closest(&Coord::new(start_press.x, start_press.y));
+
+    let first = shapes.first();
+    if let Some((shape_index, ..)) = first {
+        let shapes = &mut scene.selected.shapes;
+        let pos = shapes
+            .iter()
+            .position(|shape_selected| shape_selected.shape_index == *shape_index);
+
+        match pos {
+            Some(index) => {
+                shapes.swap_remove(index);
+            }
+            None => {
+                shapes.push(SelectedShape::new(*shape_index));
+            }
+        }
+    }
 }

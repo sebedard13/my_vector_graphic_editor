@@ -45,14 +45,13 @@ impl EventsMerger {
         event: keyboard::Event,
     ) -> EventStatus {
         match event {
-            keyboard::Event::KeyPressed {
-                key_code,
-                modifiers,
-            } => {
-                let active_keys = self.get_all_keydown(modifiers);
-
+            keyboard::Event::KeyPressed { key_code, .. } => {
                 let keydown = MergeEvent::KeyDown(key_code);
-                self.past_events.push(keydown.clone());
+                if !self.past_events.contains(&keydown) {
+                    self.past_events.push(keydown.clone());
+                }
+
+                let active_keys = self.get_all_keydown();
 
                 EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
                     current_coord: cursor_position,
@@ -60,15 +59,12 @@ impl EventsMerger {
                     active_keys,
                 })))
             }
-            keyboard::Event::KeyReleased {
-                key_code,
-                modifiers,
-            } => {
+            keyboard::Event::KeyReleased { key_code, .. } => {
                 self.past_events.retain(
                     |event| !matches!(event, MergeEvent::KeyDown(keydown) if key_code == *keydown),
                 );
 
-                let active_keys = self.get_all_keydown(modifiers);
+                let active_keys = self.get_all_keydown();
 
                 EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
                     current_coord: cursor_position,
@@ -98,24 +94,32 @@ impl EventsMerger {
                 match valid_event.first() {
                     Some(event) => match event {
                         MergeEvent::Mousedown(press) => {
+                            let active_keys = self.get_all_keydown();
                             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
                                 start: press.start_press,
                                 button: press.button,
                                 current_coord: position,
+                                active_keys,
                             })))
                         }
                         _ => EventStatus::Free,
                     },
-                    None => EventStatus::Used(Some(MergeEvent::Mousemove(Mousemove {
-                        current_coord: position,
-                    }))),
+                    None => {
+                        let active_keys = self.get_all_keydown();
+                        EventStatus::Used(Some(MergeEvent::Mousemove(Mousemove {
+                            current_coord: position,
+                            active_keys,
+                        })))
+                    }
                 }
             }
             mouse::Event::ButtonPressed(mouse_button) => {
                 if let Some(cursor_position) = cursor_position {
+                    let active_keys = self.get_all_keydown();
                     let v = MergeEvent::Mousedown(Mousedown {
                         start_press: cursor_position,
                         button: mouse_button,
+                        active_keys,
                     });
                     self.past_events.push(v.clone());
                     EventStatus::Used(Some(v))
@@ -144,11 +148,12 @@ impl EventsMerger {
                             MergeEvent::Mousedown(press) => press.start_press,
                             _ => return EventStatus::Free,
                         };
-
+                        let active_keys = self.get_all_keydown();
                         EventStatus::Used(Some(MergeEvent::Click(Click {
                             start_press,
                             end_press,
                             button: mouse_button,
+                            active_keys,
                         })))
                     }
                     None => return EventStatus::Free,
@@ -162,6 +167,7 @@ impl EventsMerger {
             }
             mouse::Event::WheelScrolled { delta } => {
                 if let Some(cursor_position) = cursor_position {
+                    let active_keys = self.get_all_keydown();
                     EventStatus::Used(Some(MergeEvent::Scroll(Scroll {
                         coord: cursor_position,
                         movement_type: delta,
@@ -169,6 +175,7 @@ impl EventsMerger {
                             mouse::ScrollDelta::Lines { x, y } => Point::new(x, y),
                             mouse::ScrollDelta::Pixels { x, y } => Point::new(x, y),
                         },
+                        active_keys,
                     })))
                 } else {
                     EventStatus::Free
@@ -178,8 +185,7 @@ impl EventsMerger {
     }
 
     #[allow(clippy::single_match)]
-    fn get_all_keydown(&self, _: keyboard::Modifiers) -> Vec<keyboard::KeyCode> {
-        //TODO: Use modifiers to get all active keys with valid control, shift, etc
+    fn get_all_keydown(&self) -> Vec<keyboard::KeyCode> {
         let mut active_keys = vec![];
         for event in &self.past_events {
             match event {
@@ -212,7 +218,8 @@ mod tests {
             event_status,
             EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
                 start_press: cursor_position,
-                button: mouse::Button::Left
+                button: mouse::Button::Left,
+                active_keys: vec![]
             })))
         );
 
@@ -225,7 +232,8 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::Pressmove(Pressmove {
                 start: cursor_position,
                 button: mouse::Button::Left,
-                current_coord: Point::new(1.0, 1.0)
+                current_coord: Point::new(1.0, 1.0),
+                active_keys: vec![]
             })))
         );
 
@@ -237,7 +245,8 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::Click(Click {
                 start_press: Point::new(10.0, 20.0),
                 end_press: cursor_position,
-                button: mouse::Button::Left
+                button: mouse::Button::Left,
+                active_keys: vec![]
             })))
         );
 
@@ -255,7 +264,8 @@ mod tests {
             event_status,
             EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
                 start_press: cursor_position,
-                button: mouse::Button::Left
+                button: mouse::Button::Left,
+                active_keys: vec![]
             })))
         );
 
@@ -266,7 +276,8 @@ mod tests {
             event_status,
             EventStatus::Used(Some(MergeEvent::Mousedown(Mousedown {
                 start_press: cursor_position,
-                button: mouse::Button::Right
+                button: mouse::Button::Right,
+                active_keys: vec![]
             })))
         );
 
@@ -278,7 +289,8 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::Click(Click {
                 start_press: Point::new(10.0, 20.0),
                 end_press: cursor_position,
-                button: mouse::Button::Left
+                button: mouse::Button::Left,
+                active_keys: vec![]
             })))
         );
 
@@ -292,7 +304,8 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::Click(Click {
                 start_press: Point::new(1.0, 2.0),
                 end_press: cursor_position,
-                button: mouse::Button::Right
+                button: mouse::Button::Right,
+                active_keys: vec![]
             })))
         );
 
@@ -314,7 +327,7 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::KeysDown(KeysChange {
                 current_coord: None,
                 new_keys: KeyCode::LControl,
-                active_keys: vec![],
+                active_keys: vec![]
             })))
         );
 
@@ -384,7 +397,7 @@ mod tests {
             EventStatus::Used(Some(MergeEvent::KeysUp(KeysChange {
                 current_coord: None,
                 new_keys: KeyCode::LControl,
-                active_keys: vec![],
+                active_keys: vec![]
             })))
         );
 
@@ -397,29 +410,34 @@ pub struct Scroll {
     pub coord: Point,
     pub movement_type: mouse::ScrollDelta, //Separate value from type line or pixel because we can decide to ignore them
     pub movement: Point,
+    pub active_keys: Vec<keyboard::KeyCode>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Mousedown {
     pub start_press: Point,
     pub button: mouse::Button,
+    pub active_keys: Vec<keyboard::KeyCode>,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct Pressmove {
     pub start: Point,
     pub button: mouse::Button,
     pub current_coord: Point,
+    pub active_keys: Vec<keyboard::KeyCode>,
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct Click {
     pub start_press: Point,
     pub end_press: Point,
     pub button: mouse::Button,
+    pub active_keys: Vec<keyboard::KeyCode>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Mousemove {
     pub current_coord: Point,
+    pub active_keys: Vec<keyboard::KeyCode>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
