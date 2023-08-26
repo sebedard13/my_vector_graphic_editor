@@ -89,7 +89,7 @@ impl Application for VgcEditor {
             Message::SubmitColor(color) => {
                 match self.scene.get_mut(self.current_scene) {
                     Some(scene) => {
-                        self.color_picker.set_color(color);
+                        self.color_picker.set_color(Some(color));
                         scene.update(scene::MsgScene::SubmitColor(color))
                     }
                     None => println!("No scene"),

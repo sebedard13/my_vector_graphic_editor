@@ -6,14 +6,14 @@ use iced::{Color, Point, Rectangle, Renderer, Theme};
 use crate::Message;
 
 pub struct ColorImage {
-    color: Color,
+    color: Option<Color>,
     draw_cache: Cache,
     width: Length,
     height: Length,
 }
 
 impl ColorImage {
-    pub fn new(color: Color) -> Self {
+    pub fn new(color: Option<Color>) -> Self {
         Self {
             color,
             width: Length::Fixed(20.0),
@@ -32,12 +32,12 @@ impl ColorImage {
         self
     }
 
-    pub fn set_color(&mut self, color: Color) {
+    pub fn set_color(&mut self, color:Option<Color>) {
         self.draw_cache.clear();
         self.color = color;
     }
 
-    pub fn get_color(&self) -> Color {
+    pub fn get_color(&self) -> Option<Color> {
         self.color
     }
 
@@ -51,7 +51,7 @@ impl ColorImage {
 
 impl Default for ColorImage {
     fn default() -> Self {
-        Self::new(Color::BLACK)
+        Self::new(None)
     }
 }
 
@@ -70,8 +70,33 @@ impl canvas::Program<Message> for ColorImage {
         _: mouse::Cursor,
     ) -> Vec<Geometry> {
         let img = self.draw_cache.draw(renderer, bounds.size(), |frame| {
-            let background = Path::rectangle(Point::ORIGIN, frame.size());
-            frame.fill(&background, self.color);
+            match self.color{
+                Some(color) => {
+                    let background = Path::rectangle(Point::ORIGIN, frame.size());
+                    frame.fill(&background, color);
+                }
+                None => {
+                    let p = Path::new(|p| {
+                        p.move_to(Point::new(0.0, 0.0));
+                        p.line_to(Point::new(frame.size().width, 0.0));
+                        p.line_to(Point::new(0.0, frame.size().height));
+                        p.close();
+                    });
+
+                    frame.fill(&p, Color::BLACK);
+                   
+                    let p = Path::new(|p| {
+                        p.move_to(Point::new(frame.size().width, frame.size().height));
+                        p.line_to(Point::new(frame.size().width, 1.0));
+                        p.line_to(Point::new(1.0, frame.size().height));
+                        p.close();
+                    });
+
+                    frame.fill(&p, Color::WHITE);
+                }
+            }
+
+           
         });
         vec![img]
     }
