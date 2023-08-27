@@ -74,6 +74,40 @@ impl Selected {
     }
 }
 
+pub enum ColorSelected {
+    None,
+    MultipleNotSame,
+    Single(Color),
+}
+
+pub fn get_color_selected(scene: &Scene) -> ColorSelected {
+    let shapes = &scene.selected.shapes;
+
+    if shapes.is_empty() {
+        return ColorSelected::None;
+    }
+
+    let mut color = None;
+    for shape_selected in shapes {
+        let shape = shape_selected.shape_index;
+        let shape = match scene.vgc_data.get_shape(shape) {
+            Some(shape) => shape,
+            None => continue,
+        };
+        let shape_color = &shape.color;
+        match color {
+            None => color = Some(shape_color),
+            Some(c) if c != shape_color => return ColorSelected::MultipleNotSame,
+            _ => {}
+        }
+    }
+
+    match color {
+        None => ColorSelected::None,
+        Some(c) => ColorSelected::Single(Color::from_rgba8(c.r, c.g, c.b, c.a as f32 / 255.0)),
+    }
+}
+
 enum CoordState {
     Hover,
     Selected,

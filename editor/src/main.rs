@@ -44,6 +44,7 @@ pub struct VgcEditor {
 #[derive(Debug, Clone)]
 pub enum Message {
     Scene(scene::MsgScene),
+    ChangeSelection,
     NewEmptyScene,
 
     OpenColorPicker,
@@ -74,7 +75,12 @@ impl Application for VgcEditor {
         match msg {
             Message::Scene(message) => {
                 match self.scene.get_mut(self.current_scene) {
-                    Some(scene) => scene.update(message),
+                    Some(scene) => {
+                        let msg = scene.update(message);
+                        msg.iter().for_each(|msg| {
+                            let _ = self.update(msg.clone());
+                        });
+                    }
                     None => println!("No scene"),
                 };
             }
@@ -87,14 +93,19 @@ impl Application for VgcEditor {
                 self.show_color_picker = true;
             }
             Message::SubmitColor(color) => {
+                self.show_color_picker = false;
                 match self.scene.get_mut(self.current_scene) {
                     Some(scene) => {
                         self.color_picker.set_color(Some(color));
-                        scene.update(scene::MsgScene::SubmitColor(color))
+                        let msg = scene.update(scene::MsgScene::SubmitColor(color));
+                        msg.iter().for_each(|msg| {
+                            let _ = self.update(msg.clone());
+                        });
                     }
-                    None => println!("No scene"),
+                    None => {
+                        println!("No scene");
+                    }
                 };
-                self.show_color_picker = false;
             }
             Message::CancelColor => {
                 self.show_color_picker = false;
@@ -103,6 +114,27 @@ impl Application for VgcEditor {
                 Ok(_) => println!("Font loaded"),
                 Err(err) => println!("Font error: {:?}", err),
             },
+            Message::ChangeSelection => {
+                match self.scene.get_mut(self.current_scene) {
+                    Some(scene) => {
+                        let color_selected = scene.get_color_selected();
+                        match color_selected {
+                            scene::ColorSelected::None => {
+                                //Keep the current color
+                            }
+                            scene::ColorSelected::MultipleNotSame => {
+                                self.color_picker.set_color(None);
+                            }
+                            scene::ColorSelected::Single(color) => {
+                                self.color_picker.set_color(Some(color));
+                            }
+                        }
+                    }
+                    None => {
+                        println!("No scene");
+                    }
+                };
+            }
         }
 
         Command::none()

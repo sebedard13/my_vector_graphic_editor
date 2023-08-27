@@ -18,6 +18,10 @@ use user_selection::Selected;
 
 pub use functionality::Functionality;
 
+use crate::Message;
+
+pub use self::user_selection::ColorSelected;
+
 pub struct Scene {
     draw_cache: Cache,
     pub camera: Camera,
@@ -88,8 +92,10 @@ impl Default for CanvasState {
 
 impl Scene {
     #[allow(clippy::single_match)] //Because to future proof adding match arms
-    pub fn update(&mut self, message: MsgScene) {
+    pub fn update(&mut self, message: MsgScene) -> Vec<Message> {
         self.draw_cache.clear();
+
+        let mut messages = Vec::new();
 
         //camera
         match &message {
@@ -111,10 +117,10 @@ impl Scene {
 
             MsgScene::ChangeFunctionality(functionality) => {
                 self.functionality = functionality.clone();
-                return;
+                return messages;
             }
             MsgScene::SubmitColor(color) => {
-                for shape in &mut self.selected.shapes{
+                for shape in &mut self.selected.shapes {
                     if let Some(shape) = self.vgc_data.get_mut_shape(shape.shape_index) {
                         shape.color = color.into_rgba8().into();
                     }
@@ -128,6 +134,7 @@ impl Scene {
             MsgScene::Mousemove(mousemove) => {
                 if let Some(cursor_pos) = self.camera.project_in_canvas(mousemove.current_coord) {
                     user_selection::change_hover(self, cursor_pos);
+                    messages.push(Message::ChangeSelection);
                 }
             }
             MsgScene::MousedownMain(mousedown)
@@ -135,20 +142,25 @@ impl Scene {
             {
                 if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
                     user_selection::add_selection(self, cursor_pos);
+                    messages.push(Message::ChangeSelection);
                 }
             }
             MsgScene::MousedownMain(mousedown) => {
                 if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
                     user_selection::change_selection(self, cursor_pos);
+                    messages.push(Message::ChangeSelection);
                 }
             }
             MsgScene::ClearSelection(level) => {
                 self.selected.clear_to_level(*level);
+                messages.push(Message::ChangeSelection);
             }
             _ => {}
         }
 
         functionality::match_functionality(self, &message);
+
+        messages
     }
 
     pub fn view(&self) -> Element<MsgScene> {
@@ -156,6 +168,10 @@ impl Scene {
             .width(Length::Fill)
             .height(Length::Fill)
             .into()
+    }
+
+    pub fn get_color_selected(&self) -> ColorSelected {
+        user_selection::get_color_selected(self)
     }
 }
 

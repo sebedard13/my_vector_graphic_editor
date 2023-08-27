@@ -70,11 +70,11 @@ pub fn left_toolbar<'a>(
             .on_press(Message::OpenColorPicker)
             .style(Button::Custom(Box::<BtnStyleNormal>::default()));
 
-        let color = match vgc_editor.color_picker.get_color(){
+        let color = match vgc_editor.color_picker.get_color() {
             Some(c) => c,
-            None => Color::from_rgba8(0, 0, 0, 1.0)
+            None => Color::from_rgba8(0, 0, 0, 1.0),
         };
-        
+
         color_picker(
             vgc_editor.show_color_picker,
             color,

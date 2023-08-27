@@ -32,7 +32,7 @@ impl ColorImage {
         self
     }
 
-    pub fn set_color(&mut self, color:Option<Color>) {
+    pub fn set_color(&mut self, color: Option<Color>) {
         self.draw_cache.clear();
         self.color = color;
     }
@@ -69,8 +69,9 @@ impl canvas::Program<Message> for ColorImage {
         bounds: Rectangle,
         _: mouse::Cursor,
     ) -> Vec<Geometry> {
-        let img = self.draw_cache.draw(renderer, bounds.size(), |frame| {
-            match self.color{
+        let img = self
+            .draw_cache
+            .draw(renderer, bounds.size(), |frame| match self.color {
                 Some(color) => {
                     let background = Path::rectangle(Point::ORIGIN, frame.size());
                     frame.fill(&background, color);
@@ -84,7 +85,7 @@ impl canvas::Program<Message> for ColorImage {
                     });
 
                     frame.fill(&p, Color::BLACK);
-                   
+
                     let p = Path::new(|p| {
                         p.move_to(Point::new(frame.size().width, frame.size().height));
                         p.line_to(Point::new(frame.size().width, 1.0));
@@ -94,10 +95,7 @@ impl canvas::Program<Message> for ColorImage {
 
                     frame.fill(&p, Color::WHITE);
                 }
-            }
-
-           
-        });
+            });
         vec![img]
     }
 

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
