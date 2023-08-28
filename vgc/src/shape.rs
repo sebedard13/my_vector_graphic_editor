@@ -217,10 +217,25 @@ impl Shape {
             }
         }
     }
+
+    /// Cut curve_index with coord like cp0 coord coord coord cp1 p1
+    pub fn insert_coord_at(&mut self, curve_index: usize, coord: Coord) {
+        let p1 = Rc::new(RefCell::new(coord));
+
+        let cp0 = self.curves[curve_index].cp0.clone();
+
+        let new_curve = Curve::new(cp0, p1.clone(), p1.clone());
+
+        self.curves[curve_index].cp0 = p1;
+
+        self.curves.insert(curve_index, new_curve);
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use std::rc::Rc;
+
     use crate::{coord::Coord, generate_from_push};
 
     #[test]
@@ -241,7 +256,50 @@ mod test {
         let shape = vgc.get_shape(0).expect("Shape should exist");
 
         let (_, _, _, coord) = shape.closest_curve(&Coord::new(1.008, 0.612));
-        dbg!(&coord);
         assert_ne!(&coord.y, &1.0);
+    }
+
+    #[test]
+    fn insert_coord_at() {
+        let mut vgc = generate_from_push(vec![vec![
+            Coord::new(0.0, 0.0),
+            Coord::new(0.1, 0.1),
+            Coord::new(0.9, 0.9),
+            Coord::new(1.0, 1.0),
+        ]]);
+
+        let shape = vgc.get_shape_mut(0).expect("Shape should exist");
+
+        shape.insert_coord_at(0, Coord::new(0.5, 0.5));
+
+        let (p0, c0, c1l, p1) = shape.get_coords_of_curve(0);
+        let (p1_2, c1r, c2, p2) = shape.get_coords_of_curve(1);
+
+        assert_eq!(*p0.borrow(), Coord::new(0.0, 0.0));
+
+        assert_eq!(*c0.borrow(), Coord::new(0.1, 0.1));
+        assert_eq!(*c1l.borrow(), Coord::new(0.5, 0.5));
+        assert_eq!(*p1.borrow(), Coord::new(0.5, 0.5));
+
+        assert_eq!(*p1_2.borrow(), Coord::new(0.5, 0.5));
+
+        assert_eq!(*c1r.borrow(), Coord::new(0.5, 0.5));
+
+        assert_eq!(*c2.borrow(), Coord::new(0.9, 0.9));
+        assert_eq!(*p2.borrow(), Coord::new(1.0, 1.0));
+
+        assert_eq!(shape.curves.len(), 3); //Because close
+
+        //+1 or +2 beacause of current borrow at 280 and 281
+        assert_eq!(Rc::strong_count(&p0), 3 + 1); //Because close
+        assert_eq!(Rc::strong_count(&c0), 1 + 1);
+        assert_eq!(Rc::strong_count(&c1l), 3 + 4);
+        assert_eq!(Rc::strong_count(&p1), 3 + 4);
+
+        assert_eq!(Rc::strong_count(&p1_2), 3 + 4);
+        assert_eq!(Rc::strong_count(&c1r), 3 + 4);
+
+        assert_eq!(Rc::strong_count(&c2), 1 + 1);
+        assert_eq!(Rc::strong_count(&p2), 2 + 1);
     }
 }

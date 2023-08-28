@@ -350,7 +350,12 @@ pub fn add_selection(scene: &mut Scene, start_press: Point) {
 
         match pos {
             Some(index) => {
-                if shapes.get(index).expect("Valid index because founds with iter().position").coords.is_empty() {
+                if shapes
+                    .get(index)
+                    .expect("Valid index because founds with iter().position")
+                    .coords
+                    .is_empty()
+                {
                     shapes.swap_remove(index);
                 }
             }

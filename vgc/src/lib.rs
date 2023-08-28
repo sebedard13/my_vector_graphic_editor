@@ -44,7 +44,7 @@ impl Vgc {
         self.shapes.get(index_shape)
     }
 
-    pub fn get_mut_shape(&mut self, index_shape: usize) -> Option<&mut Shape> {
+    pub fn get_shape_mut(&mut self, index_shape: usize) -> Option<&mut Shape> {
         self.shapes.get_mut(index_shape)
     }
 
@@ -187,7 +187,7 @@ pub fn generate_from_line(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
                 },
             );
 
-            let shape = canvas.get_mut_shape(shape_index).unwrap();
+            let shape = canvas.get_shape_mut(shape_index).unwrap();
             let mut previous = shape.start.clone();
             for coord in shape_coords.iter().skip(1) {
                 let p1 = Rc::new(RefCell::new(coord.clone()));
@@ -225,7 +225,7 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
                 },
             );
 
-            let shape = canvas.get_mut_shape(shape_index).unwrap();
+            let shape = canvas.get_shape_mut(shape_index).unwrap();
 
             for i in 0..((shape_coords.len() - 1) / 3) {
                 let index = i * 3 + 1;

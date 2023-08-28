@@ -121,7 +121,7 @@ impl Scene {
             }
             MsgScene::SubmitColor(color) => {
                 for shape in &mut self.selected.shapes {
-                    if let Some(shape) = self.vgc_data.get_mut_shape(shape.shape_index) {
+                    if let Some(shape) = self.vgc_data.get_shape_mut(shape.shape_index) {
                         shape.color = color.into_rgba8().into();
                     }
                 }
