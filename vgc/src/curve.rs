@@ -224,13 +224,34 @@ pub fn tangent_cornor_pts(
     )
 }
 
+///For a curve defined by p0, cp0, cp1, p1, let's imagine we want to add a point at t without changing the actual curve.
+/// Return the handle and points to create a smooth curve at t so (cp0, cp1l, p1, cp1r, cp2, p2)
+pub fn add_smooth_result(
+    p0: &Coord,
+    cp0: &Coord,
+    cp1: &Coord,
+    p1: &Coord,
+    t: f32,
+) -> (Coord, Coord, Coord, Coord, Coord) {
+    let cp0_rtn = t * cp0 - (t - 1.0) * p0;
+    let cp1l_rtn = t * t * cp1 - 2.0 * (t * (t - 1.0) * cp0 - 0.5 * (t * t - 2.0 * t + 1.0) * p0);
+    let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);
+    let cp1r_rtn =
+        -2.0 * (t * (t - 1.0) * cp1 - 0.5 * ((t * t - 2.0 * t + 1.0) * cp0 + t * t * p1));
+    let cp2_rtn = -1.0 * ((t - 1.0) * cp1 - t * p1);
+
+    (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn)
+}
+
 #[cfg(test)]
 mod test {
     use std::f32::consts::PI;
     use std::time::Instant;
 
+    use float_cmp::approx_eq;
+
+    use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
     use crate::coord::Coord;
-    use crate::curve::{tangent_cornor_pts, tangent_vector};
 
     #[test]
     fn tangent_vector_same() {
@@ -310,6 +331,79 @@ mod test {
         let (t, _, _) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
         assert_eq!(t, 0.45561033);
+    }
+
+    #[test]
+    fn test_add_smooth_result() {
+        let p0 = Coord { x: 1.0, y: 0.0 };
+        let cp0 = Coord { x: 1.0, y: 0.5 };
+        let cp1 = Coord { x: 0.0, y: 0.1 };
+        let p1 = Coord { x: 0.0, y: 0.0 };
+
+        let (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn) =
+            add_smooth_result(&p0, &cp0, &cp1, &p1, 0.5);
+
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.0, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.125, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.25, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.25, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.5, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.375, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.75, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(1.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
+            ulps = 2
+        ));
+
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.625, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.25, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.5, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(0.875, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(0.75, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
+            ulps = 2
+        ));
+        assert!(approx_eq!(
+            &Coord,
+            &cubic_bezier(1.0, &p0, &cp0, &cp1, &p1),
+            &cubic_bezier(1.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
+            ulps = 2
+        ));
     }
 
     #[test]

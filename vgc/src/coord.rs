@@ -3,33 +3,7 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
 
-/*
-pub fn insert_curve(coord_ds: &mut CoordDS, curve_instruction: CoordInstruction) -> Curve {
-    let c1 = coord_ds.insert(curve_instruction.c1);
-    let c2 = coord_ds.insert(curve_instruction.c2);
-    let p = coord_ds.insert(curve_instruction.p);
-    Curve::new(c1, c2, p)
-}
-
-pub fn insert_shape(coord_ds: &mut CoordDS, shape_instruction: ShapeInstruction) -> Shape {
-    let start = coord_ds.insert(shape_instruction.start);
-
-    let curves: Vec<Curve> = shape_instruction
-        .curves
-        .iter()
-        .map(|curve_instruction| {
-            insert_curve(coord_ds, curve_instruction.clone()) //TODO: clone is not good
-        })
-        .collect();
-
-    let mut shape = Shape {
-        start,
-        curves,
-        color: shape_instruction.color,
-    };
-    shape.close();
-    shape
-}*/
+use float_cmp::{ApproxEq, F32Margin};
 
 pub type CoordPtr = Rc<RefCell<Coord>>;
 
@@ -237,5 +211,14 @@ impl Div<f32> for &Coord {
             x: self.x / rhs,
             y: self.y / rhs,
         }
+    }
+}
+
+impl ApproxEq for &Coord {
+    type Margin = F32Margin;
+
+    fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
+        let margin = margin.into();
+        self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
     }
 }

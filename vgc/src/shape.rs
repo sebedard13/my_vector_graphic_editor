@@ -218,6 +218,34 @@ impl Shape {
         }
     }
 
+    /// Cut curve_index at t without chnaging the curve by replacing the handles
+    pub fn insert_coord_smooth(&mut self, curve_index: usize, t: f32) {
+        let (p0, cp0i, cp2i, p2) = self.get_coords_of_curve(curve_index);
+
+        let (cp0, cp1l, p1, cp1r, cp2) = curve::add_smooth_result(
+            &p0.borrow(),
+            &cp0i.borrow(),
+            &cp2i.borrow(),
+            &p2.borrow(),
+            t,
+        );
+
+        self.insert_coord_at(curve_index, p1);
+
+        //left has separate handle
+        if !Rc::ptr_eq(&p0, &cp0i) {
+            self.curves[curve_index].cp0 = Rc::new(RefCell::new(cp0));
+            self.curves[curve_index].cp1 = Rc::new(RefCell::new(cp1l));
+        }
+
+        //right has separate handle
+        if !Rc::ptr_eq(&cp2i, &p2) {
+            //Index valid because we just inserted
+            self.curves[curve_index + 1].cp0 = Rc::new(RefCell::new(cp1r));
+            self.curves[curve_index + 1].cp1 = Rc::new(RefCell::new(cp2));
+        }
+    }
+
     /// Cut curve_index with coord like cp0 coord coord coord cp1 p1
     pub fn insert_coord_at(&mut self, curve_index: usize, coord: Coord) {
         let p1 = Rc::new(RefCell::new(coord));
