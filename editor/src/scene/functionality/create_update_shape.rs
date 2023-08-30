@@ -1,7 +1,10 @@
 use iced::Point;
-use vgc::{coord::{Coord, RefCoordType}, Vgc};
+use vgc::{
+    coord::{Coord, RefCoordType},
+    Vgc,
+};
 
-use crate::scene::{canvas_camera::Camera, user_selection::Selected, MsgScene, point_in_radius};
+use crate::scene::{canvas_camera::Camera, point_in_radius, user_selection::Selected, MsgScene};
 
 #[allow(clippy::single_match)]
 pub fn handle_create_or_add_point(
@@ -29,7 +32,7 @@ pub fn handle_create_or_add_point(
                     }
                 }
             });
-            if !to_do.is_empty(){
+            if !to_do.is_empty() {
                 for (shape_index, curve_index) in to_do {
                     let shape = vgc_data.get_shape_mut(shape_index).unwrap();
                     shape.remove_curve(curve_index);
@@ -38,11 +41,9 @@ pub fn handle_create_or_add_point(
                         vgc_data.remove_shape(shape_index);
                     }
                 }
-               
+
                 return;
             }
-            
-
 
             // if click is on the path of curve, add a point
             let mut min_distance = std::f32::MAX;
@@ -65,16 +66,16 @@ pub fn handle_create_or_add_point(
 
             if min_distance <= camera.fixed_length(10.0) {
                 let shape = vgc_data
-                .get_shape_mut(min_shape_index)
-                .expect("Shape is valid because it was selected");
+                    .get_shape_mut(min_shape_index)
+                    .expect("Shape is valid because it was selected");
 
                 shape.insert_coord_smooth(min_curve_index, min_t);
                 return;
             }
 
-            if let Some(pos) = camera.project_in_canvas(click.end_press){
+            if let Some(pos) = camera.project_in_canvas(click.end_press) {
                 // if click create a new shape on point and ready to new point
-                vgc::create_circle(vgc_data, Coord::new(pos.x, pos.y),0.23);
+                vgc::create_circle(vgc_data, Coord::new(pos.x, pos.y), 0.23);
             }
         }
         _ => {}

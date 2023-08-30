@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 iced = { version = "0.10.0", features = ["canvas", "tokio", "debug", "image"] }
-iced_aw = {version = "0.6.0", features = ["color_picker"]}
+iced_aw = {version = "0.7.0", features = ["color_picker", "menu"]}
 vgc = { path="../vgc"}
 tokio = { version = "1.0", features = ["sync"] }
 itertools = "0.9"

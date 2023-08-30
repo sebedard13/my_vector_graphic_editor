@@ -254,20 +254,17 @@ impl Shape {
         self.curves.insert(curve_index, new_curve);
     }
 
-    pub fn remove_start(&mut self) {
-        
-    }
+    pub fn remove_start(&mut self) {}
 
     pub fn remove_curve(&mut self, curve_index: usize) {
-
-        if self.is_closed() && self.curves.len() -1 == curve_index {
+        if self.is_closed() && self.curves.len() - 1 == curve_index {
             let curve = self.curves.remove(0);
-            self.curves[curve_index-1].cp1 = curve.cp1;
-            self.curves[curve_index-1].p1 = curve.p1.clone();
+            self.curves[curve_index - 1].cp1 = curve.cp1;
+            self.curves[curve_index - 1].p1 = curve.p1.clone();
             self.start = curve.p1;
             return;
         }
-        
+
         let cp0 = self.curves[curve_index].cp0.clone();
 
         self.curves.remove(curve_index);
@@ -277,14 +274,12 @@ impl Shape {
         }
     }
 
-
     pub fn is_empty(&self) -> bool {
-        if self.is_closed(){
-            self.curves.len() ==1
-        }else{
+        if self.is_closed() {
+            self.curves.len() == 1
+        } else {
             self.curves.is_empty()
         }
-        
     }
 }
 

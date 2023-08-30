@@ -1,5 +1,5 @@
 use iced::widget::canvas::Frame;
-use iced::{Point, Rectangle, Vector, Size};
+use iced::{Point, Rectangle, Size, Vector};
 
 use super::events;
 

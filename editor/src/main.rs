@@ -12,6 +12,7 @@ use iced::window;
 use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::left_toolbar;
+use toolbars::top::top_toolbar;
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
@@ -52,6 +53,8 @@ pub enum Message {
     CancelColor,
 
     FontLoaded(Result<(), font::Error>),
+
+    None,
 }
 
 impl Application for VgcEditor {
@@ -135,6 +138,7 @@ impl Application for VgcEditor {
                     }
                 };
             }
+            Message::None => println!("None"),
         }
 
         Command::none()
@@ -156,9 +160,7 @@ impl Application for VgcEditor {
                 .map(move |message| Message::Scene(message)),
         };
 
-        let top_toolbar = container(row![])
-            .width(Length::Fill)
-            .height(Length::Fixed(50.0));
+        let top_toolbar = top_toolbar();
 
         let content = column![top_toolbar, row![controls, canvas]];
 
