@@ -132,7 +132,7 @@ impl Scene {
         //User selection
         match &message {
             MsgScene::Mousemove(mousemove) => {
-                if let Some(cursor_pos) = self.camera.project_in_canvas(mousemove.current_coord) {
+                if let Some(cursor_pos) = self.camera.project_in_view(mousemove.current_coord) {
                     user_selection::change_hover(self, cursor_pos);
                     messages.push(Message::ChangeSelection);
                 }
@@ -140,13 +140,13 @@ impl Scene {
             MsgScene::MousedownMain(mousedown)
                 if mousedown.active_keys.contains(&keyboard::KeyCode::LShift) =>
             {
-                if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
+                if let Some(cursor_pos) = self.camera.project_in_view(mousedown.start_press) {
                     user_selection::add_selection(self, cursor_pos);
                     messages.push(Message::ChangeSelection);
                 }
             }
             MsgScene::MousedownMain(mousedown) => {
-                if let Some(cursor_pos) = self.camera.project_in_canvas(mousedown.start_press) {
+                if let Some(cursor_pos) = self.camera.project_in_view(mousedown.start_press) {
                     user_selection::change_selection(self, cursor_pos);
                     messages.push(Message::ChangeSelection);
                 }

@@ -118,6 +118,10 @@ impl Vgc {
         }
         string
     }
+
+    pub fn remove_shape(&mut self, shape_index: usize) {
+        self.shapes.remove(shape_index);
+    }
 }
 
 #[cfg(test)]
@@ -240,4 +244,74 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     }
 
     canvas
+}
+
+pub fn create_circle(canvas: &mut Vgc,center: Coord, radius: f32) {
+    //https://spencermortensen.com/articles/bezier-circle/
+    let a = 1.00005519;
+    let b = 0.55342686;
+    let c = 0.99873585;
+
+    let p0 = Coord::new(0.0,a);
+
+
+    let shape_index = canvas.create_shape(
+        p0.clone(),
+        Rgba {
+            r: 0,
+            g: 0,
+            b: 0,
+            a: 255,
+        },
+    );
+    let shape = canvas.get_shape_mut(shape_index).unwrap();
+
+    let vec = vec![
+        shape.start.clone(),
+        Rc::new(RefCell::new(Coord::new(b,c))),
+        Rc::new(RefCell::new(Coord::new(c,b))),
+        Rc::new(RefCell::new(Coord::new(a,0.0))),
+        Rc::new(RefCell::new(Coord::new(c,-b))),
+        Rc::new(RefCell::new(Coord::new(b,-c))),
+        Rc::new(RefCell::new(Coord::new(0.0,-a))),
+        Rc::new(RefCell::new(Coord::new(-b,-c))),
+        Rc::new(RefCell::new(Coord::new(-c,-b))),
+        Rc::new(RefCell::new(Coord::new(-a,0.0))),
+        Rc::new(RefCell::new(Coord::new(-c,b))),
+        Rc::new(RefCell::new(Coord::new(-b,c))),
+    ];
+
+    shape.push_coord(
+        vec[1].clone(),
+        vec[2].clone(),
+        vec[3].clone(),
+    );
+
+    shape.push_coord(
+        vec[4].clone(),
+        vec[5].clone(),
+        vec[6].clone(),
+    );
+
+    shape.push_coord(
+        vec[7].clone(),
+        vec[8].clone(),
+        vec[9].clone(),
+    );
+
+    shape.push_coord(
+        vec[10].clone(),
+        vec[11].clone(),
+        vec[0].clone(),
+    );
+
+    for coord_ref in vec {
+        let mut coord = coord_ref.borrow_mut();
+        coord.x *= radius;
+        coord.y *= radius;
+        coord.x += center.x;
+        coord.y += center.y;
+    }
+
+
 }

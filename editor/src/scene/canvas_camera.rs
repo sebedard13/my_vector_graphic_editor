@@ -1,5 +1,5 @@
 use iced::widget::canvas::Frame;
-use iced::{Point, Rectangle, Vector};
+use iced::{Point, Rectangle, Vector, Size};
 
 use super::events;
 
@@ -67,10 +67,21 @@ impl Camera {
         )
     }
 
-    pub fn project_in_canvas(&self, position: Point) -> Option<Point> {
+    pub fn project_in_view(&self, position: Point) -> Option<Point> {
         let point = self.project(position);
 
         match self.region().contains(point) {
+            true => Some(point),
+            false => None,
+        }
+    }
+
+    pub fn project_in_canvas(&self, position: Point) -> Option<Point> {
+        let point = self.project(position);
+
+        let canvas = Rectangle::new(Point::new(0.0, 0.0), Size::new(1.0, 1.0));
+
+        match canvas.contains(point) {
             true => Some(point),
             false => None,
         }

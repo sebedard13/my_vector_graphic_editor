@@ -34,7 +34,6 @@ fn render(canvas: &Vgc, w: u32, h: u32) -> Result<Pixmap, String> {
 
                 pb.cubic_to(cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y);
             }
-            pb.close();
             pb.finish().unwrap()
         };
 
@@ -84,8 +83,6 @@ pub fn frame_render(canvas: &Vgc, frame: &mut Frame) {
                     ),
                 );
             }
-
-            builder.close();
         });
 
         frame.fill(path, fill)

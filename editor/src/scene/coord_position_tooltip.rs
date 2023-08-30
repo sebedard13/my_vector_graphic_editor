@@ -7,7 +7,7 @@ use iced::{
 use super::Scene;
 
 pub fn draw(scene: &Scene, frame: &mut Frame, cursor_pos: Point) {
-    let pos = scene.camera.project_in_canvas(cursor_pos);
+    let pos = scene.camera.project_in_view(cursor_pos);
 
     if let Some(pos) = pos {
         let text = Text {

@@ -3,25 +3,16 @@ use crate::curve;
 use crate::curve::Curve;
 use crate::fill::Rgba;
 use std::cell::RefCell;
-use std::mem::swap;
 use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Shape {
     pub start: Rc<RefCell<Coord>>,
-    pub curves: Vec<Curve>,
+    pub(crate) curves: Vec<Curve>,
     pub color: Rgba,
 }
 
 impl Shape {
-    pub fn add_coord(&mut self, mut curve: Curve, index: usize) {
-        let curve_after = self.curves.get_mut(index).expect("Index should be valid because we should not be able to add a curve at the end of the shape because the last element close the curve with a link to the start coord in shape");
-
-        swap(&mut curve.cp0, &mut curve.cp1);
-        swap(&mut curve.cp0, &mut curve_after.cp0);
-        self.curves.insert(index, curve);
-    }
-
     pub fn toggle_separate_join_handle(&mut self, index: usize) {
         if self.is_handles_joined(index) {
             self.separate_handle(index);
@@ -263,7 +254,20 @@ impl Shape {
         self.curves.insert(curve_index, new_curve);
     }
 
+    pub fn remove_start(&mut self) {
+        
+    }
+
     pub fn remove_curve(&mut self, curve_index: usize) {
+
+        if self.is_closed() && self.curves.len() -1 == curve_index {
+            let curve = self.curves.remove(0);
+            self.curves[curve_index-1].cp1 = curve.cp1;
+            self.curves[curve_index-1].p1 = curve.p1.clone();
+            self.start = curve.p1;
+            return;
+        }
+        
         let cp0 = self.curves[curve_index].cp0.clone();
 
         self.curves.remove(curve_index);
@@ -271,6 +275,16 @@ impl Shape {
         if let Some(curve) = self.curves.get_mut(curve_index) {
             curve.cp0 = cp0;
         }
+    }
+
+
+    pub fn is_empty(&self) -> bool {
+        if self.is_closed(){
+            self.curves.len() ==1
+        }else{
+            self.curves.is_empty()
+        }
+        
     }
 }
 
