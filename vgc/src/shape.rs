@@ -232,16 +232,20 @@ impl Shape {
 
         self.insert_coord_at(curve_index, p1);
 
+        //for a straight line no handle
+        if !(Rc::ptr_eq(&p0, &cp0i) && Rc::ptr_eq(&cp2i, &p2)) {
+            self.curves[curve_index].cp1 = Rc::new(RefCell::new(cp1l));
+            self.curves[curve_index + 1].cp0 = Rc::new(RefCell::new(cp1r));
+        }
+
         //left has separate handle
         if !Rc::ptr_eq(&p0, &cp0i) {
             self.curves[curve_index].cp0 = Rc::new(RefCell::new(cp0));
-            self.curves[curve_index].cp1 = Rc::new(RefCell::new(cp1l));
         }
 
         //right has separate handle
         if !Rc::ptr_eq(&cp2i, &p2) {
             //Index valid because we just inserted
-            self.curves[curve_index + 1].cp0 = Rc::new(RefCell::new(cp1r));
             self.curves[curve_index + 1].cp1 = Rc::new(RefCell::new(cp2));
         }
     }
@@ -257,6 +261,16 @@ impl Shape {
         self.curves[curve_index].cp0 = p1;
 
         self.curves.insert(curve_index, new_curve);
+    }
+
+    pub fn remove_curve(&mut self, curve_index: usize) {
+        let cp0 = self.curves[curve_index].cp0.clone();
+
+        self.curves.remove(curve_index);
+
+        if let Some(curve) = self.curves.get_mut(curve_index) {
+            curve.cp0 = cp0;
+        }
     }
 }
 
