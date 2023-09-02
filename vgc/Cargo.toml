@@ -5,13 +5,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-float-cmp = "0.9.0"
-tiny-skia = "0.11.1"
-
-iced = { version = "0.10.0", features = ["canvas"] }
 polynomen = "1.1.0"
 
+tiny-skia = "0.11.1"
+iced = { version = "0.10.0", features = ["canvas"] }
+
 serde = { version = "1.0.130", features = ["derive"], optional = true }
+
+[dev-dependencies]
+postcard = {version = "1.0.7",  features = ["alloc"]}
+float-cmp = "0.9.0" 
 
 [features]
 default = ["serialization"]
