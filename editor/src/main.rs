@@ -1,6 +1,9 @@
 mod scene;
 mod toolbars;
 mod utils;
+mod styles;
+
+use std::path::PathBuf;
 
 use scene::Scene;
 
@@ -40,6 +43,8 @@ pub struct VgcEditor {
     current_scene: usize,
     show_color_picker: bool,
     pub color_picker: utils::ColorImage,
+
+    path_selected: PathBuf,
 }
 
 #[derive(Debug, Clone)]
@@ -53,6 +58,9 @@ pub enum Message {
     CancelColor,
 
     FontLoaded(Result<(), font::Error>),
+
+    SaveCurrentScene,
+    LoadScene,
 
     None,
 }
@@ -139,6 +147,18 @@ impl Application for VgcEditor {
                 };
             }
             Message::None => println!("None"),
+            Message::SaveCurrentScene => {
+                match self.scene.get_mut(self.current_scene) {
+                    Some(scene) => {
+                       
+                       
+                    }
+                    None => {
+                        println!("No scene");
+                    }
+                };
+            },
+            Message::LoadScene => todo!(),
         }
 
         Command::none()

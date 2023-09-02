@@ -5,9 +5,14 @@ use std::rc::Rc;
 
 use float_cmp::{ApproxEq, F32Margin};
 
+
+use serde::{Deserialize, Serialize};
+
 pub type CoordPtr = Rc<RefCell<Coord>>;
 
 #[derive(Clone, Debug, PartialEq)]
+
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Coord {
     pub x: f32,
     pub y: f32,

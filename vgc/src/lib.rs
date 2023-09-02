@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use crate::coord::Coord;
 use crate::fill::Rgba;
-use coord::RefCoordType;
+use coord::{CoordPtr, RefCoordType};
 use iced::widget::canvas::Frame;
 use shape::Shape;
 
@@ -11,6 +11,11 @@ pub mod coord;
 mod curve;
 mod fill;
 pub mod render;
+
+
+#[cfg(feature = "serialization")]
+mod serialization;
+
 mod shape;
 
 #[derive(Debug)]
@@ -68,6 +73,17 @@ impl Vgc {
                     shape_index,
                     RefCoordType::P1(curve_index, curve.p1.borrow()),
                 );
+            }
+        }
+    }
+
+    pub fn visit_ptr(&self, f: &mut dyn FnMut(&CoordPtr)) {
+        for (_, shape) in self.shapes.iter().enumerate() {
+            f(&shape.start);
+            for (_, curve) in shape.curves.iter().enumerate() {
+                f(&curve.cp0);
+                f(&curve.cp1);
+                f(&curve.p1);
             }
         }
     }
