@@ -5,6 +5,8 @@ use iced::{Color, Point, Rectangle, Renderer, Theme};
 
 use crate::Message;
 
+pub mod file_explorer;
+
 pub struct ColorImage {
     color: Option<Color>,
     draw_cache: Cache,
