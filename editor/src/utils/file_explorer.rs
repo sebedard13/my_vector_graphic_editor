@@ -52,7 +52,6 @@ where
         }
     }
 
-
     pub fn on_search_found(&mut self, on_search_found: T) {
         self.on_search_found = Some(on_search_found);
     }
@@ -60,7 +59,6 @@ where
     pub fn on_search_abort(&mut self, on_search_abort: T) {
         self.on_search_abort = Some(on_search_abort);
     }
-
 
     pub fn view(&self) ->  Element<RtnMsg<T>> {
         let text_input: iced::widget::TextInput<'_, RtnMsg<T>, Renderer<Theme>> = text_input("",self.current_value.as_str())
@@ -107,8 +105,7 @@ where
             main_col = main_col.push(text(title).size(20));
         }
 
-        main_col = main_col.push(first_row).push(second_row).spacing(10.0).padding([10.0;4]);
-
+        main_col = main_col.push(first_row).push(second_row).spacing(10.0).padding([10.0;4]).width(Length::Fixed(500.0)).height(Length::Fixed(400.0));
 
         main_col.into()
     }

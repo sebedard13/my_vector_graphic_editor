@@ -1,14 +1,15 @@
 mod scene;
+mod styles;
 mod toolbars;
 mod utils;
-mod styles;
 
 use std::path::PathBuf;
 
+use iced_aw::{modal, Modal};
 use scene::Scene;
 
 use iced::theme::Theme;
-use iced::{executor, font, Alignment, Color};
+use iced::{executor, font, Alignment, Color, Renderer};
 
 use iced::widget::{button, column, container, row, text};
 use iced::window;
@@ -16,7 +17,7 @@ use iced::window::icon::from_file_data;
 use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::left_toolbar;
 use toolbars::top::top_toolbar;
-use utils::file_explorer::{FileExplorerWidget, self};
+use utils::file_explorer::{self, FileExplorerWidget};
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
@@ -47,7 +48,8 @@ pub struct VgcEditor {
 
     path_selected: PathBuf,
     file_explorer: FileExplorerWidget<Message>,
-    show_file_explorer: bool,
+
+    modal: ModalPossible,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -62,13 +64,26 @@ pub enum Message {
 
     FontLoaded(Result<(), font::Error>),
 
+    StartSaveCurrentScene,
     SaveCurrentScene,
+
+    StartLoadScene,
     LoadScene,
+
+    AbortModal,
 
     #[default]
     None,
 
     FileExplorerMsg(file_explorer::Msg),
+}
+
+#[derive(Debug, Clone, Default)]
+pub enum ModalPossible {
+    FileExplorer,
+
+    #[default]
+    None,
 }
 
 impl Application for VgcEditor {
@@ -80,9 +95,7 @@ impl Application for VgcEditor {
     fn new(_flags: ()) -> (Self, Command<Message>) {
         let mut state = Self { ..Self::default() };
 
-        state.file_explorer.on_search_found(Message::LoadScene);
-        state.file_explorer.title = Some(String::from("Load Scene"));
-
+        state.file_explorer.on_search_abort(Message::AbortModal);
         (
             state,
             font::load(iced_aw::graphics::icons::ICON_FONT_BYTES).map(Message::FontLoaded),
@@ -94,7 +107,6 @@ impl Application for VgcEditor {
     }
 
     fn update(&mut self, msg: Message) -> Command<Message> {
-        self.show_file_explorer = true;//TODO remove this
         match msg {
             Message::Scene(message) => {
                 match self.scene.get_mut(self.current_scene) {
@@ -159,26 +171,40 @@ impl Application for VgcEditor {
                 };
             }
             Message::None => println!("None"),
+            Message::StartSaveCurrentScene => {
+                self.file_explorer.title = Some(String::from("Save Scene"));
+                self.file_explorer.search_result = None;
+                self.file_explorer.on_search_found(Message::SaveCurrentScene);
+                self.modal = ModalPossible::FileExplorer;
+            },
             Message::SaveCurrentScene => {
+                self.modal = ModalPossible::None;
                 match self.scene.get_mut(self.current_scene) {
-                    Some(scene) => {
-                       
-                       
-                    }
+                    Some(scene) => {}
                     None => {
                         println!("No scene");
                     }
                 };
+            }
+            Message::StartLoadScene => {
+                self.file_explorer.title = Some(String::from("Load Scene"));
+                self.file_explorer.search_result = None;
+                self.file_explorer.on_search_found(Message::LoadScene);
+                self.modal = ModalPossible::FileExplorer;
             },
             Message::LoadScene => {
-                if let Some(path)= self.file_explorer.search_result.clone(){
+                self.modal = ModalPossible::None;
+                if let Some(path) = self.file_explorer.search_result.clone() {
                     println!("Load scene {:?}", path);
                 }
-            },
+            }
 
             Message::FileExplorerMsg(msg) => {
                 self.file_explorer.update(msg);
             }
+            Message::AbortModal => {
+                self.modal = ModalPossible::None;
+            },
         }
 
         Command::none()
@@ -193,27 +219,33 @@ impl Application for VgcEditor {
 
         let controls = left_toolbar(self, current_functionality);
 
-        /*let canvas: Element<'_, Message, Renderer<Theme>> = match self.scene.is_empty() {
+        let canvas: Element<'_, Message, Renderer<Theme>> = match self.scene.is_empty() {
             true => new_scene(),
             false => self.scene[self.current_scene]
                 .view()
                 .map(move |message| Message::Scene(message)),
-        };*/
-
-        let canvas = self.file_explorer.view().map(move |message| match message{
-            file_explorer::RtnMsg::Own(msg) => Message::FileExplorerMsg(msg),
-            file_explorer::RtnMsg::ToParent(msg) => msg
-        });
-          
+        };
 
         let top_toolbar = top_toolbar();
 
         let content = column![top_toolbar, row![controls, canvas]];
 
-        container(content)
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .into()
+        let modal_over: Option<Element<Message, Renderer<Theme>>> = match self.modal {
+            ModalPossible::FileExplorer => {
+                Some(self.file_explorer.view().map(move |message| match message {
+                    file_explorer::RtnMsg::Own(msg) => Message::FileExplorerMsg(msg),
+                    file_explorer::RtnMsg::ToParent(msg) => msg,
+                }))
+            },
+            ModalPossible::None => None,
+        };
+
+        modal(
+            container(content).width(Length::Fill).height(Length::Fill),
+            modal_over,
+        )
+        .backdrop(Message::AbortModal).on_esc(Message::AbortModal)
+        .into()
     }
 
     fn theme(&self) -> Theme {

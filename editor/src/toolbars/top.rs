@@ -33,11 +33,11 @@ fn menu_file<'a>() -> MenuTree<'a, Message, iced::Renderer> {
         menu_bar_button("File", Message::None),
         vec![
             helpers::menu_tree(
-                item_button("Save", Message::None),
+                item_button("Save", Message::StartSaveCurrentScene),
                 le_vec() 
             ),
             helpers::menu_tree(
-                item_button("Load", Message::None),
+                item_button("Load", Message::StartLoadScene),
                 le_vec() 
             ),
         ],
