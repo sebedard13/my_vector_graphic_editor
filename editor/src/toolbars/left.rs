@@ -35,7 +35,7 @@ pub fn left_toolbar<'a>(
             Functionality::CreateOrAddPoint
             | Functionality::CreateNextPoint
             | Functionality::RemovePoint => Button::Custom(Box::<BtnStyleSelected>::default()),
-            _ =>  crate::styles::btn_normal(),
+            _ => crate::styles::btn_normal(),
         };
         let img = Image::<image::Handle>::new("editor/data/pen_nib.png")
             .width(20)
@@ -51,7 +51,7 @@ pub fn left_toolbar<'a>(
     let btn_bend_tools = {
         let btn_style = match current_functionality {
             Functionality::SeparateHandle => Button::Custom(Box::<BtnStyleSelected>::default()),
-            _ =>  crate::styles::btn_normal(),
+            _ => crate::styles::btn_normal(),
         };
 
         let img = Image::<image::Handle>::new("editor/data/bezier_curve.png")
@@ -152,4 +152,3 @@ impl button::StyleSheet for BtnStyleSelected {
         }
     }
 }
-

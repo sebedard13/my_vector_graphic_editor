@@ -1,12 +1,8 @@
-use iced::Theme;
 use iced::theme::Button;
-use iced::{
-    widget::button,
-    Background, BorderRadius, Color,  Vector,
-};
+use iced::Theme;
+use iced::{widget::button, Background, BorderRadius, Color, Vector};
 
-
-pub fn btn_normal() -> Button{
+pub fn btn_normal() -> Button {
     Button::Custom(Box::<BtnStyleNormal>::default())
 }
 

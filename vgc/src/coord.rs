@@ -3,13 +3,11 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
 use std::rc::Rc;
 
-
 use serde::{Deserialize, Serialize};
 
 pub type CoordPtr = Rc<RefCell<Coord>>;
 
 #[derive(Clone, Debug, PartialEq)]
-
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Coord {
     pub x: f32,

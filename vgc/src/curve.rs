@@ -253,7 +253,6 @@ mod test {
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
     use crate::coord::Coord;
 
-
     use float_cmp::{ApproxEq, F32Margin};
 
     impl ApproxEq for &Coord {
@@ -264,7 +263,6 @@ mod test {
             self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
         }
     }
-
 
     #[test]
     fn tangent_vector_same() {

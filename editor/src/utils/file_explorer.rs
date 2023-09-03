@@ -1,6 +1,6 @@
 use iced::alignment::Horizontal;
-use iced::widget::{text_input,button, row, text, column, container, Row, Column};
-use iced::{Element, Renderer, Theme, Alignment, Length};
+use iced::widget::{button, container, row, text, text_input, Column, Row};
+use iced::{Alignment, Element, Length, Renderer, Theme};
 use std::fmt::Debug;
 use std::path::PathBuf;
 
@@ -8,21 +8,20 @@ use crate::styles;
 
 /// Message for file operations
 #[derive(Debug, Clone)]
-pub enum Msg{
+pub enum Msg {
     InputChange(String),
-
 }
 
 #[derive(Debug, Clone)]
-pub enum RtnMsg<T>{
+pub enum RtnMsg<T> {
     Own(Msg),
-    ToParent(T)
+    ToParent(T),
 }
 
 #[derive(Default)]
 pub struct FileExplorerWidget<T>
 where
-    T: Clone + Debug
+    T: Clone + Debug,
 {
     on_search_found: Option<T>,
     on_search_abort: Option<T>,
@@ -34,10 +33,9 @@ where
 
 impl<T> FileExplorerWidget<T>
 where
-    T: Clone + Debug
-    {
-
-    pub fn update(&mut self, msg: Msg)  {
+    T: Clone + Debug,
+{
+    pub fn update(&mut self, msg: Msg) {
         match msg {
             Msg::InputChange(string) => {
                 let path = PathBuf::from(&string.as_str());
@@ -60,16 +58,19 @@ where
         self.on_search_abort = Some(on_search_abort);
     }
 
-    pub fn view(&self) ->  Element<RtnMsg<T>> {
-        let text_input: iced::widget::TextInput<'_, RtnMsg<T>, Renderer<Theme>> = text_input("",self.current_value.as_str())
-        .on_input(|string| RtnMsg::Own(Msg::InputChange(string)));
+    pub fn view(&self) -> Element<RtnMsg<T>> {
+        let text_input: iced::widget::TextInput<'_, RtnMsg<T>, Renderer<Theme>> =
+            text_input("", self.current_value.as_str())
+                .on_input(|string| RtnMsg::Own(Msg::InputChange(string)));
 
-       
         let first_row = Row::with_children(vec![
             text("File Name :").width(Length::Shrink).into(),
-            text_input.width(Length::Fill).into()
-        ]).spacing(5.0).align_items(Alignment::Center).width(Length::Fill);
-    
+            text_input.width(Length::Fill).into(),
+        ])
+        .spacing(5.0)
+        .align_items(Alignment::Center)
+        .width(Length::Fill);
+
         let mut btn_open = button("Open").style(styles::btn_normal());
         if let Some(on_press) = self.on_search_found.clone() {
             btn_open = btn_open.on_press(RtnMsg::ToParent(on_press));
@@ -81,33 +82,32 @@ where
         }
 
         let error_msg = match self.search_result.clone() {
-            Some(_) => {
-               text("")
-            }
+            Some(_) => text(""),
             None => text("File not found"),
         };
 
         let second_row = container(
-            row![
-                error_msg,
-                btn_open,
-                btn_cancel
-            ].spacing(5.0)
-            .align_items(Alignment::Center)
+            row![error_msg, btn_open, btn_cancel]
+                .spacing(5.0)
+                .align_items(Alignment::Center),
         )
         .width(Length::Fill)
         .align_x(Horizontal::Right);
 
-       
         let mut main_col = Column::new();
 
-        if let Some(title)= self.title.clone() {
+        if let Some(title) = self.title.clone() {
             main_col = main_col.push(text(title).size(20));
         }
 
-        main_col = main_col.push(first_row).push(second_row).spacing(10.0).padding([10.0;4]).width(Length::Fixed(500.0)).height(Length::Fixed(400.0));
+        main_col = main_col
+            .push(first_row)
+            .push(second_row)
+            .spacing(10.0)
+            .padding([10.0; 4])
+            .width(Length::Fixed(500.0))
+            .height(Length::Fixed(400.0));
 
         main_col.into()
     }
 }
-

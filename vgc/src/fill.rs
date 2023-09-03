@@ -10,9 +10,7 @@ pub struct Rgba {
 }
 impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
-        Rgba{
-            r,g,b,a
-        }
+        Rgba { r, g, b, a }
     }
 }
 

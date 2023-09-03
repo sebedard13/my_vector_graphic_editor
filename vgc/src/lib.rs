@@ -12,7 +12,6 @@ mod curve;
 mod fill;
 pub mod render;
 
-
 #[cfg(feature = "serialization")]
 mod serialization;
 
@@ -264,9 +263,9 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
 
 pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
     //https://spencermortensen.com/articles/bezier-circle/
-    let a = 1.00005519;
-    let b = 0.55342686;
-    let c = 0.99873585;
+    let a = 1.000_055_2;
+    let b = 0.553_426_9;
+    let c = 0.998_735_9;
 
     let p0 = Coord::new(0.0, a);
 

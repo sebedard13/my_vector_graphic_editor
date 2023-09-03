@@ -3,9 +3,7 @@ mod styles;
 mod toolbars;
 mod utils;
 
-use std::path::PathBuf;
-
-use iced_aw::{modal, Modal};
+use iced_aw::modal;
 use scene::Scene;
 
 use iced::theme::Theme;
@@ -46,7 +44,6 @@ pub struct VgcEditor {
     show_color_picker: bool,
     pub color_picker: utils::ColorImage,
 
-    path_selected: PathBuf,
     file_explorer: FileExplorerWidget<Message>,
 
     modal: ModalPossible,
@@ -174,13 +171,14 @@ impl Application for VgcEditor {
             Message::StartSaveCurrentScene => {
                 self.file_explorer.title = Some(String::from("Save Scene"));
                 self.file_explorer.search_result = None;
-                self.file_explorer.on_search_found(Message::SaveCurrentScene);
+                self.file_explorer
+                    .on_search_found(Message::SaveCurrentScene);
                 self.modal = ModalPossible::FileExplorer;
-            },
+            }
             Message::SaveCurrentScene => {
                 self.modal = ModalPossible::None;
                 match self.scene.get_mut(self.current_scene) {
-                    Some(scene) => {}
+                    Some(_) => {}
                     None => {
                         println!("No scene");
                     }
@@ -191,7 +189,7 @@ impl Application for VgcEditor {
                 self.file_explorer.search_result = None;
                 self.file_explorer.on_search_found(Message::LoadScene);
                 self.modal = ModalPossible::FileExplorer;
-            },
+            }
             Message::LoadScene => {
                 self.modal = ModalPossible::None;
                 if let Some(path) = self.file_explorer.search_result.clone() {
@@ -204,7 +202,7 @@ impl Application for VgcEditor {
             }
             Message::AbortModal => {
                 self.modal = ModalPossible::None;
-            },
+            }
         }
 
         Command::none()
@@ -236,7 +234,7 @@ impl Application for VgcEditor {
                     file_explorer::RtnMsg::Own(msg) => Message::FileExplorerMsg(msg),
                     file_explorer::RtnMsg::ToParent(msg) => msg,
                 }))
-            },
+            }
             ModalPossible::None => None,
         };
 
@@ -244,7 +242,8 @@ impl Application for VgcEditor {
             container(content).width(Length::Fill).height(Length::Fill),
             modal_over,
         )
-        .backdrop(Message::AbortModal).on_esc(Message::AbortModal)
+        .backdrop(Message::AbortModal)
+        .on_esc(Message::AbortModal)
         .into()
     }
 
