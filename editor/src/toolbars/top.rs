@@ -19,7 +19,7 @@ pub fn top_toolbar<'a>() -> Element<'a, Message, iced::Renderer> {
         .style(style::MenuBarStyle::Custom(Box::new(MenuBarStyle {})))
         .close_condition(CloseCondition {
             leave: false,
-            click_outside: false,
+            click_outside: true,
             click_inside: true,
         });
 

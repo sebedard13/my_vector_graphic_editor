@@ -3,7 +3,10 @@ mod styles;
 mod toolbars;
 mod utils;
 
+use std::fs;
+
 use iced_aw::modal;
+use postcard::{from_bytes, to_allocvec};
 use scene::Scene;
 
 use iced::theme::Theme;
@@ -16,6 +19,7 @@ use iced::{Application, Command, Element, Length, Settings};
 use toolbars::left::left_toolbar;
 use toolbars::top::top_toolbar;
 use utils::file_explorer::{self, FileExplorerWidget};
+use vgc::Vgc;
 
 pub fn main() -> iced::Result {
     env_logger::builder().format_timestamp(None).init();
@@ -167,10 +171,10 @@ impl Application for VgcEditor {
                     }
                 };
             }
-            Message::None => println!("None"),
+            Message::None => {}
             Message::StartSaveCurrentScene => {
                 self.file_explorer.title = Some(String::from("Save Scene"));
-                self.file_explorer.search_result = None;
+                self.file_explorer.action = file_explorer::Action::FindNewFile;
                 self.file_explorer
                     .on_search_found(Message::SaveCurrentScene);
                 self.modal = ModalPossible::FileExplorer;
@@ -178,7 +182,14 @@ impl Application for VgcEditor {
             Message::SaveCurrentScene => {
                 self.modal = ModalPossible::None;
                 match self.scene.get_mut(self.current_scene) {
-                    Some(_) => {}
+                    Some(scene) => {
+                        if let Ok(path) = self.file_explorer.search_result.clone() {
+                            let data = to_allocvec(&scene.vgc_data)
+                                .expect("Serialization should be valid");
+
+                            fs::write(path, data).expect("Able to write file");
+                        }
+                    }
                     None => {
                         println!("No scene");
                     }
@@ -186,14 +197,29 @@ impl Application for VgcEditor {
             }
             Message::StartLoadScene => {
                 self.file_explorer.title = Some(String::from("Load Scene"));
-                self.file_explorer.search_result = None;
                 self.file_explorer.on_search_found(Message::LoadScene);
+                self.file_explorer.action = file_explorer::Action::FindExistingFile;
                 self.modal = ModalPossible::FileExplorer;
             }
             Message::LoadScene => {
                 self.modal = ModalPossible::None;
-                if let Some(path) = self.file_explorer.search_result.clone() {
-                    println!("Load scene {:?}", path);
+                if let Ok(path) = self.file_explorer.search_result.clone() {
+                    if !self.scene.is_empty() {
+                        println!("Clearing all scene");
+                        self.scene.clear();
+                    }
+
+                    match fs::read(path) {
+                        Ok(data) => {
+                            let vgc =
+                                from_bytes::<Vgc>(&data).expect("Deserialization should be valid");
+                            self.scene.push(Scene::new(vgc));
+                            self.current_scene = self.scene.len() - 1;
+                        }
+                        Err(err) => {
+                            println!("Error reading file: {:?}", err);
+                        }
+                    }
                 }
             }
 

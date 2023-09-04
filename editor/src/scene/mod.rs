@@ -76,21 +76,22 @@ impl Default for Scene {
     }
 }
 
+#[derive(Default)]
 pub struct CanvasState {
-    scene_size: Size,
     event_merger: events::EventsMerger,
 }
 
-impl Default for CanvasState {
-    fn default() -> Self {
+impl Scene {
+    pub fn new(vgc_data: Vgc) -> Self {
         Self {
-            scene_size: Size::new(0.0, 0.0),
-            event_merger: events::EventsMerger::default(),
+            draw_cache: Cache::default(),
+            camera: Camera::new(vgc_data.ratio as f32),
+            vgc_data,
+            functionality: Functionality::default(),
+            selected: Selected::default(),
         }
     }
-}
 
-impl Scene {
     #[allow(clippy::single_match)] //Because to future proof adding match arms
     pub fn update(&mut self, message: MsgScene) -> Vec<Message> {
         self.draw_cache.clear();
@@ -185,8 +186,7 @@ impl canvas::Program<MsgScene> for Scene {
         bounds: Rectangle,
         cursor: mouse::Cursor,
     ) -> (event::Status, Option<MsgScene>) {
-        if canvas_state.scene_size != bounds.size() {
-            canvas_state.scene_size = bounds.size();
+        if self.camera.pixel_region.size() != bounds.size() {
             return (
                 event::Status::Captured,
                 Some(MsgScene::ChangeBounds(bounds)),

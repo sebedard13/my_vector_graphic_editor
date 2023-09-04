@@ -19,16 +19,41 @@ pub enum RtnMsg<T> {
 }
 
 #[derive(Default)]
+pub enum Action {
+    FindExistingFile,
+    #[default]
+    FindNewFile,
+}
+
 pub struct FileExplorerWidget<T>
 where
     T: Clone + Debug,
 {
     on_search_found: Option<T>,
     on_search_abort: Option<T>,
-    pub search_result: Option<PathBuf>,
+    pub search_result: Result<PathBuf, String>,
 
     pub title: Option<String>,
     current_value: String,
+    pub action: Action,
+    overwrite: bool,
+}
+
+impl<T> Default for FileExplorerWidget<T>
+where
+    T: Clone + Debug,
+{
+    fn default() -> Self {
+        Self {
+            search_result: Err(String::from("No search done yet")),
+            on_search_found: Option::default(),
+            on_search_abort: Option::default(),
+            title: Option::default(),
+            current_value: String::default(),
+            action: Action::default(),
+            overwrite: false,
+        }
+    }
 }
 
 impl<T> FileExplorerWidget<T>
@@ -38,14 +63,41 @@ where
     pub fn update(&mut self, msg: Msg) {
         match msg {
             Msg::InputChange(string) => {
-                let path = PathBuf::from(&string.as_str());
-                self.current_value = string;
+                self.set_value(string);
+            }
+        }
+    }
 
-                if path.exists() {
-                    self.search_result = Some(path);
-                } else {
-                    self.search_result = None;
+    pub fn set_value(&mut self, value: String) {
+        let path = PathBuf::from(&value.as_str());
+        self.current_value = value;
+        self.overwrite = false;
+
+        match self.action {
+            Action::FindExistingFile => {
+                if path.is_dir() {
+                    self.search_result = Err(String::from("Path is a directory"));
+                    return;
                 }
+
+                if !path.is_file() {
+                    self.search_result = Err(String::from("File not found"));
+                    return;
+                }
+
+                self.search_result = Ok(path);
+            }
+            Action::FindNewFile => {
+                if path.is_dir() {
+                    self.search_result = Err(String::from("Path is a directory"));
+                    return;
+                }
+
+                if path.exists() && path.is_file() {
+                    self.overwrite = true;
+                }
+
+                self.search_result = Ok(path);
             }
         }
     }
@@ -73,7 +125,9 @@ where
 
         let mut btn_open = button("Open").style(styles::btn_normal());
         if let Some(on_press) = self.on_search_found.clone() {
-            btn_open = btn_open.on_press(RtnMsg::ToParent(on_press));
+            if self.search_result.is_ok() {
+                btn_open = btn_open.on_press(RtnMsg::ToParent(on_press));
+            }
         }
 
         let mut btn_cancel = button("Cancel").style(styles::btn_normal());
@@ -82,12 +136,18 @@ where
         }
 
         let error_msg = match self.search_result.clone() {
-            Some(_) => text(""),
-            None => text("File not found"),
+            Ok(_) => {
+                if self.overwrite {
+                    "Do you want to overwrite this file?".to_string()
+                } else {
+                    "".to_string()
+                }
+            }
+            Err(msg) => msg,
         };
 
         let second_row = container(
-            row![error_msg, btn_open, btn_cancel]
+            row![text(error_msg), btn_open, btn_cancel]
                 .spacing(5.0)
                 .align_items(Alignment::Center),
         )

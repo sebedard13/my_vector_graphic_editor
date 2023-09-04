@@ -602,6 +602,7 @@ dependencies = [
  "iced",
  "iced_aw",
  "itertools",
+ "postcard",
  "rustc-hash",
  "tokio",
  "vgc",
