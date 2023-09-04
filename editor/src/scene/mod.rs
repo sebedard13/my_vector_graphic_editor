@@ -3,6 +3,7 @@ mod coord_position_tooltip;
 mod events;
 pub mod functionality;
 mod user_selection;
+mod vgc_render;
 
 use iced::widget::canvas;
 use iced::widget::canvas::event::{self, Event};

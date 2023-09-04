@@ -2,10 +2,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::coord::Coord;
-use crate::fill::Rgba;
 use coord::{CoordPtr, RefCoordType};
 use iced::widget::canvas::Frame;
 use shape::Shape;
+
+pub use render::VgcRenderer;
+pub use fill::Rgba;
 
 pub mod coord;
 mod curve;
@@ -50,6 +52,22 @@ impl Vgc {
 
     pub fn get_shape_mut(&mut self, index_shape: usize) -> Option<&mut Shape> {
         self.shapes.get_mut(index_shape)
+    }
+
+    pub fn render_w<T>(&self, renderer: &mut T, width: u32) -> Result<(), String>
+    where
+        T: render::VgcRenderer,
+    {
+        let h = ((width as f64) * (1.0 / self.ratio)) as u32;
+        render::render_true(self, renderer, width, h)
+    }
+
+    pub fn render_h<T>(&self, renderer: &mut T, height: u32) -> Result<(), String>
+    where
+        T: render::VgcRenderer,
+    {
+        let w = ((height as f64) * (self.ratio)) as u32;
+        render::render_true(self, renderer, w, height)
     }
 
     pub fn frame_render(&self, frame: &mut Frame) {
