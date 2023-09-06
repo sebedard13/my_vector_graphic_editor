@@ -1,24 +1,24 @@
-use iced::widget::canvas::Frame;
 use iced::widget::canvas::path::Builder;
-use vgc::coord::Coord;
-use vgc::{VgcRenderer, Rgba};
+use iced::widget::canvas::Frame;
 use iced::widget::canvas::{Fill, Path};
 use iced::{Color, Point};
+use vgc::coord::Coord;
+use vgc::{Rgba, VgcRenderer};
 
-struct IcedFrame<'a>{
+pub struct IcedFrame<'a> {
     frame: &'a mut Frame,
     fill: Option<Fill>,
-    path_builder: Option<Builder>
+    path_builder: Option<Builder>,
 }
 
 impl IcedFrame<'_> {
-   fn new(frame: &mut Frame) -> IcedFrame {
-       IcedFrame {
+    pub fn new(frame: &mut Frame) -> IcedFrame {
+        IcedFrame {
             frame: frame,
             fill: None,
-            path_builder: None
-       }
-   }
+            path_builder: None,
+        }
+    }
 }
 
 impl VgcRenderer for IcedFrame<'_> {
@@ -47,15 +47,33 @@ impl VgcRenderer for IcedFrame<'_> {
         Ok(())
     }
 
-    fn move_curve(&mut self, cp0: &vgc::coord::Coord, cp1: &vgc::coord::Coord, p1: &vgc::coord::Coord) -> Result<(), String> {
-        todo!()
+    fn move_curve(
+        &mut self,
+        cp0: &vgc::coord::Coord,
+        cp1: &vgc::coord::Coord,
+        p1: &vgc::coord::Coord,
+    ) -> Result<(), String> {
+        let builder = self.path_builder.as_mut().unwrap();
+        builder.bezier_curve_to(
+            Point::new(cp0.x, cp0.y),
+            Point::new(cp1.x, cp1.y),
+            Point::new(p1.x, p1.y),
+        );
+        Ok(())
     }
 
     fn close_shape(&mut self) -> Result<(), String> {
-        todo!()
+    
+        let fill = self.fill.take().unwrap();
+        let path = Path::new(|e| {
+            *e = self.path_builder.take().unwrap();
+        });
+
+        self.frame.fill(&path, fill);
+        Ok(())
     }
 
     fn end(&mut self) -> Result<(), String> {
-        todo!()
+        Ok(())
     }
 }

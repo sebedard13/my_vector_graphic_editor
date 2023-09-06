@@ -20,6 +20,7 @@ use user_selection::Selected;
 pub use functionality::Functionality;
 
 use crate::Message;
+use crate::scene::vgc_render::IcedFrame;
 
 pub use self::user_selection::ColorSelected;
 
@@ -313,7 +314,14 @@ impl canvas::Program<MsgScene> for Scene {
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
 
-                self.vgc_data.frame_render(frame);
+                let renderer= &mut IcedFrame::new(frame);
+
+                match self.vgc_data.render_w(renderer, 1){
+                    Ok(_) => {},
+                    Err(e) => {
+                        println!("Error Render: {}", e);
+                    }
+                };
             });
         });
 

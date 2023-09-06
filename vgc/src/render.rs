@@ -1,6 +1,6 @@
 use crate::{Vgc, fill::Rgba, coord::Coord};
-use iced::widget::canvas::Frame;
-use tiny_skia::{Pixmap, Paint, PathBuilder};
+
+
 
 pub trait VgcRenderer{
     fn create(&mut self, width: u32, height: u32) -> Result<(), String>;
@@ -47,15 +47,18 @@ where T : VgcRenderer {
     Ok(())
 }
 
-
+#[cfg(feature = "tiny-skia_renderer")]
+use tiny_skia::{Pixmap, Paint, PathBuilder};
 
 #[derive(Default)]
+#[cfg(feature = "tiny-skia_renderer")]
 struct TinySkiaRenderer<'a> {
     pixmap: Option<Pixmap>,
     paint: Option<Paint<'a>>,
     current_path: Option<PathBuilder>,
 }
 
+#[cfg(feature = "tiny-skia_renderer")]
 impl<'a> VgcRenderer for TinySkiaRenderer<'a>{
     fn create(&mut self, width: u32, height: u32) -> Result<(), String>{
         self.pixmap = Some(Pixmap::new(width, height).expect("Valid Size"));
@@ -121,53 +124,12 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a>{
     }
 }
 
-pub fn frame_render(canvas: &Vgc, frame: &mut Frame) {
-    use iced::widget::canvas::{Fill, Path};
-    use iced::{Color, Point};
-
-    for i_region in 0..canvas.shapes.len() {
-        let region = &canvas.shapes[i_region];
-
-        let fill = Fill::from(Color::from_rgba8(
-            region.color.r,
-            region.color.g,
-            region.color.b,
-            region.color.a as f32 / 255.0,
-        ));
-
-        let path = &Path::new(|builder| {
-            let coord_start = &region.start.borrow();
-            builder.move_to(Point::new(coord_start.x, coord_start.y));
-
-            for i_curve in 0..region.curves.len() {
-                builder.bezier_curve_to(
-                    Point::new(
-                        region.curves[i_curve].cp0.borrow().x,
-                        region.curves[i_curve].cp0.borrow().y,
-                    ),
-                    Point::new(
-                        region.curves[i_curve].cp1.borrow().x,
-                        region.curves[i_curve].cp1.borrow().y,
-                    ),
-                    Point::new(
-                        region.curves[i_curve].p1.borrow().x,
-                        region.curves[i_curve].p1.borrow().y,
-                    ),
-                );
-            }
-        });
-
-        frame.fill(path, fill)
-    }
-}
-
-
 mod test {
-    use std::fs;
-
 
     #[test]
+    #[cfg(feature = "tiny-skia_renderer")]
     fn test_tiny_skia_renderer(){
+        use std::fs;
         use super::*;
         use crate::coord::Coord;
         use crate::generate_from_push;

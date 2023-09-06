@@ -2933,7 +2933,6 @@ name = "vgc"
 version = "0.1.0"
 dependencies = [
  "float-cmp",
- "iced",
  "polynomen",
  "postcard",
  "serde",

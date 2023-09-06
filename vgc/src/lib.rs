@@ -3,7 +3,6 @@ use std::rc::Rc;
 
 use crate::coord::Coord;
 use coord::{CoordPtr, RefCoordType};
-use iced::widget::canvas::Frame;
 use shape::Shape;
 
 pub use render::VgcRenderer;
@@ -68,10 +67,6 @@ impl Vgc {
     {
         let w = ((height as f64) * (self.ratio)) as u32;
         render::render_true(self, renderer, w, height)
-    }
-
-    pub fn frame_render(&self, frame: &mut Frame) {
-        render::frame_render(self, frame);
     }
 
     pub fn visit(&self, f: &mut dyn FnMut(usize, RefCoordType)) {
