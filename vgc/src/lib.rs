@@ -6,6 +6,8 @@ use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
 pub use render::VgcRenderer;
+#[cfg(feature = "tiny-skia")]
+pub use render::TinySkiaRenderer;
 pub use fill::Rgba;
 
 pub mod coord;

@@ -52,10 +52,23 @@ use tiny_skia::{Pixmap, Paint, PathBuilder};
 
 #[derive(Default)]
 #[cfg(feature = "tiny-skia_renderer")]
-struct TinySkiaRenderer<'a> {
+pub struct TinySkiaRenderer<'a> {
     pixmap: Option<Pixmap>,
     paint: Option<Paint<'a>>,
     current_path: Option<PathBuilder>,
+}
+
+impl<'a> TinySkiaRenderer<'a>{
+    pub fn new() -> Self{
+        Self::default()
+    }
+
+    pub fn get_rgba(self) -> Option<Vec<u8>>{
+        match self.pixmap{
+            Some(pixmap) => Some(pixmap.take()),
+            None => None,
+        }
+    }
 }
 
 #[cfg(feature = "tiny-skia_renderer")]
