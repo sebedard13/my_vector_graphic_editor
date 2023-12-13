@@ -1,11 +1,34 @@
 use js_sys::Uint8ClampedArray;
+use vgc::{TinySkiaRenderer, coord::Coord};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 pub fn render() -> Uint8ClampedArray {
     console_log!("Render");
-    let image = vgc::render::render_w(&vgc::generate_exemple(), 512).unwrap();
-    js_sys::Uint8ClampedArray::from(image.data())
+    let mut tiny_skia_renderer = TinySkiaRenderer::new();
+    let vgc = vgc::generate_from_line(vec![
+        vec![
+            Coord { x: 0.0, y: 0.1 },
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 0.9, y: 1.0 },
+        ],
+        vec![
+            Coord { x: 1.0, y: 0.9 },
+            Coord { x: 0.1, y: 0.0 },
+            Coord { x: 1.0, y: 0.0 },
+        ],
+    ]);
+    let width = 512;
+    let result = vgc.render_w(&mut tiny_skia_renderer,512);
+
+    match result{
+        Err(string) => {
+            console_log!("{}", string);
+            return js_sys::Uint8ClampedArray::from((vec![0 as u8; width*width]).as_slice())
+        },
+        _ =>{},
+    }
+    js_sys::Uint8ClampedArray::from(tiny_skia_renderer.get_rgba().expect("valid after match result").as_slice())
 }
 
 //------------------------------------------------------------------------------
