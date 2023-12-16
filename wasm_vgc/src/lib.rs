@@ -1,10 +1,11 @@
+use std::mem;
+
 use js_sys::Uint8ClampedArray;
 use vgc::{TinySkiaRenderer, coord::Coord};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
-pub fn render() -> Uint8ClampedArray {
-    console_log!("Render");
+pub fn render(width: usize, height: usize) -> Uint8ClampedArray {
     let mut tiny_skia_renderer = TinySkiaRenderer::new();
     let vgc = vgc::generate_from_line(vec![
         vec![
@@ -18,7 +19,9 @@ pub fn render() -> Uint8ClampedArray {
             Coord { x: 1.0, y: 0.0 },
         ],
     ]);
-    let width = 512;
+
+    let mut main_background_u32 = vec![0xff020202 as u32; width * height];
+
     let result = vgc.render_w(&mut tiny_skia_renderer,512);
 
     match result{
@@ -28,7 +31,24 @@ pub fn render() -> Uint8ClampedArray {
         },
         _ =>{},
     }
-    js_sys::Uint8ClampedArray::from(tiny_skia_renderer.get_rgba().expect("valid after match result").as_slice())
+
+    // I copy-pasted this code from StackOverflow without reading the answer 
+    // surrounding it that told me to write a comment explaining why this code 
+    // is actually safe for my own use case.
+    let vec8 = unsafe {
+        let ratio = mem::size_of::<u32>() / mem::size_of::<u8>();
+
+        let length = main_background_u32.len() * ratio;
+        let capacity = main_background_u32.capacity() * ratio;
+        let ptr = main_background_u32.as_mut_ptr() as *mut u8;
+
+        // Don't run the destructor for vec32
+        mem::forget(main_background_u32);
+
+        // Construct new Vec
+        Vec::from_raw_parts(ptr, length, capacity)
+    };
+    js_sys::Uint8ClampedArray::from(vec8.as_slice())
 }
 
 //------------------------------------------------------------------------------
