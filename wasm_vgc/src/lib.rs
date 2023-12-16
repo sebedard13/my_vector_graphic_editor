@@ -1,12 +1,13 @@
-use std::mem;
+mod canvas_context_2d_render;
 
-use js_sys::Uint8ClampedArray;
-use vgc::{TinySkiaRenderer, coord::Coord};
-use wasm_bindgen::prelude::wasm_bindgen;
+use vgc::coord::Coord;
+use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
+use web_sys::CanvasRenderingContext2d;
+use crate::canvas_context_2d_render::CanvasContext2DRender;
 
 #[wasm_bindgen]
-pub fn render(width: usize, height: usize) -> Uint8ClampedArray {
-    let mut tiny_skia_renderer = TinySkiaRenderer::new();
+pub fn render(ctx: &CanvasRenderingContext2d, width: usize, height: usize) -> Result<(), JsValue> {
+   
     let vgc = vgc::generate_from_line(vec![
         vec![
             Coord { x: 0.0, y: 0.1 },
@@ -20,35 +21,29 @@ pub fn render(width: usize, height: usize) -> Uint8ClampedArray {
         ],
     ]);
 
-    let mut main_background_u32 = vec![0xff020202 as u32; width * height];
 
-    let result = vgc.render_w(&mut tiny_skia_renderer,512);
+    let vgc_width = 512;
+    let vgc_height = ((vgc_width as f64) * (1.0 / vgc.ratio)) as u32;
+   
 
-    match result{
+    let coord_center = (width as f64 / 2.0, height as f64 / 2.0);
+
+    let top_left = (
+        coord_center.0 - (vgc_width as f64 / 2.0),
+        coord_center.1 - (vgc_height as f64 / 2.0),
+    );
+
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, top_left);
+
+    let result = vgc.render_w(&mut ctx_2d_renderer, vgc_width);
+    match result {
         Err(string) => {
-            console_log!("{}", string);
-            return js_sys::Uint8ClampedArray::from((vec![0 as u8; width*width]).as_slice())
-        },
-        _ =>{},
-    }
-
-    // I copy-pasted this code from StackOverflow without reading the answer 
-    // surrounding it that told me to write a comment explaining why this code 
-    // is actually safe for my own use case.
-    let vec8 = unsafe {
-        let ratio = mem::size_of::<u32>() / mem::size_of::<u8>();
-
-        let length = main_background_u32.len() * ratio;
-        let capacity = main_background_u32.capacity() * ratio;
-        let ptr = main_background_u32.as_mut_ptr() as *mut u8;
-
-        // Don't run the destructor for vec32
-        mem::forget(main_background_u32);
-
-        // Construct new Vec
-        Vec::from_raw_parts(ptr, length, capacity)
+            return Err(JsValue::from_str(&string));
+        }
+        _ => {}
     };
-    js_sys::Uint8ClampedArray::from(vec8.as_slice())
+
+    Ok(())
 }
 
 //------------------------------------------------------------------------------

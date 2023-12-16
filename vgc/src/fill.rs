@@ -12,6 +12,19 @@ impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
         Rgba { r, g, b, a }
     }
+
+    ///
+    /// ```rust
+    /// use vgc::Rgba;
+    /// let rgba = Rgba::new(255, 255, 255, 255);
+    /// assert_eq!(rgba.to_css_string(), "rgba(255,255,255,255)");
+    /// 
+    /// let rgba = Rgba::new(25, 50, 75, 100);
+    /// assert_eq!(rgba.to_css_string(), "rgba(25,50,75,100)");
+    /// ```
+    pub fn to_css_string(&self) -> String{
+        return format!("rgba({},{},{},{})", self.r, self.g, self.b, self.a);
+    }
 }
 
 impl From<[u8; 4]> for Rgba {

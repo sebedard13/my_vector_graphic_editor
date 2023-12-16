@@ -28,7 +28,6 @@ export class CanvasComponent implements AfterViewInit{
 
         this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth;
         this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
-        this.render()
       }, 1);
     });
 
@@ -37,11 +36,9 @@ export class CanvasComponent implements AfterViewInit{
   }
 
   public render(){
-    let data_image = wasm.render(this.canvas.nativeElement.width, this.canvas.nativeElement.height);
-    let img = new ImageData(data_image, this.canvas.nativeElement.width, this.canvas.nativeElement.height)
-    this.ctx.putImageData(img, 0,0);
-    window.requestAnimationFrame(this.render.bind(this))
+    wasm.render(this.ctx,this.canvas.nativeElement.width, this.canvas.nativeElement.height);
     this.showCanvas();
+    window.requestAnimationFrame(this.render.bind(this))
   }
 
 

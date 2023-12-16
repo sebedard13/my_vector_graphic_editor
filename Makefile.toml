@@ -2,8 +2,15 @@
 [tasks.serve]
 workspace = false
 run_task = [
+    { name = ["wasm_build_all", "view_serve"] },
+]
+
+[tasks.install]
+workspace = false
+run_task = [
     { name = ["wasm_build_all", "view_install", "view_serve"] },
 ]
+
 
 #Build and install for serve
 
@@ -13,7 +20,7 @@ run_task = [{ name = ["wasm_vgc_build"], parallel = true }]
 
 [tasks.wasm_vgc_build]
 workspace = false
-script = ["cd wasm_vgc", "wasm-pack build"]
+script = ["cd wasm_vgc", "wasm-pack build --debug"]
 
 [tasks.view_install]
 workspace = false
