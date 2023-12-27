@@ -43,9 +43,18 @@ impl CanvasContent {
         self.camera.scaling
     }
 
+    ///  Zooms the camera in or out by the given amount, centered on the given point.
+    ///
+    ///  # Arguments
+    ///  * `movement` - positive for zoom in, negative for zoom out. Only 1 or -1 are supported.
+    ///  * `x` - x coordinate of the center of the zoom
+    ///  * `y` - y coordinate of the center of the zoom
     pub fn zoom(&mut self, movement: f32, x: f32, y: f32) {
-        self.camera
-            .handle_zoom(f32::signum(movement) * -1.0, (x, y));
+        self.camera.handle_zoom(movement, (x, y));
+    }
+
+    pub fn pan_camera(&mut self, x: f32, y: f32) {
+        self.camera.handle_pan((x, y));
     }
 }
 

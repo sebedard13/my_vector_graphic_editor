@@ -22,7 +22,7 @@ impl Camera {
             home: default_translate,
             ratio,
             pixel_region: (0.0, 0.0, 0.0, 0.0),
-            const_zoom: 30.0,
+            const_zoom: 15.0,
         }
     }
 
@@ -84,6 +84,7 @@ impl Camera {
         if movement < 0.0 && self.scaling > Self::MIN_SCALING
             || movement > 0.0 && self.scaling < Self::MAX_SCALING
         {
+            let movement = f32::signum(movement);
             let old_scaling = self.scaling;
 
             let new_scaling = (self.scaling * (1.0 + movement / self.const_zoom))
@@ -99,31 +100,12 @@ impl Camera {
         };
     }
 
-    /*pub fn handle_translate(&mut self, pressmove: &events::Pressmove) {
-        let translation = match self.interaction {
-            Interaction::Panning { translation, start } => {
-                if pressmove.start == start {
-                    translation
-                } else {
-                    self.interaction = Interaction::Panning {
-                        translation: self.translation,
-                        start: pressmove.start,
-                    };
-                    self.translation
-                }
-            }
-            _ => {
-                self.interaction = Interaction::Panning {
-                    translation: self.translation,
-                    start: pressmove.start,
-                };
-                self.translation
-            }
-        };
+    pub fn handle_pan(&mut self, movement: (f32, f32)) {
+        let scale_x = movement.0 / (Self::WIDTH * self.scaling);
+        let scale_y = movement.1 / (Self::WIDTH * self.scaling * (1.0 / self.ratio));
 
-        self.translation =
-            translation + (pressmove.current_coord - pressmove.start) * (1.0 / self.scaling);
-    }*/
+        self.position = (self.position.0 - scale_x, self.position.1 - scale_y);
+    }
 
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
         let top_left_on_screen = self.unproject((0.0, 0.0));

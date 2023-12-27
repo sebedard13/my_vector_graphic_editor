@@ -40,7 +40,7 @@ export class CanvasComponent implements AfterViewInit {
     });
 
     this.canvas.nativeElement.addEventListener("wheel", (event: WheelEvent) => {
-      this.canvasContent.zoom(event.deltaY, event.offsetX, event.offsetY);
+      this.canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY);
       this.mouseInfo.zoom.next(this.canvasContent.get_zoom());
       let pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY)
       this.mouseInfo.coords.next({ x: pt.x, y: pt.y });
@@ -50,7 +50,12 @@ export class CanvasComponent implements AfterViewInit {
       let pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY)
       this.mouseInfo.coords.next({ x: pt.x, y: pt.y });
 
+      if (event.buttons == 4) {
+        this.canvasContent.pan_camera(event.movementX, event.movementY);
+      }
+
     });
+
 
     this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
     this.render()
