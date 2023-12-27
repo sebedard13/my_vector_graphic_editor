@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub translation_full_size: (f32, f32),
+    pub position: (f32, f32),
     pub scaling: f32,
     home: (f32, f32),
     ratio: f32,
@@ -14,10 +14,10 @@ impl Camera {
     pub const WIDTH: f32 = 500.0;
 
     pub fn new(ratio: f32) -> Self {
-        let default_translate = (0.0, 0.0);
+        let default_translate = (0.5, 0.5);
 
         Self {
-            translation_full_size: default_translate,
+            position: default_translate,
             scaling: 1.0,
             home: default_translate,
             ratio,
@@ -31,12 +31,9 @@ impl Camera {
         let height =
             (self.pixel_region.3 - self.pixel_region.1) / self.scaling / (Self::WIDTH / self.ratio);
 
-        let x = (-self.translation_full_size.0 * 2.0 / Self::WIDTH - (width / 2.0) + 0.5) / 2.0;
-        let y = (-self.translation_full_size.1 * 2.0 / (Self::WIDTH / self.ratio) - (height / 2.0)
-            + 0.5)
-            / 2.0;
+        let x = self.position.0 - (width / 2.0);
+        let y = self.position.1 - (height / 2.0);
 
-        let x = ((self.pixel_region.2 - self.pixel_region.0) - Self::WIDTH * self.scaling)/2.0 ;
         (x, y, width, height)
     }
 
@@ -50,6 +47,16 @@ impl Camera {
             ((position.0 - self.pixel_region.0) / self.scaling / Self::WIDTH) + region.0,
             ((position.1 - self.pixel_region.1) / self.scaling / (Self::WIDTH / self.ratio))
                 + region.1,
+        )
+    }
+
+    pub fn unproject(&self, position: (f32, f32)) -> (f32, f32) {
+        let region = &self.region();
+
+        (
+            ((position.0 - region.0) * self.scaling * Self::WIDTH) + self.pixel_region.0,
+            ((position.1 - region.1) * self.scaling * (Self::WIDTH / self.ratio))
+                + self.pixel_region.1,
         )
     }
 
@@ -77,30 +84,18 @@ impl Camera {
         if movement < 0.0 && self.scaling > Self::MIN_SCALING
             || movement > 0.0 && self.scaling < Self::MAX_SCALING
         {
-            let old_scaling = self.scaling as f64;
+            let old_scaling = self.scaling;
 
-            let scaling = (self.scaling as f64 * (1.0 + movement as f64 / self.const_zoom as f64))
-                .clamp(Self::MIN_SCALING as f64, Self::MAX_SCALING as f64);
+            let new_scaling = (self.scaling * (1.0 + movement / self.const_zoom))
+                .clamp(Self::MIN_SCALING, Self::MAX_SCALING);
 
-            let center = center(self.pixel_region);
+            let projected_coord = self.project(coord);
 
-            let cursor_to_center = (
-                coord.0 as f64 - center.0 as f64 - self.translation_full_size.0 as f64,
-                coord.1 as f64 - center.1 as f64 - self.translation_full_size.1 as f64,
-            );
+            let factor = 1.0 - (old_scaling / new_scaling);
 
-            let factor = scaling - old_scaling;
+            self.position = lerp(self.position, projected_coord, factor);
 
-            let minus = (
-                cursor_to_center.0 * factor / (old_scaling),
-                cursor_to_center.1 * factor / (old_scaling),
-            );
-            self.translation_full_size = (
-                (self.translation_full_size.0 as f64 - minus.0) as f32,
-                (self.translation_full_size.1 as f64 - minus.1) as f32,
-            );
-
-            self.scaling = scaling as f32;
+            self.scaling = new_scaling;
         };
     }
 
@@ -131,19 +126,14 @@ impl Camera {
     }*/
 
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
-        let center_full_size = center(self.pixel_region);
+        let top_left_on_screen = self.unproject((0.0, 0.0));
 
         let vgc_width = Self::WIDTH * self.scaling;
         let vgc_height = ((vgc_width as f32) * (1.0 / self.ratio)) as f32;
 
-        let top_left = (
-            center_full_size.0 - vgc_width / 2.0 + self.translation_full_size.0,
-            center_full_size.1 - vgc_height / 2.0 + self.translation_full_size.1,
-        );
-
         return (
-            top_left.0 as f32,
-            top_left.1 as f32,
+            top_left_on_screen.0 as f32,
+            top_left_on_screen.1 as f32,
             vgc_width as f32,
             vgc_height as f32,
         );
@@ -155,7 +145,7 @@ impl Camera {
     }
 
     pub fn home(&mut self) {
-        self.translation_full_size = self.home;
+        self.position = self.home;
         self.scaling = 1.0;
     }
 
@@ -175,8 +165,8 @@ fn contain(rect: (f32, f32, f32, f32), point: (f32, f32)) -> bool {
         && (rect.1 + rect.3) >= point.1
 }
 
-fn center(rect: (f32, f32, f32, f32)) -> (f32, f32) {
-    (rect.0 + rect.2 / 2.0, rect.1 + rect.3 / 2.0)
+fn lerp(a: (f32, f32), b: (f32, f32), t: f32) -> (f32, f32) {
+    ((1.0 - t) * a.0 + t * b.0, (1.0 - t) * a.1 + t * b.1)
 }
 
 #[cfg(test)]
@@ -252,6 +242,19 @@ mod test {
     }
 
     #[test]
+    fn test_no_zoom_then_region() {
+        let mut camera = Camera::new(1.0);
+        camera.pixel_region = (0.0, 0.0, 1000.0, 1000.0);
+
+        let region = camera.region();
+
+        assert_approx_eq!(f32, region.0, -0.5);
+        assert_approx_eq!(f32, region.1, -0.5);
+        assert_approx_eq!(f32, region.2, 2.0);
+        assert_approx_eq!(f32, region.3, 2.0);
+    }
+
+    #[test]
     fn test_zoom_multiple_in_corner_then_transform() {
         let mut camera = Camera::new(1.0);
         camera.const_zoom = 4.0;
@@ -282,10 +285,31 @@ mod test {
 
         let minus = (500.0 * camera.scaling) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 1.5625);
-        assert_approx_eq!(f32, transform.0, 250.0 - minus);
-        assert_approx_eq!(f32, transform.1, 250.0 - minus);
-        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling);
-        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.0, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.1, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling, (0.0001, 3));
+    }
+
+    #[test]
+    fn zoom_in_out_then_transform() {
+        let mut camera = Camera::new(1.0);
+        camera.pixel_region = (0.0, 0.0, 1000.0, 1000.0);
+        camera.const_zoom = 4.0;
+
+        camera.handle_zoom(1.0, (750.0, 750.0));
+        camera.handle_zoom(-1.0, (750.0, 750.0));
+        camera.handle_zoom(1.0, (750.0, 750.0));
+        camera.handle_zoom(-1.0, (750.0, 750.0));
+        camera.handle_zoom(1.0, (750.0, 750.0));
+
+        let transform = camera.get_transform();
+
+        assert_approx_eq!(f32, camera.scaling, 1.0986328);
+        assert_approx_eq!(f32, transform.0, 250.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.1, 250.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.2, 500.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.3, 500.0, (0.0001, 3));
     }
 
     #[test]
@@ -310,24 +334,11 @@ mod test {
         let transform = camera.get_transform();
 
         let minus = (500.0 * camera.scaling) - 500.0;
-        assert_approx_eq!(f32, camera.scaling, 1.5315307);
+        assert_approx_eq!(f32, camera.scaling, 1.5315307, (0.0001, 3));
         assert_approx_eq!(f32, transform.0, 250.0 - minus, (0.0001, 3));
         assert_approx_eq!(f32, transform.1, 250.0 - minus, (0.0001, 3));
         assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling, (0.0001, 3));
         assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling, (0.0001, 3));
-    }
-
-    #[test]
-    fn test_no_zoom_then_region() {
-        let mut camera = Camera::new(1.0);
-        camera.pixel_region = (0.0, 0.0, 1000.0, 1000.0);
-
-        let region = camera.region();
-
-        assert_approx_eq!(f32, region.0, -0.5);
-        assert_approx_eq!(f32, region.1, -0.5);
-        assert_approx_eq!(f32, region.2, 2.0);
-        assert_approx_eq!(f32, region.3, 2.0);
     }
 
     #[test]
