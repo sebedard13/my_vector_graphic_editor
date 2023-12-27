@@ -19,8 +19,8 @@ use user_selection::Selected;
 
 pub use functionality::Functionality;
 
-use crate::Message;
 use crate::scene::vgc_render::IcedFrame;
+use crate::Message;
 
 pub use self::user_selection::ColorSelected;
 
@@ -68,7 +68,7 @@ impl Default for Scene {
             ],
         ]);
 
-        Self {
+                Self {
             draw_cache: Cache::default(),
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data,
@@ -314,10 +314,10 @@ impl canvas::Program<MsgScene> for Scene {
 
                 frame.fill_rectangle(Point::new(0 as f32, 0 as f32), size, color);
 
-                let renderer= &mut IcedFrame::new(frame);
+                let renderer = &mut IcedFrame::new(frame, self.vgc_data.ratio);
 
-                match self.vgc_data.render_w(renderer, 1){
-                    Ok(_) => {},
+                match self.vgc_data.render(renderer) {
+                    Ok(_) => {}
                     Err(e) => {
                         println!("Error Render: {}", e);
                     }

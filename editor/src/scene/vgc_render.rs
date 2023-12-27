@@ -9,25 +9,31 @@ pub struct IcedFrame<'a> {
     frame: &'a mut Frame,
     fill: Option<Fill>,
     path_builder: Option<Builder>,
+    ratio: f64,
 }
 
 impl IcedFrame<'_> {
-    pub fn new(frame: &mut Frame) -> IcedFrame {
+    pub fn new(frame: &mut Frame, ratio: f64) -> IcedFrame {
         IcedFrame {
             frame: frame,
             fill: None,
             path_builder: None,
+            ratio,
         }
     }
 }
 
 impl VgcRenderer for IcedFrame<'_> {
-    fn create(&mut self, _: u32, _: u32) -> Result<(), String> {
+    fn create(&mut self) -> Result<(), String> {
         Ok(())
     }
 
     fn fill_background(&mut self, _: &Rgba) -> Result<(), String> {
         Ok(())
+    }
+
+    fn get_transform(&self) -> Result<(f32, f32, f32, f32), String> {
+        Ok((0.0, 0.0, 1.0, 1.0 / self.ratio as f32))
     }
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String> {
@@ -63,7 +69,6 @@ impl VgcRenderer for IcedFrame<'_> {
     }
 
     fn close_shape(&mut self) -> Result<(), String> {
-    
         let fill = self.fill.take().unwrap();
         let path = Path::new(|e| {
             *e = self.path_builder.take().unwrap();

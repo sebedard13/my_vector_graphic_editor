@@ -5189,6 +5189,7 @@ name = "wasm_vgc"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "float-cmp",
  "js-sys",
  "vgc",
  "wasm-bindgen",

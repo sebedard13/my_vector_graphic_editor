@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, EmbeddedViewRef} from '@angular/core';
+import { EventsService } from './events.service';
 
 @Component({
   selector: 'app-root',
@@ -7,5 +8,5 @@ import {AfterViewInit, Component, EmbeddedViewRef} from '@angular/core';
 })
 export class AppComponent{
 
-
+  constructor(protected eventsService: EventsService) {}
 }

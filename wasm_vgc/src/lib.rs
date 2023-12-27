@@ -1,41 +1,100 @@
+mod camera;
 mod canvas_context_2d_render;
 
-use vgc::coord::Coord;
+use crate::canvas_context_2d_render::CanvasContext2DRender;
+use camera::Camera;
+use vgc::{coord::Coord, Vgc};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
-use crate::canvas_context_2d_render::CanvasContext2DRender;
 
 #[wasm_bindgen]
-pub fn render(ctx: &CanvasRenderingContext2d, width: usize, height: usize) -> Result<(), JsValue> {
-   
-    let vgc = vgc::generate_from_line(vec![
-        vec![
-            Coord { x: 0.0, y: 0.1 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 0.9, y: 1.0 },
-        ],
-        vec![
-            Coord { x: 1.0, y: 0.9 },
-            Coord { x: 0.1, y: 0.0 },
-            Coord { x: 1.0, y: 0.0 },
-        ],
-    ]);
+pub struct Point {
+    pub x: f32,
+    pub y: f32,
+}
 
+// Function to read from index 1 of our buffer
+// And return the value at the index
+#[wasm_bindgen]
+pub struct CanvasContent {
+    #[wasm_bindgen(skip)]
+    pub vgc_data: Vgc,
+    #[wasm_bindgen(skip)]
+    pub camera: Camera,
+}
 
-    let vgc_width = 512;
-    let vgc_height = ((vgc_width as f64) * (1.0 / vgc.ratio)) as u32;
-   
+#[wasm_bindgen]
+impl CanvasContent {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> CanvasContent {
+        CanvasContent::default()
+    }
 
-    let coord_center = (width as f64 / 2.0, height as f64 / 2.0);
+    pub fn set_pixel_region(&mut self, width: f32, height: f32) {
+        self.camera.pixel_region = (0.0, 0.0, width, height);
+    }
 
-    let top_left = (
-        coord_center.0 - (vgc_width as f64 / 2.0),
-        coord_center.1 - (vgc_height as f64 / 2.0),
+    pub fn get_project_mouse(&self, x: f32, y: f32) -> Point {
+        let (x, y) = self.camera.project((x, y));
+        Point { x, y }
+    }
+
+    pub fn get_zoom(&self) -> f32 {
+        self.camera.scaling
+    }
+
+    pub fn zoom(&mut self, movement: f32, x: f32, y: f32) {
+        self.camera
+            .handle_zoom(f32::signum(movement) * -1.0, (x, y));
+    }
+}
+
+impl Default for CanvasContent {
+    fn default() -> Self {
+        let mut vgc_data = vgc::generate_from_line(vec![
+            vec![
+                Coord { x: 0.0, y: 0.1 },
+                Coord { x: 0.0, y: 1.0 },
+                Coord { x: 0.9, y: 1.0 },
+            ],
+            vec![
+                Coord { x: 1.0, y: 0.9 },
+                Coord { x: 0.1, y: 0.0 },
+                Coord { x: 1.0, y: 0.0 },
+            ],
+        ]);
+
+        vgc_data.ratio = 1.5;
+        Self {
+            camera: Camera::new(vgc_data.ratio as f32),
+            vgc_data,
+        }
+    }
+}
+
+#[wasm_bindgen]
+pub fn render(
+    ctx: &CanvasRenderingContext2d,
+    canvas_content: &CanvasContent,
+) -> Result<(), JsValue> {
+    let vgc = &canvas_content.vgc_data;
+
+    let transform = canvas_content.camera.get_transform();
+
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(
+        ctx,
+        (transform.0 as f64, transform.1 as f64),
+        transform.2 as f64,
+        transform.3 as f64,
     );
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, top_left);
-
-    let result = vgc.render_w(&mut ctx_2d_renderer, vgc_width);
+    ctx.clear_rect(
+        canvas_content.camera.pixel_region.0 as f64,
+        canvas_content.camera.pixel_region.1 as f64,
+        canvas_content.camera.pixel_region.2 as f64,
+        canvas_content.camera.pixel_region.3 as f64,
+    );
+    let result = vgc.render(&mut ctx_2d_renderer);
     match result {
         Err(string) => {
             return Err(JsValue::from_str(&string));

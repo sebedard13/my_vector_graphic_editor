@@ -1,15 +1,13 @@
 #Serve web angular
 [tasks.serve]
 workspace = false
-run_task = [
-    { name = ["wasm_build_all", "view_serve"] },
-]
+#TODO : do not serve angular every time
+run_task = [{ name = ["wasm_build_all", "view_serve"] }]
+watch = { no_git_ignore = false, watch = ["./wasm_vgc/", "./vgc/"] }
 
 [tasks.install]
 workspace = false
-run_task = [
-    { name = ["wasm_build_all", "view_install", "view_serve"] },
-]
+run_task = [{ name = ["wasm_build_all", "view_install", "view_serve"] }]
 
 
 #Build and install for serve
@@ -34,7 +32,11 @@ script = ["cd view", "ng serve"]
 [tasks.clean_all]
 workspace = false
 description = "Clean all files"
-run_task = { name = ["view_clean", "wasm_clean","cargo_clean"], parallel = true }
+run_task = { name = [
+    "view_clean",
+    "wasm_clean",
+    "cargo_clean",
+], parallel = true }
 
 
 #Clean specific
@@ -47,8 +49,13 @@ args = ["clean"]
 [tasks.view_clean]
 workspace = false
 run_task = [
-    { name = "view_clean_win", condition = { platforms = ["windows"] } },
-    { name = "view_clean_unix", condition = { platforms = ["mac", "linux"] } }
+    { name = "view_clean_win", condition = { platforms = [
+        "windows",
+    ] } },
+    { name = "view_clean_unix", condition = { platforms = [
+        "mac",
+        "linux",
+    ] } },
 ]
 
 [tasks.view_clean_unix]
@@ -63,8 +70,13 @@ script = "if exist \"view/node_modules\" rmdir /s /q \"view/node_modules\""
 [tasks.wasm_clean]
 workspace = false
 run_task = [
-    { name = "wasm_clean_win", condition = { platforms = ["windows"] } },
-    { name = "wasm_clean_unix", condition = { platforms = ["mac", "linux"] } }
+    { name = "wasm_clean_win", condition = { platforms = [
+        "windows",
+    ] } },
+    { name = "wasm_clean_unix", condition = { platforms = [
+        "mac",
+        "linux",
+    ] } },
 ]
 
 [tasks.wasm_clean_unix]
