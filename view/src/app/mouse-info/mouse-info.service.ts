@@ -7,7 +7,8 @@ import { Subject } from 'rxjs';
 export class MouseInfoService {
 
 
-  public coords = new Subject<{x: number, y: number}>();
+  public normalizedMousePos = new Subject<{ x: number, y: number }>();
+  public mousePos = new Subject<{ x: number, y: number }>();
   public zoom = new Subject<number>();
 
   constructor() { }
