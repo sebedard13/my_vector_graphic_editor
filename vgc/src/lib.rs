@@ -5,14 +5,14 @@ use crate::coord::Coord;
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
-pub use fill::Rgba;
+pub use common::Rgba;
 #[cfg(feature = "tiny-skia")]
 pub use render::TinySkiaRenderer;
 pub use render::VgcRenderer;
 
 pub mod coord;
 mod curve;
-mod fill;
+
 pub mod render;
 
 #[cfg(feature = "serialization")]

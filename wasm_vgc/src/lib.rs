@@ -8,6 +8,8 @@ use vgc::{coord::Coord, Vgc};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
 
+pub use vgc::Rgba;
+
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug)]
 pub struct Point {

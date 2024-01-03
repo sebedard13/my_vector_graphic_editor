@@ -1,7 +1,7 @@
 use crate::coord::{Coord, CoordPtr, CoordType};
 use crate::curve;
 use crate::curve::Curve;
-use crate::fill::Rgba;
+use common::Rgba;
 use std::cell::RefCell;
 use std::rc::Rc;
 

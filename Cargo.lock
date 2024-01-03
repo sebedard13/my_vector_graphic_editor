@@ -600,6 +600,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "float-cmp",
+ "serde",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "complex-division"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5052,6 +5061,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 name = "vgc"
 version = "0.1.0"
 dependencies = [
+ "common",
  "float-cmp",
  "polynomen",
  "postcard",

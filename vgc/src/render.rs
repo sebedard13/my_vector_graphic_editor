@@ -1,5 +1,5 @@
-use crate::{coord::Coord, fill::Rgba, Vgc};
-
+use crate::{coord::Coord, Vgc};
+use common::Rgba;
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
 

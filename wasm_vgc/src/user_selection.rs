@@ -97,7 +97,7 @@ impl Selected {
         }
     }
 
-    pub fn get_selected_colors(&self, canvas_context: &CanvasContent) -> Vec<String> {
+    pub fn get_selected_colors(&self, canvas_context: &CanvasContent) -> Vec<Rgba> {
         let shapes = &self.shapes;
 
         if shapes.is_empty() {
@@ -111,12 +111,11 @@ impl Selected {
                 Some(shape) => shape,
                 None => continue,
             };
-            let shape_color = &shape.color;
-            let css_string = shape_color.to_css_string();
-            if colors.contains(&css_string) {
+
+            if colors.contains(&shape.color) {
                 continue;
             }
-            colors.push(css_string);
+            colors.push(shape.color.clone());
         }
 
         colors

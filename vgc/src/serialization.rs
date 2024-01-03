@@ -1,14 +1,13 @@
 use std::{cell::RefCell, rc::Rc};
 
-use serde::{Deserialize, Serialize};
-
 use crate::{
     coord::{Coord, CoordPtr},
     curve::Curve,
-    fill::Rgba,
     shape::Shape,
     Vgc,
 };
+use common::Rgba;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct VgcSerialization {

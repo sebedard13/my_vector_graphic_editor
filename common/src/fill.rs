@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::wasm_bindgen;
 
+#[wasm_bindgen]
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Rgba {
@@ -8,6 +10,7 @@ pub struct Rgba {
     pub b: u8,
     pub a: u8,
 }
+#[wasm_bindgen]
 impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
         Rgba { r, g, b, a }
@@ -18,11 +21,11 @@ impl Rgba {
     /// use vgc::Rgba;
     /// let rgba = Rgba::new(255, 255, 255, 255);
     /// assert_eq!(rgba.to_css_string(), "rgba(255,255,255,255)");
-    /// 
+    ///
     /// let rgba = Rgba::new(25, 50, 75, 100);
     /// assert_eq!(rgba.to_css_string(), "rgba(25,50,75,100)");
     /// ```
-    pub fn to_css_string(&self) -> String{
+    pub fn to_css_string(&self) -> String {
         return format!("rgba({},{},{},{})", self.r, self.g, self.b, self.a);
     }
 }
