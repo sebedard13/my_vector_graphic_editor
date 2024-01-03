@@ -1,31 +1,23 @@
-import {Component, Directive} from '@angular/core';
-import {Button} from "../../interface/Button";
-import {toolsbarSvgBtn} from "../../config/toolsbar-svg-btn";
+import { Component, Directive } from "@angular/core"
+import { Button } from "../../interface/Button"
+import { toolsbarSvgBtn } from "../../config/toolsbar-svg-btn"
 
-
-@Directive({selector: 'button'})
-export class ButtonDirective {
-}
+@Directive({ selector: "button" })
+export class ButtonDirective {}
 
 @Component({
-  selector: 'app-tools-bar',
-  templateUrl: './tools-bar.component.html',
-  styleUrls: ['./tools-bar.component.scss']
+    selector: "app-tools-bar",
+    templateUrl: "./tools-bar.component.html",
+    styleUrls: ["./tools-bar.component.scss"],
 })
 export class ToolsBarComponent {
-  buttons: Button[] = toolsbarSvgBtn
+    buttons: Button[] = toolsbarSvgBtn
 
-  constructor() { }
+    constructor() {}
 
-  ngOnInit(): void {
-  }
+    ngOnInit(): void {}
 
-  ngAfterViewInit(){
+    ngAfterViewInit() {}
 
-  }
-
-
-  onclick(){
-
-  }
+    onclick() {}
 }
