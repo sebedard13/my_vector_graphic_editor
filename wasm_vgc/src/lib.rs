@@ -85,6 +85,10 @@ impl Default for CanvasContent {
             ],
         ]);
 
+        let shape = vgc_data.get_shape_mut(0).expect("Valid");
+        shape.color.r = 128;
+        shape.color.g = 0;
+
         vgc_data.ratio = 1.5;
         Self {
             camera: Camera::new(vgc_data.ratio as f32),

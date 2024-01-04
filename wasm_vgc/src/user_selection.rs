@@ -4,7 +4,7 @@ use vgc::{coord::Coord, Rgba};
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
 
-use crate::{console_log, CanvasContent, Point};
+use crate::{CanvasContent, Point};
 
 /// Return true if the cursor is in the radius of the center
 ///```rust
@@ -130,8 +130,6 @@ impl Selected {
             let coords = shape.get_coords_of_shape_tmp();
             for ref_coord_type in coords {
                 let coord = ref_coord_type.borrow();
-
-                console_log!("point_in_radius {:?} {:?}", cursor_position, coord);
 
                 if point_in_radius(
                     &cursor_position,

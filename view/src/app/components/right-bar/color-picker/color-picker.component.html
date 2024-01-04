@@ -1,1 +1,10 @@
-<input type="color" name="color" id="color-picker" />
+<label for="color-picker">
+    @if (colorIsValid$ | async) {
+        <div class="color" [style.background-color]="colorValue$ | async"></div>
+    }
+    @else {
+        <div class="invalid-color"><img src="ouii.png" alt=""></div>
+    }
+       
+</label>
+<input #colorInput type="color" name="color" [value]="colorValue$ | async" id="color-picker" />

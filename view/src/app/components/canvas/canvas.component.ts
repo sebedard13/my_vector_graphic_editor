@@ -154,6 +154,7 @@ export class CanvasComponent implements AfterViewInit {
                     this.canvasContent,
                     point,
                 )
+                this.selectionService.selectionHasChanged.next()
             } else {
                 let point = this.canvasContent.get_project_mouse(
                     event.offsetX,
@@ -163,6 +164,7 @@ export class CanvasComponent implements AfterViewInit {
                     this.canvasContent,
                     point,
                 )
+                this.selectionService.selectionHasChanged.next()
             }
         }
     }
@@ -170,5 +172,6 @@ export class CanvasComponent implements AfterViewInit {
     @HostListener("window:keydown.code.esc")
     public onEsc() {
         this.selectionService.selection.clear_to_level(SelectedLevel.None)
+        this.selectionService.selectionHasChanged.next()
     }
 }

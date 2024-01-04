@@ -18,7 +18,7 @@ impl Rgba {
 
     ///
     /// ```rust
-    /// use vgc::Rgba;
+    /// use common::Rgba;
     /// let rgba = Rgba::new(255, 255, 255, 255);
     /// assert_eq!(rgba.to_css_string(), "rgba(255,255,255,255)");
     ///
@@ -27,6 +27,28 @@ impl Rgba {
     /// ```
     pub fn to_css_string(&self) -> String {
         return format!("rgba({},{},{},{})", self.r, self.g, self.b, self.a);
+    }
+
+    ///```rust
+    /// use common::Rgba;
+    /// let rgba = Rgba::new(255, 255, 255, 255);
+    /// assert_eq!(rgba.to_hex_string(), "#ffffffff");
+    ///
+    /// let rgba = Rgba::new(25, 50, 75, 100);
+    /// assert_eq!(rgba.to_hex_string(), "#19324b64");
+    pub fn to_hex_string(&self) -> String {
+        return format!("#{:02x}{:02x}{:02x}{:02x}", self.r, self.g, self.b, self.a);
+    }
+
+    ///```rust
+    /// use common::Rgba;
+    /// let rgba = Rgba::new(255, 255, 255, 255);
+    /// assert_eq!(rgba.to_small_hex_string(), "#ffffff");
+    ///
+    /// let rgba = Rgba::new(25, 50, 75, 100);
+    /// assert_eq!(rgba.to_small_hex_string(), "#19324b");
+    pub fn to_small_hex_string(&self) -> String {
+        return format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b);
     }
 }
 
