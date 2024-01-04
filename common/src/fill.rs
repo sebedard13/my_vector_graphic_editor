@@ -50,6 +50,60 @@ impl Rgba {
     pub fn to_small_hex_string(&self) -> String {
         return format!("#{:02x}{:02x}{:02x}", self.r, self.g, self.b);
     }
+
+    pub fn from_small_hex_string(hex: &str) -> Rgba {
+        let result = Rgba::from_small_hex_safe(hex);
+        match result {
+            Ok(rgba) => rgba,
+            Err(_) => {
+                //Todo Log error
+                Rgba::new(0, 0, 0, 255)
+            }
+        }
+    }
+
+    pub fn from_small_hex_safe(hex: &str) -> Result<Rgba, String> {
+        let hex = hex.trim_start_matches('#');
+        let mut hex = hex.chars();
+
+        let r = hex
+            .next()
+            .ok_or("Invalid hex string")?
+            .to_digit(16)
+            .ok_or("Invalid hex string")? as u8;
+        let r = r * 16
+            + hex
+                .next()
+                .ok_or("Invalid hex string")?
+                .to_digit(16)
+                .ok_or("Invalid hex string")? as u8;
+
+        let g = hex
+            .next()
+            .ok_or("Invalid hex string")?
+            .to_digit(16)
+            .ok_or("Invalid hex string")? as u8;
+        let g = g * 16
+            + hex
+                .next()
+                .ok_or("Invalid hex string")?
+                .to_digit(16)
+                .ok_or("Invalid hex string")? as u8;
+
+        let b = hex
+            .next()
+            .ok_or("Invalid hex string")?
+            .to_digit(16)
+            .ok_or("Invalid hex string")? as u8;
+        let b = b * 16
+            + hex
+                .next()
+                .ok_or("Invalid hex string")?
+                .to_digit(16)
+                .ok_or("Invalid hex string")? as u8;
+
+        Ok(Rgba::new(r, g, b, 255))
+    }
 }
 
 impl From<[u8; 4]> for Rgba {

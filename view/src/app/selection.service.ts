@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core"
 import { Observable, Subject } from "rxjs"
-import { Rgba, Selected } from "wasm-vgc"
+import { Rgba, Selected, set_color_of } from "wasm-vgc"
 import { ScenesService } from "./scenes.service"
 
 @Injectable({
@@ -21,4 +21,11 @@ export class SelectionService {
             })
         })
     }
+
+    public set_color(color: Rgba){
+        this.scenesService.currentScene$.subscribe((scene) => {
+           set_color_of(this.selection, scene, color);
+        })
+    }
+    
 }

@@ -12,6 +12,7 @@ import {
 import { BehaviorSubject, fromEvent } from "rxjs"
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
 import { SelectionService } from "src/app/selection.service"
+import { Rgba } from "wasm-vgc"
 
 @Component({
     selector: "app-color-picker",
@@ -31,7 +32,7 @@ export class ColorPickerComponent implements AfterViewInit {
     protected colorIsValid$ = this.colorIsValid.asObservable()
     protected colorValue$ = this.colorValue.asObservable()
 
-    constructor(selectionService: SelectionService) {
+    constructor(private selectionService: SelectionService) {
         selectionService.selectedColor$.subscribe((selected) => {
             if (selected.length == 0) {
                 this.colorValue.next(this.lastColor)
@@ -54,8 +55,9 @@ export class ColorPickerComponent implements AfterViewInit {
                 const target = event.target as HTMLInputElement
                 const color = target.value
 
-                this.colorValue.next(color)
-                this.colorIsValid.next(true)
+                this.selectionService.set_color(
+                    Rgba.from_small_hex_string(color),
+                )
             })
     }
 }

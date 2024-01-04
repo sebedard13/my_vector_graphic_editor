@@ -1,3 +1,4 @@
+pub mod api;
 mod camera;
 mod canvas_context_2d_render;
 pub mod user_selection;

@@ -14,6 +14,8 @@ export class ScenesService {
         this.currentSceneSubject.asObservable()
 
     constructor() {
+
+        
         this.scenes.push(new CanvasContent())
         this.indexScene = 0
         this.currentSceneSubject.next(this.scenes[this.indexScene])
