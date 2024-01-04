@@ -8,11 +8,12 @@ export class EventsService {
     private keyCodeSubject = new Subject<string>()
     public keyCode$ = this.keyCodeSubject.asObservable()
 
-    constructor() {
-        console.log("KeyboardService.ngAfterViewInit()")
+    public mouseMove = new Subject<MouseEvent>();
+    public mouseMove$ = this.mouseMove.asObservable();
 
+    constructor() {
         document.addEventListener("keydown", (event: KeyboardEvent) => {
-            console.log(event)
+            this.keyCodeSubject.next(event.key)
         })
     }
 }

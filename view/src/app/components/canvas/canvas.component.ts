@@ -7,6 +7,7 @@ import {
     Host,
     HostListener,
 } from "@angular/core"
+import { EventsService } from "src/app/events.service"
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service"
 import { ScenesService } from "src/app/scenes.service"
 import { SelectionService } from "src/app/selection.service"
@@ -37,6 +38,7 @@ export class CanvasComponent implements AfterViewInit {
         private mouseInfo: MouseInfoService,
         scenesService: ScenesService,
         private selectionService: SelectionService,
+        private eventService: EventsService,
     ) {
         scenesService.currentScene$.subscribe((scene) => {
             this.canvasContent = scene
@@ -125,6 +127,8 @@ export class CanvasComponent implements AfterViewInit {
 
         //selection
         this.selectionService.selection.change_hover(this.canvasContent, pt)
+
+        this.eventService.mouseMove.next(event)
     }
 
     @HostListener("wheel", ["$event"])

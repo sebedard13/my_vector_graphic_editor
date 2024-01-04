@@ -23,10 +23,12 @@ import { Rgba } from "wasm-vgc"
 export class ColorPickerComponent implements AfterViewInit {
     private _destory = inject(DestroyRef)
     @ViewChild("colorInput") colorInput!: ElementRef<HTMLInputElement>
+    @ViewChild("canvasInvalidColor")
+    canvasInvalidColor!: ElementRef<HTMLCanvasElement>
 
-    private lastColor: string = "#FF0000"
+    private lastColor: string = "#000000"
 
-    private colorValue = new BehaviorSubject<string>("#FF0000")
+    private colorValue = new BehaviorSubject<string>("#000000")
     private colorIsValid = new BehaviorSubject<boolean>(true)
 
     protected colorIsValid$ = this.colorIsValid.asObservable()
@@ -55,9 +57,24 @@ export class ColorPickerComponent implements AfterViewInit {
                 const target = event.target as HTMLInputElement
                 const color = target.value
 
+                this.lastColor = color
                 this.selectionService.set_color(
                     Rgba.from_small_hex_string(color),
                 )
             })
+
+        let ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {
+            alpha: false,
+        }) as CanvasRenderingContext2D
+
+        ctx.fillStyle = "#FFFFFF"
+        ctx.fillRect(0, 0, 100, 100)
+        ctx.fillStyle = "#000000"
+        ctx.beginPath()
+        ctx.moveTo(0, 0)
+        ctx.lineTo(0, 100)
+        ctx.lineTo(100, 0)
+        ctx.closePath()
+        ctx.fill()
     }
 }

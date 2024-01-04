@@ -10,6 +10,19 @@ input {
 }
 
 label {
+    .color {
+        display: none;
+    }
+
+    &.is-valid {
+        .color {
+            display: block;
+        }
+        .invalid-color {
+            display: none;
+        }
+    }
+
     div {
         width: 100px;
         height: 100px;

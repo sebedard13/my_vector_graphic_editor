@@ -3,3 +3,4 @@ useTabs = false
 tabWidth = 4
 semi = false
 singleQuote = false
+max_line_length = 100

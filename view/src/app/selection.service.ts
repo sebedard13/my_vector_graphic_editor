@@ -22,10 +22,10 @@ export class SelectionService {
         })
     }
 
-    public set_color(color: Rgba){
+    public set_color(color: Rgba) {
         this.scenesService.currentScene$.subscribe((scene) => {
-           set_color_of(this.selection, scene, color);
+            set_color_of(this.selection, scene, color)
+            this.selectionHasChanged.next()
         })
     }
-    
 }

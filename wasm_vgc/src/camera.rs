@@ -121,6 +121,15 @@ impl Camera {
         );
     }
 
+    pub fn fixed_2d_length(&self, movement: (f32, f32))-> (f32, f32){
+        let transform = self.get_transform();
+
+        let x = movement.0 / transform.2;
+        let y = movement.1 / transform.3;
+
+        (x, y)
+    }
+
     /// Return the length of a given fixed pixel length in the canvas.
     pub fn fixed_length(&self, length_px: f32) -> f32 {
         length_px / self.scaling / Self::WIDTH
