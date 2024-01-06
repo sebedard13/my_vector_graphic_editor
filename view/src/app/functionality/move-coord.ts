@@ -6,7 +6,7 @@ import { Subscription, withLatestFrom } from "rxjs"
 import { SelectionService } from "../selection.service"
 import { Functionality } from "./Functionality"
 
-export class MoveCoordService implements Functionality {
+export class MoveCoordService extends Functionality {
     private subscription: Subscription | null = null
     private eventsService!: EventsService
     private sceneService!: ScenesService
@@ -35,5 +35,9 @@ export class MoveCoordService implements Functionality {
 
     desactivate(): void {
         this.subscription?.unsubscribe()
+    }
+
+    isActivated(): boolean {
+        return this.subscription !== null
     }
 }

@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, EmbeddedViewRef } from "@angular/core"
+import { Component } from "@angular/core"
 import { EventsService } from "./events.service"
-import { MoveCoordService } from "./functionality/move-coord"
+import { CameraService } from "./functionality/camera"
+import { filter } from "rxjs"
 
 @Component({
     selector: "app-root",
@@ -8,5 +9,9 @@ import { MoveCoordService } from "./functionality/move-coord"
     styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
-    constructor(protected eventsService: EventsService) {}
+    constructor(protected eventsService: EventsService) {
+        let camera = new CameraService()
+        camera.inject()
+        camera.activate()
+    }
 }

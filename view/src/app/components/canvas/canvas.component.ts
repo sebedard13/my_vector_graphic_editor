@@ -121,10 +121,6 @@ export class CanvasComponent implements AfterViewInit {
         )
         this.mouseInfo.normalizedMousePos.next({ x: pt.x, y: pt.y })
 
-        if (event.buttons == 4) {
-            this.canvasContent.pan_camera(event.movementX, event.movementY)
-        }
-
         //selection
         this.selectionService.selection.change_hover(this.canvasContent, pt)
 
@@ -135,7 +131,8 @@ export class CanvasComponent implements AfterViewInit {
     public onMouseWheel(event: WheelEvent) {
         if (this.canvasContent == null) return
 
-        this.canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY)
+        this.eventService.wheel.next(event)
+
         this.mouseInfo.zoom.next(this.canvasContent.get_zoom())
         let pt = this.canvasContent.get_project_mouse(
             event.offsetX,
