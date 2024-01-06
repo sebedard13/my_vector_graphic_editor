@@ -1,12 +1,12 @@
-import { AfterViewInit, Injectable } from "@angular/core"
-import { Observable, Subject } from "rxjs"
+import { AfterViewInit, Injectable } from "@angular/core";
+import { Observable, Subject } from "rxjs";
 
 @Injectable({
     providedIn: "root",
 })
 export class EventsService {
-    private keyCodeSubject = new Subject<string>()
-    public keyCode$ = this.keyCodeSubject.asObservable()
+    private keyCodeSubject = new Subject<string>();
+    public keyCode$ = this.keyCodeSubject.asObservable();
 
     public mouseMove = new Subject<MouseEvent>();
     public mouseMove$ = this.mouseMove.asObservable();
@@ -16,7 +16,7 @@ export class EventsService {
 
     constructor() {
         document.addEventListener("keydown", (event: KeyboardEvent) => {
-            this.keyCodeSubject.next(event.key)
-        })
+            this.keyCodeSubject.next(event.key);
+        });
     }
 }

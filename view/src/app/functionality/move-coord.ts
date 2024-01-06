@@ -1,21 +1,21 @@
-import { inject } from "@angular/core"
-import { EventsService } from "../events.service"
-import { move_coords_of } from "wasm-vgc"
-import { ScenesService } from "../scenes.service"
-import { Subscription, withLatestFrom } from "rxjs"
-import { SelectionService } from "../selection.service"
-import { Functionality } from "./Functionality"
+import { inject } from "@angular/core";
+import { EventsService } from "../events.service";
+import { move_coords_of } from "wasm-vgc";
+import { ScenesService } from "../scenes.service";
+import { Subscription, withLatestFrom } from "rxjs";
+import { SelectionService } from "../selection.service";
+import { Functionality } from "./Functionality";
 
 export class MoveCoordService extends Functionality {
-    private subscription: Subscription | null = null
-    private eventsService!: EventsService
-    private sceneService!: ScenesService
-    private selectionService!: SelectionService
+    private subscription: Subscription | null = null;
+    private eventsService!: EventsService;
+    private sceneService!: ScenesService;
+    private selectionService!: SelectionService;
 
     inject(): void {
-        this.eventsService = inject(EventsService)
-        this.sceneService = inject(ScenesService)
-        this.selectionService = inject(SelectionService)
+        this.eventsService = inject(EventsService);
+        this.sceneService = inject(ScenesService);
+        this.selectionService = inject(SelectionService);
     }
 
     activate(): void {
@@ -28,16 +28,16 @@ export class MoveCoordService extends Functionality {
                         canvas,
                         event.movementX,
                         event.movementY,
-                    )
+                    );
                 }
-            })
+            });
     }
 
     desactivate(): void {
-        this.subscription?.unsubscribe()
+        this.subscription?.unsubscribe();
     }
 
     isActivated(): boolean {
-        return this.subscription !== null
+        return this.subscription !== null;
     }
 }

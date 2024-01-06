@@ -8,11 +8,11 @@ import {
     HostListener,
     ViewChild,
     inject,
-} from "@angular/core"
-import { BehaviorSubject, fromEvent } from "rxjs"
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop"
-import { SelectionService } from "src/app/selection.service"
-import { Rgba } from "wasm-vgc"
+} from "@angular/core";
+import { BehaviorSubject, fromEvent } from "rxjs";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { SelectionService } from "src/app/selection.service";
+import { Rgba } from "wasm-vgc";
 
 @Component({
     selector: "app-color-picker",
@@ -21,60 +21,58 @@ import { Rgba } from "wasm-vgc"
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ColorPickerComponent implements AfterViewInit {
-    private _destory = inject(DestroyRef)
-    @ViewChild("colorInput") colorInput!: ElementRef<HTMLInputElement>
+    private _destory = inject(DestroyRef);
+    @ViewChild("colorInput") colorInput!: ElementRef<HTMLInputElement>;
     @ViewChild("canvasInvalidColor")
-    canvasInvalidColor!: ElementRef<HTMLCanvasElement>
+    canvasInvalidColor!: ElementRef<HTMLCanvasElement>;
 
-    private lastColor: string = "#000000"
+    private lastColor: string = "#000000";
 
-    private colorValue = new BehaviorSubject<string>("#000000")
-    private colorIsValid = new BehaviorSubject<boolean>(true)
+    private colorValue = new BehaviorSubject<string>("#000000");
+    private colorIsValid = new BehaviorSubject<boolean>(true);
 
-    protected colorIsValid$ = this.colorIsValid.asObservable()
-    protected colorValue$ = this.colorValue.asObservable()
+    protected colorIsValid$ = this.colorIsValid.asObservable();
+    protected colorValue$ = this.colorValue.asObservable();
 
     constructor(private selectionService: SelectionService) {
         selectionService.selectedColor$.subscribe((selected) => {
             if (selected.length == 0) {
-                this.colorValue.next(this.lastColor)
-                this.colorIsValid.next(true)
+                this.colorValue.next(this.lastColor);
+                this.colorIsValid.next(true);
             } else if (selected.length == 1) {
-                this.colorValue.next(selected[0].to_small_hex_string())
+                this.colorValue.next(selected[0].to_small_hex_string());
 
-                this.colorIsValid.next(true)
+                this.colorIsValid.next(true);
             } else {
-                this.colorValue.next("#000000")
-                this.colorIsValid.next(false)
+                this.colorValue.next("#000000");
+                this.colorIsValid.next(false);
             }
-        })
+        });
     }
 
     ngAfterViewInit(): void {
         fromEvent(this.colorInput.nativeElement, "input")
             .pipe(takeUntilDestroyed(this._destory))
             .subscribe((event) => {
-                const target = event.target as HTMLInputElement
-                const color = target.value
+                const target = event.target as HTMLInputElement;
+                const color = target.value;
 
-                this.lastColor = color
-                this.selectionService.set_color(
-                    Rgba.from_small_hex_string(color),
-                )
-            })
+                this.lastColor = color;
+                this.selectionService.set_color(Rgba.from_small_hex_string(color));
+            });
 
         let ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {
             alpha: false,
-        }) as CanvasRenderingContext2D
+        }) as CanvasRenderingContext2D;
 
-        ctx.fillStyle = "#FFFFFF"
-        ctx.fillRect(0, 0, 100, 100)
-        ctx.fillStyle = "#000000"
-        ctx.beginPath()
-        ctx.moveTo(0, 0)
-        ctx.lineTo(0, 100)
-        ctx.lineTo(100, 0)
-        ctx.closePath()
-        ctx.fill()
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, 100, 100);
+        ctx.fillStyle = "#000000";
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, 100);
+        ctx.lineTo(100, 0);
+        ctx.closePath();
+        ctx.fill();
     }
 }

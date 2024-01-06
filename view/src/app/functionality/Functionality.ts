@@ -1,13 +1,13 @@
 export abstract class Functionality {
-    abstract inject(): void
-    abstract activate(): void
-    abstract desactivate(): void
-    abstract isActivated(): boolean
+    abstract inject(): void;
+    abstract activate(): void;
+    abstract desactivate(): void;
+    abstract isActivated(): boolean;
     toggle(): void {
         if (this.isActivated()) {
-            this.desactivate()
+            this.desactivate();
         } else {
-            this.activate()
+            this.activate();
         }
     }
 }
