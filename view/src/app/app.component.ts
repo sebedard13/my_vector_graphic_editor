@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, EmbeddedViewRef } from "@angular/core"
 import { EventsService } from "./events.service"
-import { MoveCoordService } from "./move-coord.service"
+import { MoveCoordService } from "./functionality/move-coord"
 
 @Component({
     selector: "app-root",
@@ -8,8 +8,5 @@ import { MoveCoordService } from "./move-coord.service"
     styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
-    constructor(
-        protected eventsService: EventsService,
-        protected moveCoordService: MoveCoordService,
-    ) {}
+    constructor(protected eventsService: EventsService) {}
 }

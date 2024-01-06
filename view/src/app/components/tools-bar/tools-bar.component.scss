@@ -23,12 +23,16 @@
         width: 100%;
         padding: 3px 8px;
         margin: 2px 0;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     label:hover {
         background-color: #181818;
     }
     input:checked + label {
-        background-color: #181818;
+        background-color: #ca8300;
     }
 }
