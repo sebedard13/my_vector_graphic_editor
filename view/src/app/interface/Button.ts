@@ -4,6 +4,7 @@ import { faArrowPointer, faPenNib, faBezierCurve } from "@fortawesome/free-solid
 import { MoveCoordService } from "../functionality/move-coord.service";
 import { inject } from "@angular/core";
 import { AddRemoveCoordService } from "../functionality/add-remove-coord.service";
+import { ToggleHandleService } from "../functionality/toggle-handle.service";
 
 export interface Button {
     title: string;
@@ -19,6 +20,6 @@ export function toolsbarSvgBtn(): Button[] {
             icon: faPenNib,
             functionality: inject(AddRemoveCoordService),
         },
-        { title: "Edit curve", icon: faBezierCurve },
+        { title: "Edit curve", icon: faBezierCurve, functionality: inject(ToggleHandleService) },
     ];
 }

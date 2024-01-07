@@ -98,3 +98,32 @@ pub fn add_or_remove_coord(
         return;
     }
 }
+
+#[wasm_bindgen]
+pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+    let vgc_data = &mut canvas_content.vgc_data;
+    let camera = &mut canvas_content.camera;
+    let x = x as f32;
+    let y = y as f32;
+    let pos = camera.project((x, y));
+
+    let mut to_do: Vec<(usize, usize)> = Vec::new();
+    vgc_data.visit(&mut |shape_index, coord_type| {
+        if let RefCoordType::P1(curve_index, coord) = coord_type {
+            if point_in_radius(
+                &Point::new(coord.x, coord.y),
+                &Point::new(pos.0, pos.1),
+                camera.fixed_length(12.0),
+            ) {
+                to_do.push((shape_index, curve_index));
+            }
+        }
+    });
+
+    for (shape_index, curve_index) in to_do {
+        let shape = vgc_data.get_shape_mut(shape_index);
+        if let Some(shape) = shape {
+            shape.toggle_separate_join_handle(curve_index);
+        }
+    }
+}
