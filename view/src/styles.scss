@@ -35,3 +35,63 @@ input[type="reset"] {
     cursor: pointer;
     outline: inherit;
 }
+
+$spacing: (
+    "0": 0,
+    "1": 0.25rem,
+    "2": 0.5rem,
+    "3": 1rem,
+    "4": 2rem,
+    "5": 4rem,
+);
+
+$side: (
+    "t": top,
+    "r": right,
+    "b": bottom,
+    "l": left,
+);
+
+@each $key, $value in $spacing {
+    @each $sideKey, $sideValue in $side {
+        .m#{$sideKey}-#{$key} {
+            margin-#{$sideValue}: $value;
+        }
+        .p#{$sideKey}-#{$key} {
+            padding-#{$sideValue}: $value;
+        }
+    }
+}
+
+@each $key, $value in $spacing {
+    .m-#{$key} {
+        margin: $value;
+    }
+    .p-#{$key} {
+        padding: $value;
+    }
+}
+
+//x for left and right
+@each $key, $value in $spacing {
+    .mx-#{$key} {
+        margin-left: $value;
+        margin-right: $value;
+    }
+    .px-#{$key} {
+        padding-left: $value;
+        padding-right: $value;
+    }
+}
+
+//y for top and bottom
+@each $key, $value in $spacing {
+    .my-#{$key} {
+        margin-top: $value;
+        margin-bottom: $value;
+    }
+    .py-#{$key} {
+        padding-top: $value;
+        padding-bottom: $value;
+    }
+}
