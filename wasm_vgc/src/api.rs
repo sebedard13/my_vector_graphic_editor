@@ -1,7 +1,13 @@
-use vgc::Rgba;
+use vgc::{
+    coord::{Coord, RefCoordType},
+    Rgba,
+};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::{user_selection::Selected, CanvasContent};
+use crate::{
+    user_selection::{point_in_radius, Selected},
+    CanvasContent, Point,
+};
 
 #[wasm_bindgen]
 pub fn set_color_of(selected: &Selected, canvas_content: &mut CanvasContent, color: Rgba) {
@@ -22,5 +28,73 @@ pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x
             coord.x += x;
             coord.y += y;
         }
+    }
+}
+
+#[wasm_bindgen]
+pub fn add_or_remove_coord(
+    selected: &Selected,
+    canvas_content: &mut CanvasContent,
+    x: f64,
+    y: f64,
+) {
+    let vgc_data = &mut canvas_content.vgc_data;
+    let camera = &mut canvas_content.camera;
+    let x = x as f32;
+    let y = y as f32;
+    let pos = camera.project((x, y));
+    // if click is on a point, remove it
+    let mut to_do: Vec<(usize, usize)> = Vec::new();
+    vgc_data.visit(&mut |shape_index, coord_type| {
+        if let RefCoordType::P1(curve_index, coord) = coord_type {
+            if point_in_radius(
+                &Point::new(coord.x, coord.y),
+                &Point::new(pos.0, pos.1),
+                camera.fixed_length(12.0),
+            ) {
+                to_do.push((shape_index, curve_index));
+            }
+        }
+    });
+    if !to_do.is_empty() {
+        for (shape_index, curve_index) in to_do {
+            let shape = vgc_data.get_shape_mut(shape_index).unwrap();
+            shape.remove_curve(curve_index);
+
+            if shape.is_empty() {
+                vgc_data.remove_shape(shape_index);
+            }
+        }
+
+        return;
+    }
+
+    // if click is on the path of curve, add a point
+    let mut min_distance = std::f32::MAX;
+    let mut min_shape_index = 0;
+    let mut min_curve_index = 0;
+    let mut min_t = 0.0;
+
+    for shape_selected in &selected.shapes {
+        let shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
+
+        let (curve_index, t, distance, _) = shape.closest_curve(&Coord::new(pos.0, pos.1));
+
+        if distance < min_distance {
+            min_distance = distance;
+            min_shape_index = shape_selected.shape_index;
+            min_curve_index = curve_index;
+            min_t = t;
+        }
+    }
+
+    let fixed_length = camera.fixed_length(10.0);
+    if min_distance <= fixed_length {
+        let shape = vgc_data
+            .get_shape_mut(min_shape_index)
+            .expect("Shape is valid because it was selected");
+
+        shape.insert_coord_smooth(min_curve_index, min_t);
+        return;
     }
 }
