@@ -1,19 +1,24 @@
-extend = [{ path = "makefile/lint.toml" }, { path = "makefile/clean.toml" }]
+extend = [
+    { path = "makefile/lint.toml" },
+    { path = "makefile/clean.toml" },
+    { path = "makefile/serve.toml" },
+]
 
+[tasks.install]
+workspace = false
+description = "Install all dependencies"
+script = ["cd view", "npm i"]
 
 #Serve web angular
 [tasks.serve]
 workspace = false
-#TODO : do not serve angular every time
-run_task = [{ name = ["wasm_build_all", "view_serve"] }]
-watch = { no_git_ignore = false, watch = ["./wasm_vgc/", "./vgc/"] }
+description = "Serve angular webapp and watch for changes"
+run_task = [{ name = ["wasm_watch", "view_serve"], parallel = true }]
 
-[tasks.install]
-workspace = false
-run_task = [{ name = ["wasm_build_all", "view_install", "view_serve"] }]
 
 [tasks.lint]
 workspace = false
+description = "Check all lint errors and show them"
 run_task = [
     { name = [
         "cargo_lint",
@@ -24,6 +29,7 @@ run_task = [
 
 [tasks.lint-fix]
 workspace = false
+description = "Fix all lint errors and format code"
 run_task = [
     { name = [
         "cargo_lint_fix",
@@ -31,23 +37,6 @@ run_task = [
         "view_prettier_fix",
     ], parallel = false },
 ]
-
-
-[tasks.wasm_build_all]
-workspace = false
-run_task = [{ name = ["wasm_vgc_build"], parallel = true }]
-
-[tasks.wasm_vgc_build]
-workspace = false
-script = ["cd wasm_vgc", "wasm-pack build --debug"]
-
-[tasks.view_install]
-workspace = false
-script = ["cd view", "npm i"]
-
-[tasks.view_serve]
-workspace = false
-script = ["cd view", "ng serve"]
 
 
 [tasks.clean-all]

@@ -4,7 +4,7 @@ This project reimagined a vector graphic named VGC. At this moment VGC is very l
 
 ## Building
 
-Use rust classic command line ``cargo build --package editor``
+See Makefile commands for more details.
 
 ## Other tools
 
