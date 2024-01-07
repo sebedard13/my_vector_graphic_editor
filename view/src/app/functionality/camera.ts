@@ -15,14 +15,14 @@ export class CameraService extends Functionality {
     }
 
     activate(): void {
-        let zoomEvent = this.eventsService.wheel$
+        const zoomEvent = this.eventsService.wheel$
             .pipe(withLatestFrom(this.sceneService.currentScene$))
             .subscribe(([event, canvasContent]) => {
                 canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY);
             });
         this.subscriptions.push(zoomEvent);
 
-        let moveEvent = this.eventsService.mouseMove$
+        const moveEvent = this.eventsService.mouseMove$
             .pipe(
                 filter((event) => event.buttons == 4),
                 withLatestFrom(this.sceneService.currentScene$),

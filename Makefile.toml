@@ -1,3 +1,5 @@
+extend = "makefile/lint.toml"
+
 #Serve web angular
 [tasks.serve]
 workspace = false
@@ -9,8 +11,15 @@ watch = { no_git_ignore = false, watch = ["./wasm_vgc/", "./vgc/"] }
 workspace = false
 run_task = [{ name = ["wasm_build_all", "view_install", "view_serve"] }]
 
+[tasks.lint]
+workspace = false
+run_task = [{ name = ["view_lint", "view_prettier"], parallel = false }]
 
-#Build and install for serve
+[tasks.lint-fix]
+workspace = false
+run_task = [{ name = ["view_lint_fix", "view_prettier_fix"], parallel = false }]
+
+
 
 [tasks.wasm_build_all]
 workspace = false

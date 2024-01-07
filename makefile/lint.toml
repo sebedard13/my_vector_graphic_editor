@@ -1,0 +1,15 @@
+[tasks.view_lint]
+workspace = false
+script = ["cd view", "npx eslint ."]
+
+[tasks.view_prettier]
+workspace = false
+script = ["cd view", "npx prettier . --check"]
+
+[tasks.view_lint_fix]
+workspace = false
+script = ["cd view", "npx eslint . --fix"]
+
+[tasks.view_prettier_fix]
+workspace = false
+script = ["cd view", "npx prettier . --write"]

@@ -4,8 +4,6 @@ import {
     Component,
     DestroyRef,
     ElementRef,
-    Host,
-    HostListener,
     ViewChild,
     inject,
 } from "@angular/core";
@@ -61,7 +59,7 @@ export class ColorPickerComponent implements AfterViewInit {
                 this.selectionService.set_color(Rgba.from_small_hex_string(color));
             });
 
-        let ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {
+        const ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {
             alpha: false,
         }) as CanvasRenderingContext2D;
 

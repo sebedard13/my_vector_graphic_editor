@@ -1,12 +1,4 @@
-import {
-    OnInit,
-    Component,
-    ElementRef,
-    AfterViewInit,
-    ViewChild,
-    Host,
-    HostListener,
-} from "@angular/core";
+import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
 import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
@@ -50,7 +42,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.ctx = this.canvas.nativeElement.getContext("2d") as CanvasRenderingContext2D;
 
-        this.resizeObserver = new ResizeObserver((entries) => {
+        this.resizeObserver = new ResizeObserver((_) => {
             this.hideCanvas();
             this.canvas.nativeElement.removeAttribute("width");
             this.canvas.nativeElement.removeAttribute("height");
@@ -104,7 +96,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.mouseInfo.mousePos.next({ x: event.offsetX, y: event.offsetY });
 
-        let pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
+        const pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
         this.mouseInfo.normalizedMousePos.next({ x: pt.x, y: pt.y });
 
         //selection
@@ -120,7 +112,7 @@ export class CanvasComponent implements AfterViewInit {
         this.eventService.wheel.next(event);
 
         this.mouseInfo.zoom.next(this.canvasContent.get_zoom());
-        let pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
+        const pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
         this.mouseInfo.normalizedMousePos.next({ x: pt.x, y: pt.y });
     }
 
@@ -130,11 +122,11 @@ export class CanvasComponent implements AfterViewInit {
 
         if (event.buttons == 1) {
             if (event.shiftKey) {
-                let point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
+                const point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
                 this.selectionService.selection.add_selection(this.canvasContent, point);
                 this.selectionService.selectionHasChanged.next();
             } else {
-                let point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
+                const point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
                 this.selectionService.selection.change_selection(this.canvasContent, point);
                 this.selectionService.selectionHasChanged.next();
             }

@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { Rgba, Selected, set_color_of } from "wasm-vgc";
 import { ScenesService } from "./scenes.service";
 
@@ -16,7 +16,7 @@ export class SelectionService {
     constructor(private scenesService: ScenesService) {
         this.selectionHasChanged.asObservable().subscribe(() => {
             this.scenesService.currentScene$.subscribe((scene) => {
-                let selectedColors = this.selection.get_selected_colors(scene);
+                const selectedColors = this.selection.get_selected_colors(scene);
                 this.selectedColor$.next(selectedColors);
             });
         });

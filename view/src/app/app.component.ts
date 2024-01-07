@@ -1,7 +1,6 @@
 import { Component } from "@angular/core";
 import { EventsService } from "./events.service";
 import { CameraService } from "./functionality/camera";
-import { filter } from "rxjs";
 
 @Component({
     selector: "app-root",
@@ -10,7 +9,7 @@ import { filter } from "rxjs";
 })
 export class AppComponent {
     constructor(protected eventsService: EventsService) {
-        let camera = new CameraService();
+        const camera = new CameraService();
         camera.inject();
         camera.activate();
     }
