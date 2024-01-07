@@ -1,15 +1,20 @@
 import { Subscription, filter, withLatestFrom } from "rxjs";
-import { Functionality } from "./Functionality";
 import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
-import { inject } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
+import { Functionality } from "./functionality";
 
+@Injectable({
+    providedIn: "root",
+})
 export class CameraService extends Functionality {
     private subscriptions: Subscription[] = [];
     private eventsService!: EventsService;
     private sceneService!: ScenesService;
 
-    inject(): void {
+    constructor() {
+        super();
+
         this.eventsService = inject(EventsService);
         this.sceneService = inject(ScenesService);
     }

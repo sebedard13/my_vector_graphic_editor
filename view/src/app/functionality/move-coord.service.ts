@@ -1,18 +1,23 @@
-import { inject } from "@angular/core";
+import { Injectable, inject } from "@angular/core";
 import { EventsService } from "../events.service";
 import { move_coords_of } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
 import { Subscription, withLatestFrom } from "rxjs";
 import { SelectionService } from "../selection.service";
-import { Functionality } from "./Functionality";
+import { Functionality } from "./functionality";
 
+
+@Injectable({
+    providedIn: "root",
+})
 export class MoveCoordService extends Functionality {
     private subscription: Subscription | null = null;
     private eventsService!: EventsService;
     private sceneService!: ScenesService;
     private selectionService!: SelectionService;
 
-    inject(): void {
+    constructor() {
+        super();
         this.eventsService = inject(EventsService);
         this.sceneService = inject(ScenesService);
         this.selectionService = inject(SelectionService);
