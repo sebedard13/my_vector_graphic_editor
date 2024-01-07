@@ -127,3 +127,16 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y
         }
     }
 }
+
+#[wasm_bindgen]
+pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+    let vgc_data = &mut canvas_content.vgc_data;
+    let camera = &mut canvas_content.camera;
+    let x = x as f32;
+    let y = y as f32;
+
+    if let Some(pos) = camera.project_in_canvas((x, y)) {
+        // if click create a new shape on point and ready to new point
+        vgc::create_circle(vgc_data, Coord::new(pos.0, pos.1), 0.1);
+    }
+}

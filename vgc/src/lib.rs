@@ -312,7 +312,7 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
         coord.x *= radius;
-        coord.y *= radius;
+        coord.y *= radius * canvas.ratio as f32;
         coord.x += center.x;
         coord.y += center.y;
     }
