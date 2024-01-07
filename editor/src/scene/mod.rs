@@ -68,7 +68,7 @@ impl Default for Scene {
             ],
         ]);
 
-                Self {
+        Self {
             draw_cache: Cache::default(),
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data,

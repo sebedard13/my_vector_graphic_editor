@@ -51,9 +51,9 @@ impl Coord {
         dx * dx + dy * dy
     }
 
-    pub fn scale(&self, move_x: f32, move_y: f32, scale_x: f32, scale_y: f32, ) -> Coord {
+    pub fn scale(&self, move_x: f32, move_y: f32, scale_x: f32, scale_y: f32) -> Coord {
         Coord {
-            x: self.x * scale_x+ move_x,
+            x: self.x * scale_x + move_x,
             y: self.y * scale_y + move_y,
         }
     }

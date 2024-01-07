@@ -121,7 +121,7 @@ impl Camera {
         );
     }
 
-    pub fn fixed_2d_length(&self, movement: (f32, f32))-> (f32, f32){
+    pub fn fixed_2d_length(&self, movement: (f32, f32)) -> (f32, f32) {
         let transform = self.get_transform();
 
         let x = movement.0 / transform.2;
