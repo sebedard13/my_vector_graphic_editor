@@ -3,7 +3,7 @@ import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
 import { SelectionService } from "src/app/selection.service";
-import { CanvasContent, Point, SelectedLevel, draw, draw_closest_pt, render } from "wasm-vgc";
+import { CanvasContent, Point, draw, draw_closest_pt, render } from "wasm-vgc";
 
 @Component({
     selector: "app-canvas",
@@ -94,11 +94,6 @@ export class CanvasComponent implements AfterViewInit {
     public onMouseMove(event: MouseEvent) {
         if (this.canvasContent == null) return;
 
-        const pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
-
-        //selection
-        this.selectionService.selection.change_hover(this.canvasContent, pt);
-
         this.eventService.mouseMove.next(event);
     }
 
@@ -113,22 +108,6 @@ export class CanvasComponent implements AfterViewInit {
     public onMouseDown(event: MouseEvent) {
         if (this.canvasContent == null) return;
 
-        if (event.buttons == 1) {
-            if (event.shiftKey) {
-                const point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
-                this.selectionService.selection.add_selection(this.canvasContent, point);
-                this.selectionService.selectionHasChanged.next();
-            } else {
-                const point = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
-                this.selectionService.selection.change_selection(this.canvasContent, point);
-                this.selectionService.selectionHasChanged.next();
-            }
-        }
-    }
-
-    @HostListener("window:keydown.code.esc")
-    public onEsc() {
-        this.selectionService.selection.clear_to_level(SelectedLevel.None);
-        this.selectionService.selectionHasChanged.next();
+        this.eventService.mouseDown.next(event);
     }
 }

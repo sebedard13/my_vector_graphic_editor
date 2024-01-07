@@ -5,18 +5,21 @@ import { Subject } from "rxjs";
     providedIn: "root",
 })
 export class EventsService {
-    private keyCodeSubject = new Subject<string>();
-    public keyCode$ = this.keyCodeSubject.asObservable();
+    private keydown = new Subject<KeyboardEvent>();
+    public keydown$ = this.keydown.asObservable();
 
     public mouseMove = new Subject<MouseEvent>();
     public mouseMove$ = this.mouseMove.asObservable();
+
+    public mouseDown = new Subject<MouseEvent>();
+    public mouseDown$ = this.mouseDown.asObservable();
 
     public wheel = new Subject<WheelEvent>();
     public wheel$ = this.wheel.asObservable();
 
     constructor() {
         document.addEventListener("keydown", (event: KeyboardEvent) => {
-            this.keyCodeSubject.next(event.key);
+            this.keydown.next(event);
         });
     }
 }
