@@ -1,4 +1,13 @@
-import { Subscription, filter, withLatestFrom } from "rxjs";
+import {
+    ReplaySubject,
+    Subject,
+    Subscription,
+    filter,
+    map,
+    shareReplay,
+    take,
+    withLatestFrom,
+} from "rxjs";
 import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
 import { Injectable, inject } from "@angular/core";
@@ -12,11 +21,29 @@ export class CameraService extends Functionality {
     private eventsService!: EventsService;
     private sceneService!: ScenesService;
 
+    private zoomChange = new Subject<void>();
+    private zoom = new ReplaySubject<number>(1);
+    public zoom$ = this.zoom.asObservable();
     constructor() {
         super();
 
         this.eventsService = inject(EventsService);
         this.sceneService = inject(ScenesService);
+
+        this.zoomChange
+            .asObservable()
+            .pipe(
+                withLatestFrom(this.sceneService.currentScene$),
+                map(([_, scene]) => scene.get_zoom()),
+                shareReplay(1),
+            )
+            .subscribe((zoom) => {
+                this.zoom.next(zoom);
+            });
+
+        this.sceneService.currentScene$.pipe(take(1)).subscribe((_) => {
+            this.zoomChange.next();
+        });
     }
 
     activate(): void {
@@ -24,6 +51,7 @@ export class CameraService extends Functionality {
             .pipe(withLatestFrom(this.sceneService.currentScene$))
             .subscribe(([event, canvasContent]) => {
                 canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY);
+                this.zoomChange.next();
             });
         this.subscriptions.push(zoomEvent);
 

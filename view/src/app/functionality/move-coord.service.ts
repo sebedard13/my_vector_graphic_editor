@@ -6,7 +6,6 @@ import { Subscription, withLatestFrom } from "rxjs";
 import { SelectionService } from "../selection.service";
 import { Functionality } from "./functionality";
 
-
 @Injectable({
     providedIn: "root",
 })

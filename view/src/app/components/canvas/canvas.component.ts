@@ -20,7 +20,7 @@ export class CanvasComponent implements AfterViewInit {
     private mouseCoords: { x: number; y: number } | null = null;
 
     constructor(
-        private mouseInfo: MouseInfoService,
+        mouseInfo: MouseInfoService,
         scenesService: ScenesService,
         private selectionService: SelectionService,
         private eventService: EventsService,
@@ -29,7 +29,7 @@ export class CanvasComponent implements AfterViewInit {
             this.canvasContent = scene;
         });
 
-        mouseInfo.mousePos.subscribe((coords) => {
+        mouseInfo.mousePos$.subscribe((coords) => {
             this.mouseCoords = coords;
         });
     }
@@ -94,10 +94,7 @@ export class CanvasComponent implements AfterViewInit {
     public onMouseMove(event: MouseEvent) {
         if (this.canvasContent == null) return;
 
-        this.mouseInfo.mousePos.next({ x: event.offsetX, y: event.offsetY });
-
         const pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
-        this.mouseInfo.normalizedMousePos.next({ x: pt.x, y: pt.y });
 
         //selection
         this.selectionService.selection.change_hover(this.canvasContent, pt);
@@ -110,10 +107,6 @@ export class CanvasComponent implements AfterViewInit {
         if (this.canvasContent == null) return;
 
         this.eventService.wheel.next(event);
-
-        this.mouseInfo.zoom.next(this.canvasContent.get_zoom());
-        const pt = this.canvasContent.get_project_mouse(event.offsetX, event.offsetY);
-        this.mouseInfo.normalizedMousePos.next({ x: pt.x, y: pt.y });
     }
 
     @HostListener("mousedown", ["$event"])
