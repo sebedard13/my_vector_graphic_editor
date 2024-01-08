@@ -10,6 +10,7 @@ import { RightBarComponent } from "./components/right-bar/right-bar.component";
 import { ColorPickerComponent } from "./components/right-bar/color-picker/color-picker.component";
 import { EventsService } from "./events.service";
 import { MouseInfoComponent } from "./mouse-info/mouse-info/mouse-info.component";
+import { SaveLoadComponent } from "./save-load/save-load.component";
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import { MouseInfoComponent } from "./mouse-info/mouse-info/mouse-info.component
         RightBarComponent,
         ColorPickerComponent,
         MouseInfoComponent,
+        SaveLoadComponent,
     ],
     imports: [BrowserModule, AppRoutingModule, FontAwesomeModule],
     providers: [EventsService],
