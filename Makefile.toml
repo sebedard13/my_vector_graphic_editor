@@ -2,18 +2,36 @@ extend = [
     { path = "makefile/lint.toml" },
     { path = "makefile/clean.toml" },
     { path = "makefile/serve.toml" },
+    { path = "makefile/build.toml" },
 ]
 
-[tasks.install]
+[tasks.build-view]
 workspace = false
-description = "Install all dependencies"
-script = ["cd view", "npm i"]
+description = "Build production angular webapp"
+run_task = [
+    { name = [
+        "wasm_build",
+        "view_npm_install",
+        "view_build",
+    ], parallel = false },
+]
+
+[tasks.build-desktop]
+workspace = false
+description = "Build desktop application and installer and webapp"
+run_task = [
+    { name = [
+        "wasm_build",
+        "view_npm_install",
+        "tauri_build",
+    ], parallel = false },
+]
 
 #Serve web angular
 [tasks.serve]
 workspace = false
 description = "Serve angular webapp and watch for changes"
-run_task = [{ name = ["wasm_watch", "view_serve"], parallel = true }]
+run_task = [{ name = ["install", "serve_watch"], parallel = false }]
 
 
 [tasks.lint]

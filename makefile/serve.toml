@@ -1,3 +1,8 @@
+[tasks.install]
+workspace = false
+description = "Install all dependencies"
+script = ["cd view", "npm i"]
+
 [tasks.wasm_watch]
 workspace = false
 script = ["cd wasm_vgc", "wasm-pack build --debug"]
@@ -10,3 +15,8 @@ watch = { no_git_ignore = false, watch = [
 [tasks.view_serve]
 workspace = false
 script = ["cd view", "ng serve"]
+
+
+[tasks.serve_watch]
+workspace = false
+run_task = { name = ["wasm_watch", "view_serve"], parallel = true }
