@@ -57,7 +57,7 @@ export class CameraService extends Functionality {
 
         const moveEvent = this.eventsService.mouseMove$
             .pipe(
-                filter((event) => event.buttons == 4),
+                filter((event) => event.buttons == 4 || event.shiftKey && event.buttons == 1),
                 withLatestFrom(this.sceneService.currentScene$),
             )
             .subscribe(([event, canvasContent]) => {

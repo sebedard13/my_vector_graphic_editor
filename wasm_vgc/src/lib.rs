@@ -5,6 +5,7 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
+use js_sys::Date;
 use vgc::{coord::Coord, Vgc};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
@@ -34,6 +35,8 @@ pub struct CanvasContent {
     pub vgc_data: Vgc,
     #[wasm_bindgen(skip)]
     pub camera: Camera,
+    #[wasm_bindgen(skip)]
+    pub uuid: String,
 }
 
 #[wasm_bindgen]
@@ -69,6 +72,10 @@ impl CanvasContent {
     pub fn pan_camera(&mut self, x: f32, y: f32) {
         self.camera.handle_pan((x, y));
     }
+
+    pub fn get_uuid(&self) -> String {
+        self.uuid.clone()
+    }
 }
 
 impl Default for CanvasContent {
@@ -94,6 +101,7 @@ impl Default for CanvasContent {
         Self {
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data,
+            uuid: Date::now().to_string(),
         }
     }
 }

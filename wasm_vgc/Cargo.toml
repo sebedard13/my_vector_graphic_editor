@@ -16,7 +16,8 @@ path = "src/lib.rs"
 # code size when deploying.
 console_error_panic_hook = { version = "0.1.7", optional = true }
 js-sys = { version = "0.3.66" }
-wasm-bindgen = { version = "0.2.89", features = ["serde-serialize"] }
+wasm-bindgen = { version = "0.2.89" }
+postcard = {version = "1.0.7", features = ["alloc"] }
 vgc = { path = "../vgc" }
 
 [dev-dependencies]

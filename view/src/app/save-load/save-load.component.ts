@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { ScenesService } from "../scenes.service";
 
 @Component({
     selector: "app-save-load",
@@ -6,4 +7,7 @@ import { ChangeDetectionStrategy, Component } from "@angular/core";
     styleUrl: "./save-load.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SaveLoadComponent {}
+export class SaveLoadComponent {
+
+    constructor(protected scenesService: ScenesService){}
+}

@@ -1,13 +1,15 @@
-use vgc::{
-    coord::{Coord, RefCoordType},
-    Rgba,
-};
-use wasm_bindgen::prelude::wasm_bindgen;
-
 use crate::{
+    camera::Camera,
     user_selection::{point_in_radius, Selected},
     CanvasContent, Point,
 };
+use js_sys::{Uint8Array, Date};
+use postcard::{from_bytes, to_allocvec};
+use vgc::{
+    coord::{Coord, RefCoordType},
+    Rgba, Vgc,
+};
+use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
 pub fn set_color_of(selected: &Selected, canvas_content: &mut CanvasContent, color: Rgba) {
@@ -139,4 +141,22 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f
         // if click create a new shape on point and ready to new point
         vgc::create_circle(vgc_data, Coord::new(pos.0, pos.1), 0.1);
     }
+}
+
+#[wasm_bindgen]
+pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
+    let vgc_data =
+        from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
+    let camera = Camera::new(vgc_data.ratio as f32);
+    return CanvasContent {
+        vgc_data,
+        camera,
+        uuid: Date::now().to_string(),
+    };
+}
+
+#[wasm_bindgen]
+pub fn save_to_arraybuffer(canvas_content: &CanvasContent) -> Vec<u8> {
+    let vec = to_allocvec::<Vgc>(&canvas_content.vgc_data).expect("Serialization should be valid");
+    return vec;
 }

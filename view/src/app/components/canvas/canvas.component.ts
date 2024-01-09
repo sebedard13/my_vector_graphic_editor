@@ -27,6 +27,10 @@ export class CanvasComponent implements AfterViewInit {
     ) {
         scenesService.currentScene$.subscribe((scene) => {
             this.canvasContent = scene;
+            this.canvasContent.set_pixel_region(
+                this.canvas.nativeElement.width,
+                this.canvas.nativeElement.height,
+            );
         });
 
         mouseInfo.mousePos$.subscribe((coords) => {
@@ -64,6 +68,8 @@ export class CanvasComponent implements AfterViewInit {
 
     public render() {
         if (this.canvasContent == null) return;
+
+        console.log("render" + this.canvasContent.get_uuid());
 
         render(this.ctx, this.canvasContent);
 
