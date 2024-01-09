@@ -1,0 +1,6 @@
+<label for="color-picker" [class.is-valid]="colorIsValid$ | async">
+    <div class="color" [style.background-color]="colorValue$ | async"></div>
+
+    <div class="invalid-color"><canvas #canvasInvalidColor width="100" height="100"></canvas></div>
+</label>
+<input #colorInput type="color" name="color" [value]="colorValue$ | async" id="color-picker" />

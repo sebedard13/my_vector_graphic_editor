@@ -5,14 +5,14 @@ use crate::coord::Coord;
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
-pub use render::VgcRenderer;
+pub use common::Rgba;
 #[cfg(feature = "tiny-skia")]
 pub use render::TinySkiaRenderer;
-pub use fill::Rgba;
+pub use render::VgcRenderer;
 
 pub mod coord;
 mod curve;
-mod fill;
+
 pub mod render;
 
 #[cfg(feature = "serialization")]
@@ -55,20 +55,11 @@ impl Vgc {
         self.shapes.get_mut(index_shape)
     }
 
-    pub fn render_w<T>(&self, renderer: &mut T, width: u32) -> Result<(), String>
+    pub fn render<T>(&self, renderer: &mut T) -> Result<(), String>
     where
         T: render::VgcRenderer,
     {
-        let h = ((width as f64) * (1.0 / self.ratio)) as u32;
-        render::render_true(self, renderer, width, h)
-    }
-
-    pub fn render_h<T>(&self, renderer: &mut T, height: u32) -> Result<(), String>
-    where
-        T: render::VgcRenderer,
-    {
-        let w = ((height as f64) * (self.ratio)) as u32;
-        render::render_true(self, renderer, w, height)
+        render::render_true(self, renderer)
     }
 
     pub fn visit(&self, f: &mut dyn FnMut(usize, RefCoordType)) {
@@ -321,7 +312,7 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
         coord.x *= radius;
-        coord.y *= radius;
+        coord.y *= radius * canvas.ratio as f32;
         coord.x += center.x;
         coord.y += center.y;
     }

@@ -1,0 +1,32 @@
+[tasks.cargo_lint]
+workspace = false
+script = ["cargo check"]
+
+[tasks.cargo_lint_fix]
+workspace = false
+run_task = [{ name = ["cargo_lint_check_fix", "cargo_fmt"], parallel = false }]
+
+[tasks.cargo_lint_check_fix]
+workspace = false
+script = ["cargo fix --allow-dirty --allow-staged"]
+
+[tasks.cargo_fmt]
+workspace = false
+script = ["cargo fmt"]
+
+
+[tasks.view_lint]
+workspace = false
+script = ["cd view", "npx eslint ."]
+
+[tasks.view_prettier]
+workspace = false
+script = ["cd view", "npx prettier . --check"]
+
+[tasks.view_lint_fix]
+workspace = false
+script = ["cd view", "npx eslint . --fix"]
+
+[tasks.view_prettier_fix]
+workspace = false
+script = ["cd view", "npx prettier . --write"]

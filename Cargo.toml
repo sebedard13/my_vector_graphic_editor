@@ -1,2 +1,2 @@
 [workspace]
-members = ["vgc", "editor"]
+members = ["common", "vgc", "desktop", "wasm_vgc"]

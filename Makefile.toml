@@ -1,0 +1,49 @@
+extend = [
+    { path = "makefile/lint.toml" },
+    { path = "makefile/clean.toml" },
+    { path = "makefile/serve.toml" },
+]
+
+[tasks.install]
+workspace = false
+description = "Install all dependencies"
+script = ["cd view", "npm i"]
+
+#Serve web angular
+[tasks.serve]
+workspace = false
+description = "Serve angular webapp and watch for changes"
+run_task = [{ name = ["wasm_watch", "view_serve"], parallel = true }]
+
+
+[tasks.lint]
+workspace = false
+description = "Check all lint errors and show them"
+run_task = [
+    { name = [
+        "cargo_lint",
+        "view_lint",
+        "view_prettier",
+    ], parallel = false },
+]
+
+[tasks.lint-fix]
+workspace = false
+description = "Fix all lint errors and format code"
+run_task = [
+    { name = [
+        "cargo_lint_fix",
+        "view_lint_fix",
+        "view_prettier_fix",
+    ], parallel = false },
+]
+
+
+[tasks.clean-all]
+workspace = false
+description = "Clean all unnecessary files"
+run_task = { name = [
+    "view_clean",
+    "wasm_clean",
+    "cargo_clean",
+], parallel = true }

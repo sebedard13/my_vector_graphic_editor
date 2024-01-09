@@ -1,0 +1,25 @@
+import { Injectable } from "@angular/core";
+import { Subject } from "rxjs";
+
+@Injectable({
+    providedIn: "root",
+})
+export class EventsService {
+    private keydown = new Subject<KeyboardEvent>();
+    public keydown$ = this.keydown.asObservable();
+
+    public mouseMove = new Subject<MouseEvent>();
+    public mouseMove$ = this.mouseMove.asObservable();
+
+    public mouseDown = new Subject<MouseEvent>();
+    public mouseDown$ = this.mouseDown.asObservable();
+
+    public wheel = new Subject<WheelEvent>();
+    public wheel$ = this.wheel.asObservable();
+
+    constructor() {
+        document.addEventListener("keydown", (event: KeyboardEvent) => {
+            this.keydown.next(event);
+        });
+    }
+}

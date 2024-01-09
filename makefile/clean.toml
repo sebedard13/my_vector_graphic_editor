@@ -1,0 +1,48 @@
+[tasks.cargo_clean]
+workspace = false
+command = "cargo"
+args = ["clean"]
+
+
+[tasks.view_clean]
+workspace = false
+run_task = [
+    { name = "view_clean_win", condition = { platforms = [
+        "windows",
+    ] } },
+    { name = "view_clean_unix", condition = { platforms = [
+        "mac",
+        "linux",
+    ] } },
+]
+
+[tasks.view_clean_unix]
+workspace = false
+command = "rm"
+args = ["-rf", "view/node_modules"]
+
+[tasks.view_clean_win]
+workspace = false
+script = "if exist \"view/node_modules\" rmdir /s /q \"view/node_modules\""
+
+
+[tasks.wasm_clean]
+workspace = false
+run_task = [
+    { name = "wasm_clean_win", condition = { platforms = [
+        "windows",
+    ] } },
+    { name = "wasm_clean_unix", condition = { platforms = [
+        "mac",
+        "linux",
+    ] } },
+]
+
+[tasks.wasm_clean_unix]
+workspace = false
+command = "rm"
+args = ["-rf", "wasm_vgc/pkg"]
+
+[tasks.wasm_clean_win]
+workspace = false
+script = "if exist \"wasm_vgc/pkg\" rmdir /s /q \"wasm_vgc/pkg\""

@@ -1,0 +1,12 @@
+[tasks.wasm_watch]
+workspace = false
+script = ["cd wasm_vgc", "wasm-pack build --debug"]
+watch = { no_git_ignore = false, watch = [
+    "./wasm_vgc/",
+    "./vgc/",
+    "./common/",
+] }
+
+[tasks.view_serve]
+workspace = false
+script = ["cd view", "ng serve"]
