@@ -1,21 +1,5 @@
-.left {
+.action {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
-    flex-direction: column;
-    height: 100%;
-
-
-    div {
-        height: auto;
-    }
-    input {
-        display: none;
-    }
-
-    .action{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
 }

@@ -1,13 +1,14 @@
-<div class="left bg br">
+<div class="h-100 bg br">
     <div *ngFor="let button of buttons; let i = index">
         <input
+            class="sr-only"
             type="radio"
             id="btn-id-{{ i }}"
             name="btn-toolsbar"
             [attr.checked]="i === 0 ? true : null"
             (change)="onclick(button)"
         />
-        <label title="{{ button.title }}" class="action p-1 w-100" for="btn-id-{{ i }}"
+        <label title="{{ button.title }}" class="action p-2 w-100" for="btn-id-{{ i }}"
             ><fa-icon [icon]="button.icon"></fa-icon
         ></label>
     </div>

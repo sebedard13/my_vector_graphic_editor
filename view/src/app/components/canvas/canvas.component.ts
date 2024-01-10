@@ -1,5 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
-import { animationFrames, map, merge, take, withLatestFrom } from "rxjs";
+import { animationFrames, map, merge, of, take, withLatestFrom } from "rxjs";
 import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
@@ -21,20 +21,20 @@ export class CanvasComponent implements AfterViewInit {
         private scenesService: ScenesService,
         private selectionService: SelectionService,
         private eventService: EventsService,
-    ) {
-        scenesService.currentScene$.subscribe((scene) => {
-            scene.set_pixel_region(
-                this.canvas.nativeElement.width,
-                this.canvas.nativeElement.height,
-            );
-        });
-    }
+    ) {}
 
     ngAfterViewInit(): void {
         const width = this.canvas.nativeElement.offsetWidth;
         const height = this.canvas.nativeElement.offsetHeight;
         this.canvas.nativeElement.width = width;
         this.canvas.nativeElement.height = height;
+
+        this.scenesService.currentScene$.subscribe((scene) => {
+            scene.set_pixel_region(
+                this.canvas.nativeElement.width,
+                this.canvas.nativeElement.height,
+            );
+        });
 
         this.ctx = this.canvas.nativeElement.getContext("2d") as CanvasRenderingContext2D;
 
@@ -62,6 +62,7 @@ export class CanvasComponent implements AfterViewInit {
                 withLatestFrom(
                     this.scenesService.currentScene$,
                     merge(
+                        of(null),
                         this.mouseInfo.mousePos$,
                         this.eventService.mouseLeave$.pipe(map(() => null)),
                     ),

@@ -30,7 +30,7 @@ button {
     }
 }
 
-input:checked + label {
+input:checked + label.action {
     background-color: $accent;
 }
 
