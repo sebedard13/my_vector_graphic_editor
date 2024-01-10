@@ -3,17 +3,14 @@
 
     .top-row {
         height: 50px;
-        background: #1a1a1a;
     }
 
     .main {
         .left {
             width: 100px;
-            background: #1a1a1a;
 
             button {
                 height: 25px;
-                background: aliceblue;
             }
         }
         app-canvas {

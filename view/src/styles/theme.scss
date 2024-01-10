@@ -1,0 +1,37 @@
+$bg: #242424;
+$darker: #1b1919;
+$accent: #f26742;
+
+$text: #f0efee;
+
+body {
+    background-color: $bg;
+    color: $text;
+    font-family: sans-serif;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.bg {
+    background-color: $bg;
+}
+
+.action,
+button {
+    cursor: pointer;
+    &:hover {
+        background-color: $darker;
+    }
+    &:active {
+        background-color: darken($darker, $amount: 2%);
+    }
+    &.checked {
+        background-color: $accent;
+    }
+}
+
+input:checked + label {
+    background-color: $accent;
+}
+
+$border: 2px solid $darker;

@@ -1,15 +1,15 @@
-<div class="left">
-    <div
-        *ngFor="let button of buttons; let i = index"
-        (click)="onclick(button)"
-        title="{{ button.title }}"
-    >
+<div class="left bg br">
+    <div *ngFor="let button of buttons; let i = index">
         <input
             type="radio"
             id="btn-id-{{ i }}"
             name="btn-toolsbar"
             [attr.checked]="i === 0 ? true : null"
+            (change)="onclick(button)"
         />
-        <label for="btn-id-{{ i }}"><fa-icon [icon]="button.icon"></fa-icon></label>
+        <label title="{{ button.title }}" class="action p-1 w-100" for="btn-id-{{ i }}"
+            ><fa-icon [icon]="button.icon"></fa-icon
+        ></label>
     </div>
+    <app-color-picker class="w-100"></app-color-picker>
 </div>

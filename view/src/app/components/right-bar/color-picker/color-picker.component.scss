@@ -10,6 +10,10 @@ input {
 }
 
 label {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1/1;
+
     .color {
         display: none;
     }
@@ -24,9 +28,6 @@ label {
     }
 
     div {
-        width: 100px;
-        height: 100px;
-        margin: 5px;
         cursor: pointer;
     }
 }

@@ -1,6 +1,4 @@
-<div class="p-1 container">
-    <label for="input-load" class="px-2">Load</label>
-    <input type="button" id="input-load" (click)="scenesService.loadSceneFromFile()" />
-    <label for="input-save" class="px-2">Save</label>
-    <input type="button" id="input-save" (click)="scenesService.saveSceneToFile()" />
+<div class="container">
+    <button (click)="scenesService.loadSceneFromFile()" class="px-1 h-100">Load</button>
+    <button (click)="scenesService.saveSceneToFile()" class="px-1 h-100">Save</button>
 </div>
