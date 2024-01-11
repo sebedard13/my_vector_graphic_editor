@@ -10,6 +10,7 @@ import { ColorPickerComponent } from "./components/color-picker/color-picker.com
 import { EventsService } from "./events.service";
 import { MouseInfoComponent } from "./mouse-info/mouse-info/mouse-info.component";
 import { SaveLoadComponent } from "./save-load/save-load.component";
+import { SceneSelectorComponent } from "./components/scene-selector/scene-selector.component";
 
 @NgModule({
     declarations: [
@@ -19,6 +20,7 @@ import { SaveLoadComponent } from "./save-load/save-load.component";
         ColorPickerComponent,
         MouseInfoComponent,
         SaveLoadComponent,
+        SceneSelectorComponent,
     ],
     imports: [BrowserModule, AppRoutingModule, FontAwesomeModule],
     providers: [EventsService],

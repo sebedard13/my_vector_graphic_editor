@@ -1,21 +1,60 @@
 import { Injectable } from "@angular/core";
-import { Observable, ReplaySubject } from "rxjs";
+import { BehaviorSubject, Observable, combineLatest, mergeMap, of, take, throwError } from "rxjs";
 import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-vgc";
 
 @Injectable({
     providedIn: "root",
 })
 export class ScenesService {
-    private indexScene: number | null = null;
-    private scenes: CanvasContent[] = [];
+    private indexCurrentSceneSubject = new BehaviorSubject<number | null>(null);
+    public currentScene$: Observable<CanvasContent>;
 
-    private currentSceneSubject = new ReplaySubject<CanvasContent>(1);
-    public currentScene$: Observable<CanvasContent> = this.currentSceneSubject.asObservable();
+    private scenesSubject = new BehaviorSubject<CanvasContent[]>([]);
+    public scenes$: Observable<CanvasContent[]> = this.scenesSubject.asObservable();
+
+    public scenesList$: Observable<{ canvas: CanvasContent; isCurrent: boolean }[]>;
 
     constructor() {
-        this.scenes.push(new CanvasContent());
-        this.indexScene = 0;
-        this.currentSceneSubject.next(this.scenes[this.indexScene]);
+        this.scenesSubject.next([new CanvasContent()]);
+        this.currentScene$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
+            mergeMap(([scenes, index]) => {
+                if (index === null) {
+                    return throwError(() => new Error("No valid current scene, end the pipe"));
+                }
+                return of(scenes[index]);
+            }),
+        );
+        this.indexCurrentSceneSubject.next(0);
+
+        this.scenesList$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
+            mergeMap(([scenes, index]) => {
+                if (index === null) {
+                    return throwError(() => new Error("No valid current scene, end the pipe"));
+                }
+
+                return of(
+                    scenes.map((canvas, i) => {
+                        return {
+                            canvas,
+                            isCurrent: i === index,
+                        };
+                    }),
+                );
+            }),
+        );
+    }
+
+    public setCurrentScene(index: number): void {
+        if (index < 0) {
+            return;
+        }
+        if (index >= this.scenesSubject.getValue().length) {
+            return;
+        }
+        if (index === this.indexCurrentSceneSubject.getValue()) {
+            return;
+        }
+        this.indexCurrentSceneSubject.next(index);
     }
 
     public loadSceneFromFile(): void {
@@ -30,10 +69,12 @@ export class ScenesService {
                 reader.onload = () => {
                     const buffer = reader.result as ArrayBuffer;
                     const canvasContent = load_from_arraybuffer(new Uint8Array(buffer));
+                    canvasContent.set_name(file.name);
 
-                    this.scenes[0] = canvasContent;
-                    this.indexScene = this.scenes.length - 1;
-                    this.currentSceneSubject.next(this.scenes[this.indexScene]);
+                    const scenes = this.scenesSubject.getValue();
+                    scenes.push(canvasContent);
+                    this.scenesSubject.next(scenes);
+                    this.indexCurrentSceneSubject.next(scenes.length - 1);
                 };
                 reader.readAsArrayBuffer(file);
             }
@@ -42,18 +83,14 @@ export class ScenesService {
     }
 
     public saveSceneToFile(): void {
-        if (this.indexScene === null) {
-            return;
-        }
+        this.currentScene$.pipe(take(1)).subscribe((canvasContent) => {
+            const array = save_to_arraybuffer(canvasContent);
+            const url = URL.createObjectURL(new Blob([array]));
 
-        const canvasContent = this.scenes[this.indexScene];
-
-        const array = save_to_arraybuffer(canvasContent);
-        const url = URL.createObjectURL(new Blob([array]));
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "scene.vgc";
-        a.click();
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = canvasContent.get_name() + ".vgc";
+            a.click();
+        });
     }
 }

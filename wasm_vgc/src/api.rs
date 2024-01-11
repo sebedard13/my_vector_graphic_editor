@@ -3,7 +3,7 @@ use crate::{
     user_selection::{point_in_radius, Selected},
     CanvasContent, Point,
 };
-use js_sys::{Uint8Array, Date};
+use js_sys::{Date, Uint8Array};
 use postcard::{from_bytes, to_allocvec};
 use vgc::{
     coord::{Coord, RefCoordType},
@@ -152,6 +152,7 @@ pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
         vgc_data,
         camera,
         uuid: Date::now().to_string(),
+        name: "Untitled".to_string(),
     };
 }
 

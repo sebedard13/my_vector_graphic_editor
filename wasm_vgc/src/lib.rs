@@ -37,6 +37,9 @@ pub struct CanvasContent {
     pub camera: Camera,
     #[wasm_bindgen(skip)]
     pub uuid: String,
+
+    #[wasm_bindgen(skip)]
+    pub name: String,
 }
 
 #[wasm_bindgen]
@@ -76,6 +79,14 @@ impl CanvasContent {
     pub fn get_uuid(&self) -> String {
         self.uuid.clone()
     }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
 }
 
 impl Default for CanvasContent {
@@ -102,6 +113,7 @@ impl Default for CanvasContent {
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data,
             uuid: Date::now().to_string(),
+            name: "Untitled".to_string(),
         }
     }
 }

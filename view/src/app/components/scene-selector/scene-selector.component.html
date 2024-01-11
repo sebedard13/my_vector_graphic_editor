@@ -1,0 +1,11 @@
+<div class="bg row w-100 px-2">
+    @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
+        <button
+            class="p-2 action"
+            [class.active]="scene.isCurrent"
+            (click)="scenesService.setCurrentScene(i)"
+        >
+            {{ scene.canvas.get_name() }}
+        </button>
+    }
+</div>

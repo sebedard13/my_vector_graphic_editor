@@ -18,6 +18,11 @@ export class SelectionService {
         private scenesService: ScenesService,
         eventsService: EventsService,
     ) {
+        this.scenesService.currentScene$.subscribe((_) => {
+            this.selection = new Selected();
+            this.selectionHasChanged.next();
+        });
+
         this.selectionHasChanged.asObservable().subscribe(() => {
             this.scenesService.currentScene$.subscribe((scene) => {
                 const selectedColors = this.selection.get_selected_colors(scene);

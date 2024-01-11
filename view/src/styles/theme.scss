@@ -22,10 +22,12 @@ button {
     &:hover {
         background-color: $darker;
     }
-    &:active {
+    &:active,
+    &:focus {
         background-color: darken($darker, $amount: 2%);
     }
-    &.checked {
+    &.checked,
+    &.active {
         background-color: $accent;
     }
 }
