@@ -8,7 +8,12 @@
             "schematics": {
                 "@schematics/angular:component": {
                     "style": "scss",
-                    "changeDetection": "OnPush"
+                    "changeDetection": "OnPush",
+                    "standalone": false,
+                    "skipTests": true
+                },
+                "@schematics/angular:service": {
+                    "skipTests": true
                 }
             },
             "root": "",

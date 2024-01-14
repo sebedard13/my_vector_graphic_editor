@@ -1,3 +1,19 @@
 .top-row {
     font-size: 0.75rem;
 }
+
+.modal {
+    top: 0;
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+
+    align-items: center;
+    justify-content: center;
+
+    .modal-content {
+        width: 50vw;
+        height: 80vh;
+    }
+}

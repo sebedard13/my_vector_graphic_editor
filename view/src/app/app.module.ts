@@ -11,6 +11,9 @@ import { EventsService } from "./events.service";
 import { MouseInfoComponent } from "./mouse-info/mouse-info/mouse-info.component";
 import { SaveLoadComponent } from "./save-load/save-load.component";
 import { SceneSelectorComponent } from "./components/scene-selector/scene-selector.component";
+import { NewSceneComponent } from "./new-scene/new-scene.component";
+import { NumberInputComponent } from "./number-input/number-input.component";
+import { FormsModule } from "@angular/forms";
 
 @NgModule({
     declarations: [
@@ -21,8 +24,10 @@ import { SceneSelectorComponent } from "./components/scene-selector/scene-select
         MouseInfoComponent,
         SaveLoadComponent,
         SceneSelectorComponent,
+        NewSceneComponent,
+        NumberInputComponent,
     ],
-    imports: [BrowserModule, AppRoutingModule, FontAwesomeModule],
+    imports: [BrowserModule, AppRoutingModule, FontAwesomeModule, FormsModule],
     providers: [EventsService],
     bootstrap: [AppComponent],
 })

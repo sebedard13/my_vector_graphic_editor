@@ -23,7 +23,7 @@ button {
         background-color: $darker;
     }
     &:active,
-    &:focus {
+    &:focus-visible {
         background-color: darken($darker, $amount: 2%);
     }
     &.checked,
