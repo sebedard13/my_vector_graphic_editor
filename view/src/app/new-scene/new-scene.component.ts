@@ -9,14 +9,19 @@ import { Observable, Subject } from "rxjs";
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewSceneComponent implements ModalComponent {
-    public private = new Subject<unknown>();
+    public private = new Subject<void>();
 
     protected width = 1280;
     protected height = 720;
     protected ratio = (1280 / 720).toFixed(3);
     protected name = "New Scene";
+    protected keepRatio = false;
 
-    closeModal(): Observable<unknown> {
+    protected closeModal(){
+        this.private.next();
+    }
+
+    closeModal$(): Observable<unknown> {
         return this.private.asObservable();
     }
 }

@@ -1,8 +1,16 @@
-import { AfterViewInit, Component, Type, ViewChild, ViewContainerRef } from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    ComponentRef,
+    Type,
+    ViewChild,
+    ViewContainerRef,
+} from "@angular/core";
 import { EventsService } from "./events.service";
 import { CameraService } from "./functionality/camera.service";
-import { ModalService } from "./modal.service";
+import { ModalComponent, ModalService } from "./modal.service";
 import { NewSceneComponent } from "./new-scene/new-scene.component";
+import { map } from "rxjs";
 
 @Component({
     selector: "app-root",
@@ -11,6 +19,16 @@ import { NewSceneComponent } from "./new-scene/new-scene.component";
 })
 export class AppComponent implements AfterViewInit {
     @ViewChild("modalContainer", { read: ViewContainerRef }) modalContainer!: ViewContainerRef;
+    currentComponent: ComponentRef<ModalComponent> | null = null;
+
+    protected showModal$ = this.modalService.getModalObservable().pipe(
+        map((data) => {
+            if (data) {
+                return true;
+            }
+            return false;
+        }),
+    );
 
     constructor(
         protected eventsService: EventsService,
@@ -19,18 +37,34 @@ export class AppComponent implements AfterViewInit {
     ) {
         cameraService.activate();
         this.modalService.getModalObservable().subscribe((data) => {
-            this.loadModalComponent(data);
+            if (data) {
+                this.loadModalComponent(data);
+            } else {
+                this.removeModal();
+            }
         });
     }
 
     ngAfterViewInit(): void {
-        this.modalService.showModal(NewSceneComponent);
+        setTimeout(() => {
+            console.log("show modal");
+
+            this.modalService.showModal(NewSceneComponent);
+        }, 10);
     }
 
-    private loadModalComponent(component: Type<unknown>) {
-        const currentComponent = this.modalContainer.createComponent(component);
+    private removeModal() {
+        this.currentComponent!.destroy();
+        this.currentComponent = null;
+    }
+
+    private loadModalComponent(component: Type<ModalComponent>) {
+        this.currentComponent = this.modalContainer.createComponent(component);
         this.modalContainer.element.nativeElement.appendChild(
-            currentComponent.location.nativeElement,
+            this.currentComponent.location.nativeElement,
         );
+        this.currentComponent.instance.closeModal$().subscribe(() => {
+            this.modalService.closeModal();
+        });
     }
 }

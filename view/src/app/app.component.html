@@ -11,6 +11,7 @@
         </div>
     </div>
 </div>
-<div class="modal">
+
+<div class="modal" [class.d-none]="(showModal$ | async) === false">
     <div #modalContainer class="modal-content"></div>
 </div>

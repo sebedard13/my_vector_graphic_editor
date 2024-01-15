@@ -36,4 +36,16 @@ input:checked + label.action {
     background-color: $accent;
 }
 
-$border: 2px solid $darker;
+$border: 2px solid rgb(130, 125, 125);
+
+input {
+    background-color: $darker;
+    border: $border;
+    color: $text;
+    width: 100%;
+
+    &:focus, &:focus-visible{
+        outline: none;
+        border-color: $accent;
+    }
+}
