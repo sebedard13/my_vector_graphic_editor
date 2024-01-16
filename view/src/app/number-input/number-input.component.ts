@@ -35,11 +35,15 @@ export class NumberInputComponent {
 
         this.inputValue = this.numberToString(this.numberValue);
 
-        this.valueChange.emit(this.value);
+        this.valueChange.emit(this.numberValue);
     }
 
     private numberToString(value: number): string {
-        return value.toString();
+        let toString = value.toString();
+        if (toString.includes(".") && toString.length - toString.indexOf(".") > 3) {
+            toString = value.toFixed(3);
+        }
+        return toString;
     }
 
     private doMath(operation: string): number {
