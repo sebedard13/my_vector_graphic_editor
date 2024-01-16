@@ -1,5 +1,4 @@
 import {
-    AfterViewInit,
     Component,
     ComponentRef,
     Type,
@@ -9,7 +8,6 @@ import {
 import { EventsService } from "./events.service";
 import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
-import { NewSceneComponent } from "./new-scene/new-scene.component";
 import { map } from "rxjs";
 
 @Component({
@@ -17,7 +15,7 @@ import { map } from "rxjs";
     templateUrl: "./app.component.html",
     styleUrls: ["./app.component.scss"],
 })
-export class AppComponent implements AfterViewInit {
+export class AppComponent {
     @ViewChild("modalContainer", { read: ViewContainerRef }) modalContainer!: ViewContainerRef;
     currentComponent: ComponentRef<ModalComponent> | null = null;
 
@@ -43,14 +41,6 @@ export class AppComponent implements AfterViewInit {
                 this.removeModal();
             }
         });
-    }
-
-    ngAfterViewInit(): void {
-        setTimeout(() => {
-            console.log("show modal");
-
-            this.modalService.showModal(NewSceneComponent);
-        }, 10);
     }
 
     private removeModal() {

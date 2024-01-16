@@ -1,5 +1,5 @@
 import { Injectable, Type } from "@angular/core";
-import { Observable, Subject } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 
 export interface ModalComponent {
     closeModal$(): Observable<unknown>;
@@ -9,7 +9,7 @@ export interface ModalComponent {
     providedIn: "root",
 })
 export class ModalService {
-    private modalSubject = new Subject<Type<ModalComponent> | null>();
+    private modalSubject = new BehaviorSubject<Type<ModalComponent> | null>(null);
 
     showModal(component: Type<ModalComponent>) {
         this.modalSubject.next(component);
