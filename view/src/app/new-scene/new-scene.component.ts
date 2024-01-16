@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from "@angular/core";
+import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { ModalComponent } from "../modal.service";
 import { Observable, Subject } from "rxjs";
+import { ScenesService } from "../scenes.service";
 
 @Component({
     selector: "app-new-scene",
@@ -16,6 +17,8 @@ export class NewSceneComponent implements ModalComponent {
     protected ratio = 1280 / 720;
     protected name = "New Scene";
     protected keepRatio = false;
+
+    private scenesService = inject(ScenesService);
 
     protected closeModal() {
         this.private.next();
@@ -47,6 +50,11 @@ export class NewSceneComponent implements ModalComponent {
     protected ratioChange() {
         this.keepRatio = false;
         this.height = this.width / this.ratio;
+    }
+
+    protected createScene() {
+        this.scenesService.addNewScene(this.width, this.height, this.name);
+        this.closeModal();
     }
 
     closeModal$(): Observable<unknown> {

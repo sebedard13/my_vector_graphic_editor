@@ -15,7 +15,7 @@ export class ScenesService {
     public scenesList$: Observable<{ canvas: CanvasContent; isCurrent: boolean }[]>;
 
     constructor() {
-        this.scenesSubject.next([new CanvasContent()]);
+        this.scenesSubject.next([CanvasContent.default_call()]);
         this.currentScene$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
             mergeMap(([scenes, index]) => {
                 if (index === null) {
@@ -92,5 +92,15 @@ export class ScenesService {
             a.download = canvasContent.get_name() + ".vgc";
             a.click();
         });
+    }
+
+    public addNewScene(width: number, height: number, name: string) {
+        const canvasContent = new CanvasContent(width, height);
+        canvasContent.set_name(name);
+
+        const scenes = this.scenesSubject.getValue();
+        scenes.push(canvasContent);
+        this.scenesSubject.next(scenes);
+        this.indexCurrentSceneSubject.next(scenes.length - 1);
     }
 }

@@ -45,7 +45,30 @@ pub struct CanvasContent {
 #[wasm_bindgen]
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> CanvasContent {
+    pub fn new(width: f32, height: f32) -> CanvasContent {
+        let mut vgc_data = vgc::generate_from_line(vec![vec![
+            Coord { x: 0.0, y: 0.0 },
+            Coord { x: 0.0, y: 1.0 },
+            Coord { x: 1.0, y: 1.0 },
+            Coord { x: 1.0, y: 0.0 },
+        ]]);
+
+        let shape = vgc_data.get_shape_mut(0).expect("Valid");
+        shape.color.r = 255;
+        shape.color.g = 255;
+        shape.color.b = 255;
+
+        vgc_data.ratio = (width / height) as f64;
+        Self {
+            camera: Camera::new(vgc_data.ratio as f32),
+            vgc_data,
+            uuid: Date::now().to_string(),
+            name: "Untitled".to_string(),
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn default_call() -> CanvasContent {
         CanvasContent::default()
     }
 
