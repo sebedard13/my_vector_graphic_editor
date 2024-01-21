@@ -5,46 +5,45 @@
             <input [(ngModel)]="name" type="text" name="file-name" id="file-name" />
         </div>
         <div class="row gap-2">
-            <div class="gap-1 w-100">
-                <label for="width">Width</label>
-                <app-number-input
-                    id="width"
-                    [(value)]="width"
-                    (valueChange)="widthChange()"
-                ></app-number-input>
-            </div>
-            <div class="gap-1 w-100">
-                <label for="height">Height</label>
-                <app-number-input
-                    id="height"
-                    [(value)]="height"
-                    (valueChange)="heightChange()"
-                ></app-number-input>
-            </div>
-        </div>
-        <div class="btn-switch">
-            <button class="p-1" (click)="switchOrientation()">Switch Orientation</button>
-        </div>
-        <div class="row gap-2">
-            <div class="gap-1 w-100">
-                <label for="ratio">Ratio</label>
-                <app-number-input
-                    id="ratio"
-                    [(value)]="ratio"
-                    (valueChange)="ratioChange()"
-                ></app-number-input>
-            </div>
-            <div class="gap-1 row p-1 checkbox-label-container w-100">
-                <div class="checkbox-container">
-                    <input
-                        [(ngModel)]="keepRatio"
-                        type="checkbox"
-                        name="keep-ratio"
-                        id="keep-ratio"
-                    />
+            <div class="gap-2 w-100">
+                <div class="gap-1 w-100">
+                    <label for="width">Width</label>
+                    <app-number-input
+                        id="width"
+                        [(value)]="width"
+                        (valueChange)="widthChange()"
+                        [precisionShown]="0"
+                    ></app-number-input>
                 </div>
+                <div class="gap-1 w-100">
+                    <label for="height">Height</label>
+                    <app-number-input
+                        id="height"
+                        [(value)]="height"
+                        (valueChange)="heightChange()"
+                        [precisionShown]="0"
+                    ></app-number-input>
+                </div>
+            </div>
+            <div class="gap-2 aside-width-height">
+                <div class="gap-1 mt-2 row p-1 checkbox-label-container">
+                    <div class="checkbox-container m-1">
+                        <input
+                            [(ngModel)]="keepRatio"
+                            type="checkbox"
+                            name="keep-ratio"
+                            id="keep-ratio"
+                        />
+                    </div>
 
-                <label for="keep-ratio">Keep ratio</label>
+                    <label for="keep-ratio" class="pr-1"
+                        >Lock aspect ratio of <br />
+                        {{ ratioFaction }}</label
+                    >
+                </div>
+                <div class="btn-switch">
+                    <button class="p-2" (click)="switchOrientation()">Switch Orientation</button>
+                </div>
             </div>
         </div>
     </div>

@@ -16,6 +16,9 @@ export class NumberInputComponent {
         this.numberValue = value;
         this.inputValue = this.numberToString(this.numberValue);
     }
+
+    @Input() precisionShown = 3;
+
     @Output() valueChange = new EventEmitter<number>();
 
     protected inputValue!: string;
@@ -40,8 +43,11 @@ export class NumberInputComponent {
 
     private numberToString(value: number): string {
         let toString = value.toString();
-        if (toString.includes(".") && toString.length - toString.indexOf(".") > 3) {
-            toString = value.toFixed(3);
+        if (
+            toString.includes(".") &&
+            toString.length - toString.indexOf(".") > this.precisionShown
+        ) {
+            toString = value.toFixed(this.precisionShown);
         }
         return toString;
     }
@@ -55,8 +61,14 @@ export class NumberInputComponent {
 
         const value = parse(operation);
 
+        if (isNaN(value)) {
+            throw new Error("Could not parse string : " + operation);
+        }
+
         return value;
     }
+
+   
 }
 
 function parse(str: string): number {

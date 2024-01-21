@@ -14,7 +14,8 @@ export class NewSceneComponent implements ModalComponent {
 
     protected width = 1280;
     protected height = 720;
-    protected ratio = 1280 / 720;
+    protected ratio = this.width / this.height;
+    protected ratioFaction = smallestFraction(this.width, this.height);
     protected name = "New Scene";
     protected keepRatio = false;
 
@@ -29,6 +30,7 @@ export class NewSceneComponent implements ModalComponent {
         this.width = this.height;
         this.height = tmp;
         this.ratio = this.width / this.height;
+        this.ratioFaction = smallestFraction(this.width, this.height);
     }
 
     protected widthChange() {
@@ -36,6 +38,7 @@ export class NewSceneComponent implements ModalComponent {
             this.height = this.width / this.ratio;
         } else {
             this.ratio = this.width / this.height;
+            this.ratioFaction = smallestFraction(this.width, this.height);
         }
     }
 
@@ -44,6 +47,7 @@ export class NewSceneComponent implements ModalComponent {
             this.width = this.height * this.ratio;
         } else {
             this.ratio = this.width / this.height;
+            this.ratioFaction = smallestFraction(this.width, this.height);
         }
     }
 
@@ -60,4 +64,20 @@ export class NewSceneComponent implements ModalComponent {
     closeModal$(): Observable<unknown> {
         return this.private.asObservable();
     }
+}
+
+function smallestFraction(numerator: number, denominator: number): string {
+    const divisor = gcd(numerator, denominator);
+    const n = numerator / divisor;
+    const d = denominator / divisor;
+    const result = n + "/" + d;
+    return result;
+}
+
+function gcd(numerator: number, denominator: number): number {
+    if (denominator === 0) {
+        return numerator;
+    }
+
+    return gcd(denominator, numerator % denominator);
 }
