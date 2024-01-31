@@ -5,7 +5,7 @@ extend = [
     { path = "makefile/build.toml" },
 ]
 
-[tasks.build-view]
+[tasks.build-web]
 workspace = false
 description = "Build production angular webapp"
 run_task = [
