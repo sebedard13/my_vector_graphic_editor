@@ -4,12 +4,12 @@ import { ModalService } from "../modal.service";
 import { NewSceneComponent } from "../new-scene/new-scene.component";
 
 @Component({
-    selector: "app-save-load",
-    templateUrl: "./save-load.component.html",
-    styleUrl: "./save-load.component.scss",
+    selector: "app-menu-bar",
+    templateUrl: "./menu-bar.component.html",
+    styleUrl: "./menu-bar.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SaveLoadComponent {
+export class MenuBarComponent {
     constructor(
         protected scenesService: ScenesService,
         private modalService: ModalService,

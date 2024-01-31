@@ -9,7 +9,7 @@ import { CanvasComponent } from "./components/canvas/canvas.component";
 import { ColorPickerComponent } from "./components/color-picker/color-picker.component";
 import { EventsService } from "./events.service";
 import { MouseInfoComponent } from "./mouse-info/mouse-info/mouse-info.component";
-import { SaveLoadComponent } from "./save-load/save-load.component";
+import { MenuBarComponent } from "./menu-bar/menu-bar.component";
 import { SceneSelectorComponent } from "./components/scene-selector/scene-selector.component";
 import { NewSceneComponent } from "./new-scene/new-scene.component";
 import { NumberInputComponent } from "./number-input/number-input.component";
@@ -22,7 +22,7 @@ import { FormsModule } from "@angular/forms";
         CanvasComponent,
         ColorPickerComponent,
         MouseInfoComponent,
-        SaveLoadComponent,
+        MenuBarComponent,
         SceneSelectorComponent,
         NewSceneComponent,
         NumberInputComponent,
