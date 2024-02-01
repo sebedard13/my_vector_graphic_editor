@@ -110,6 +110,10 @@ impl CanvasContent {
     pub fn set_name(&mut self, name: String) {
         self.name = name;
     }
+
+    pub fn get_ratio(&self) -> f64 {
+        self.vgc_data.ratio
+    }
 }
 
 impl Default for CanvasContent {
@@ -163,6 +167,33 @@ pub fn render(
         canvas_content.camera.pixel_region.2 as f64,
         canvas_content.camera.pixel_region.3 as f64,
     );
+    let result = vgc.render(&mut ctx_2d_renderer);
+    match result {
+        Err(string) => {
+            return Err(JsValue::from_str(&string));
+        }
+        _ => {}
+    };
+
+    Ok(())
+}
+
+#[wasm_bindgen]
+pub fn render_full(
+    ctx: &CanvasRenderingContext2d,
+    canvas_content: &CanvasContent,
+    width: f64,
+    height: f64,
+) -> Result<(), JsValue> {
+    let vgc = &canvas_content.vgc_data;
+
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(
+        ctx,
+        (0.0, 0.0),
+        width,
+        height,
+    );
+
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {
         Err(string) => {
