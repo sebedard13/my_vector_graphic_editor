@@ -1,0 +1,18 @@
+.scene-selector {
+    display: flex;
+    align-items: center;
+}
+
+.close-scene {
+    aspect-ratio: 1;
+    opacity: 0;
+    font-size: small;
+    &:hover {
+        opacity: 1;
+        background-color: rgba(24, 24, 24, 0.3);
+    }
+}
+
+.scene-selector.active .close-scene {
+    opacity: 1;
+}

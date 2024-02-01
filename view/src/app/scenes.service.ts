@@ -1,5 +1,15 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, combineLatest, mergeMap, of, take, throwError } from "rxjs";
+import {
+    BehaviorSubject,
+    EMPTY,
+    Observable,
+    combineLatest,
+    empty,
+    mergeMap,
+    of,
+    take,
+    throwError,
+} from "rxjs";
 import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-vgc";
 
 @Injectable({
@@ -19,7 +29,7 @@ export class ScenesService {
         this.currentScene$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
             mergeMap(([scenes, index]) => {
                 if (index === null) {
-                    return throwError(() => new Error("No valid current scene, end the pipe"));
+                    return EMPTY;
                 }
                 return of(scenes[index]);
             }),
@@ -29,7 +39,8 @@ export class ScenesService {
         this.scenesList$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
             mergeMap(([scenes, index]) => {
                 if (index === null) {
-                    return throwError(() => new Error("No valid current scene, end the pipe"));
+                    //return throwError(() => new Error("No valid current scene, end the pipe"));
+                    return EMPTY; // return empty array instead of error
                 }
 
                 return of(
@@ -55,6 +66,22 @@ export class ScenesService {
             return;
         }
         this.indexCurrentSceneSubject.next(index);
+    }
+
+    public removeScene(index: number) {
+        const scenes = this.scenesSubject.getValue();
+        const deleted = scenes.splice(index, 1);
+        this.scenesSubject.next(scenes);
+
+        deleted[0].free();
+
+        if (index === this.indexCurrentSceneSubject.getValue()) {
+            let newIndex: number | null = index - 1;
+            if (newIndex < 0) {
+                newIndex = null;
+            }
+            this.indexCurrentSceneSubject.next(newIndex);
+        }
     }
 
     public loadSceneFromFile(): void {
