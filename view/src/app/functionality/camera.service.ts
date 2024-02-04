@@ -1,13 +1,4 @@
-import {
-    ReplaySubject,
-    Subject,
-    Subscription,
-    filter,
-    map,
-    shareReplay,
-    take,
-    withLatestFrom,
-} from "rxjs";
+import { ReplaySubject, Subject, Subscription, filter, map, shareReplay } from "rxjs";
 import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
 import { Injectable, inject } from "@angular/core";
@@ -33,35 +24,39 @@ export class CameraService extends Functionality {
         this.zoomChange
             .asObservable()
             .pipe(
-                withLatestFrom(this.sceneService.currentScene$),
-                map(([_, scene]) => scene.get_zoom()),
+                map((_) => {
+                    const scene = this.sceneService.currentScene();
+                    if (scene == null) {
+                        return -1;
+                    }
+                    return scene.get_zoom();
+                }),
                 shareReplay(1),
             )
             .subscribe((zoom) => {
                 this.zoom.next(zoom);
             });
 
-        this.sceneService.currentScene$.pipe(take(1)).subscribe((_) => {
+        this.sceneService.currentSceneChange$.subscribe((_) => {
             this.zoomChange.next();
         });
     }
 
     activate(): void {
-        const zoomEvent = this.eventsService.wheel$
-            .pipe(withLatestFrom(this.sceneService.currentScene$))
-            .subscribe(([event, canvasContent]) => {
+        const zoomEvent = this.eventsService.wheel$.subscribe((event) => {
+            this.sceneService.currentSceneNow((canvasContent) => {
                 canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY);
                 this.zoomChange.next();
             });
+        });
         this.subscriptions.push(zoomEvent);
 
         const moveEvent = this.eventsService.mouseMove$
-            .pipe(
-                filter((event) => event.buttons == 4 || event.shiftKey && event.buttons == 1),
-                withLatestFrom(this.sceneService.currentScene$),
-            )
-            .subscribe(([event, canvasContent]) => {
-                canvasContent.pan_camera(event.movementX, event.movementY);
+            .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
+            .subscribe((event) => {
+                this.sceneService.currentSceneNow((canvasContent) => {
+                    canvasContent.pan_camera(event.movementX, event.movementY);
+                });
             });
         this.subscriptions.push(moveEvent);
     }

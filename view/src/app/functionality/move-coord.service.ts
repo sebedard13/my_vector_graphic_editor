@@ -2,7 +2,7 @@ import { Injectable, inject } from "@angular/core";
 import { EventsService } from "../events.service";
 import { move_coords_of } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
-import { Subscription, withLatestFrom } from "rxjs";
+import { Subscription } from "rxjs";
 import { SelectionService } from "../selection.service";
 import { Functionality } from "./functionality";
 
@@ -23,9 +23,8 @@ export class MoveCoordService extends Functionality {
     }
 
     activate(): void {
-        this.subscription = this.eventsService.mouseMove$
-            .pipe(withLatestFrom(this.sceneService.currentScene$))
-            .subscribe(([event, canvas]) => {
+        this.subscription = this.eventsService.mouseMove$.subscribe((event) => {
+            this.sceneService.currentSceneNow((canvas) => {
                 if (event.buttons === 1) {
                     move_coords_of(
                         this.selectionService.selection,
@@ -35,6 +34,7 @@ export class MoveCoordService extends Functionality {
                     );
                 }
             });
+        });
     }
 
     desactivate(): void {

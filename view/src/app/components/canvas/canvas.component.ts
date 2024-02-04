@@ -1,5 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
-import { animationFrames, map, merge, of, take, withLatestFrom } from "rxjs";
+import { animationFrames, map, merge, of, withLatestFrom } from "rxjs";
 import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
@@ -29,11 +29,13 @@ export class CanvasComponent implements AfterViewInit {
         this.canvas.nativeElement.width = width;
         this.canvas.nativeElement.height = height;
 
-        this.scenesService.currentScene$.subscribe((scene) => {
-            scene.set_pixel_region(
-                this.canvas.nativeElement.width,
-                this.canvas.nativeElement.height,
-            );
+        this.scenesService.currentSceneChange$.subscribe(() => {
+            this.scenesService.currentSceneNow((scene) => {
+                scene.set_pixel_region(
+                    this.canvas.nativeElement.width,
+                    this.canvas.nativeElement.height,
+                );
+            });
         });
 
         this.ctx = this.canvas.nativeElement.getContext("2d") as CanvasRenderingContext2D;
@@ -46,7 +48,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth;
                 this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
 
-                this.scenesService.currentScene$.pipe(take(1)).subscribe((scene) => {
+                this.scenesService.currentSceneNow((scene) => {
                     scene.set_pixel_region(
                         this.canvas.nativeElement.width,
                         this.canvas.nativeElement.height,
@@ -60,7 +62,6 @@ export class CanvasComponent implements AfterViewInit {
         animationFrames()
             .pipe(
                 withLatestFrom(
-                    this.scenesService.currentScene$,
                     merge(
                         of(null),
                         this.mouseInfo.mousePos$,
@@ -68,8 +69,10 @@ export class CanvasComponent implements AfterViewInit {
                     ),
                 ),
             )
-            .subscribe(([_, canvasContent, mouseInfo]) => {
-                this.render(canvasContent, mouseInfo);
+            .subscribe(([_, mouseInfo]) => {
+                this.scenesService.currentSceneNow((canvasContent) => {
+                    this.render(canvasContent, mouseInfo);
+                });
             });
     }
 

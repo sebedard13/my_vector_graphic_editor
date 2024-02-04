@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable, Subject, map, withLatestFrom } from "rxjs";
+import { Observable, Subject, map } from "rxjs";
 import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
 
@@ -18,8 +18,12 @@ export class MouseInfoService {
         });
 
         this.normalizedMousePos$ = this.mousePos$.pipe(
-            withLatestFrom(scenesService.currentScene$),
-            map(([coords, scene]) => {
+            map((coords) => {
+                const scene = scenesService.currentScene();
+                if (!scene) {
+                    return { x: Infinity, y: Infinity };
+                }
+
                 return scene.get_project_mouse(coords.x, coords.y);
             }),
         );

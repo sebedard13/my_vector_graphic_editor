@@ -1,15 +1,5 @@
 import { Injectable } from "@angular/core";
-import {
-    BehaviorSubject,
-    EMPTY,
-    Observable,
-    combineLatest,
-    empty,
-    mergeMap,
-    of,
-    take,
-    throwError,
-} from "rxjs";
+import { BehaviorSubject, Observable, combineLatest, map, mergeMap, of } from "rxjs";
 import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-vgc";
 
 @Injectable({
@@ -17,32 +7,22 @@ import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-
 })
 export class ScenesService {
     private indexCurrentSceneSubject = new BehaviorSubject<number | null>(null);
-    public currentScene$: Observable<CanvasContent>;
-
     private scenesSubject = new BehaviorSubject<CanvasContent[]>([]);
+
     public scenes$: Observable<CanvasContent[]> = this.scenesSubject.asObservable();
+
+    public currentSceneChange$: Observable<void> = this.indexCurrentSceneSubject.pipe(
+        map(() => {}),
+    );
 
     public scenesList$: Observable<{ canvas: CanvasContent; isCurrent: boolean }[]>;
 
     constructor() {
         this.scenesSubject.next([CanvasContent.default_call()]);
-        this.currentScene$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
-            mergeMap(([scenes, index]) => {
-                if (index === null) {
-                    return EMPTY;
-                }
-                return of(scenes[index]);
-            }),
-        );
         this.indexCurrentSceneSubject.next(0);
 
         this.scenesList$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
             mergeMap(([scenes, index]) => {
-                if (index === null) {
-                    //return throwError(() => new Error("No valid current scene, end the pipe"));
-                    return EMPTY; // return empty array instead of error
-                }
-
                 return of(
                     scenes.map((canvas, i) => {
                         return {
@@ -110,7 +90,7 @@ export class ScenesService {
     }
 
     public saveSceneToFile(): void {
-        this.currentScene$.pipe(take(1)).subscribe((canvasContent) => {
+        this.currentSceneNow((canvasContent) => {
             const array = save_to_arraybuffer(canvasContent);
             const url = URL.createObjectURL(new Blob([array]));
 
@@ -129,5 +109,27 @@ export class ScenesService {
         scenes.push(canvasContent);
         this.scenesSubject.next(scenes);
         this.indexCurrentSceneSubject.next(scenes.length - 1);
+    }
+
+
+
+    public currentSceneNow(callback: (canvasContent: CanvasContent) => void) {
+        const indexScene = this.indexCurrentSceneSubject.getValue();
+        const scenes = this.scenesSubject.getValue();
+        if (indexScene === null || scenes.length === 0) {
+            return;
+        }
+
+        return callback(scenes[indexScene]);
+    }
+
+    public currentScene(): CanvasContent | null{
+        const indexScene = this.indexCurrentSceneSubject.getValue();
+        const scenes = this.scenesSubject.getValue();
+        if (indexScene === null || scenes.length === 0) {
+            return null;
+        }
+
+        return scenes[indexScene];
     }
 }

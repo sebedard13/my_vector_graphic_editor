@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../events.service";
-import { Subscription, withLatestFrom } from "rxjs";
+import { Subscription } from "rxjs";
 import { add_or_remove_coord } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
 import { SelectionService } from "../selection.service";
@@ -21,9 +21,8 @@ export class AddRemoveCoordService extends Functionality {
     }
 
     activate(): void {
-        const addRemove = this.eventsService.mouseDown$
-            .pipe(withLatestFrom(this.sceneService.currentScene$))
-            .subscribe(([event, canvasContent]) => {
+        const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
+            this.sceneService.currentSceneNow((canvasContent) => {
                 if (event.buttons == 1) {
                     add_or_remove_coord(
                         this.selectionService.selection,
@@ -33,6 +32,7 @@ export class AddRemoveCoordService extends Functionality {
                     );
                 }
             });
+        });
         this.subscriptions.push(addRemove);
     }
 
