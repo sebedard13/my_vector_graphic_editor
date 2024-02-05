@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable, combineLatest, map, mergeMap, of } from "rxjs";
+import { environment } from "src/environments/environment";
 import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-vgc";
 
 @Injectable({
@@ -19,8 +20,10 @@ export class ScenesService {
     public scenesList$: Observable<{ canvas: CanvasContent; isCurrent: boolean }[]>;
 
     constructor() {
-        this.scenesSubject.next([CanvasContent.default_call()]);
-        this.indexCurrentSceneSubject.next(0);
+        if (environment.openWithTestScenes) {
+            this.scenesSubject.next([CanvasContent.default_call()]);
+            this.indexCurrentSceneSubject.next(0);
+        }
 
         this.scenesList$ = combineLatest([this.scenes$, this.indexCurrentSceneSubject]).pipe(
             mergeMap(([scenes, index]) => {
@@ -112,8 +115,6 @@ export class ScenesService {
         this.indexCurrentSceneSubject.next(scenes.length - 1);
     }
 
-
-
     public currentSceneNow(callback: (canvasContent: CanvasContent) => void) {
         const indexScene = this.indexCurrentSceneSubject.getValue();
         const scenes = this.scenesSubject.getValue();
@@ -124,7 +125,7 @@ export class ScenesService {
         return callback(scenes[indexScene]);
     }
 
-    public currentScene(): CanvasContent | null{
+    public currentScene(): CanvasContent | null {
         const indexScene = this.indexCurrentSceneSubject.getValue();
         const scenes = this.scenesSubject.getValue();
         if (indexScene === null || scenes.length === 0) {
