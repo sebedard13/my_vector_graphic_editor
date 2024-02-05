@@ -1,20 +1,22 @@
 @if (scenesService.hasScenes$ | async) {
-    <div class="bg row w-100 bg bb">
-        @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
-            <button
-                class="p-2 action scene-selector gap-1"
-                [class.active]="scene.isCurrent"
-                (click)="scenesService.setCurrentScene(i)"
-            >
-                {{ scene.canvas.get_name() }}
-                <button class="p-1 action close-scene" (click)="scenesService.removeScene(i)">
-                    <fa-icon [icon]="faXmark"></fa-icon>
+    <div class="h-100">
+        <div class="bg row w-100 bg bb">
+            @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
+                <button
+                    class="p-2 action scene-selector gap-1"
+                    [class.active]="scene.isCurrent"
+                    (click)="scenesService.setCurrentScene(i)"
+                >
+                    {{ scene.canvas.get_name() }}
+                    <button class="p-1 action close-scene" (click)="scenesService.removeScene(i)">
+                        <fa-icon [icon]="faXmark"></fa-icon>
+                    </button>
                 </button>
-            </button>
-        }
-    </div>
+            }
+        </div>
 
-    <app-canvas class="w-100 h-100"></app-canvas>
+        <app-canvas class="w-100 h-100"></app-canvas>
+    </div>
 } @else {
     <div class="w-100 h-100 p-2 empty-scene">
         <div class="row">
