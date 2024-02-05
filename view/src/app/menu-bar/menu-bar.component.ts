@@ -7,7 +7,6 @@ import { RenderService } from "../render.service";
 @Component({
     selector: "app-menu-bar",
     templateUrl: "./menu-bar.component.html",
-    styleUrl: "./menu-bar.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MenuBarComponent {
