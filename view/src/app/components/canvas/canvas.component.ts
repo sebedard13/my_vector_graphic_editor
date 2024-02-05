@@ -1,4 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
+import { animationFrames, map, merge, of, withLatestFrom } from "rxjs";
 import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
@@ -15,34 +16,27 @@ export class CanvasComponent implements AfterViewInit {
     private resizeObserver: ResizeObserver | undefined;
     private ctx!: CanvasRenderingContext2D;
 
-    private canvasContent: CanvasContent | null = null;
-
-    private mouseCoords: { x: number; y: number } | null = null;
-
     constructor(
-        mouseInfo: MouseInfoService,
-        scenesService: ScenesService,
+        private mouseInfo: MouseInfoService,
+        private scenesService: ScenesService,
         private selectionService: SelectionService,
         private eventService: EventsService,
-    ) {
-        scenesService.currentScene$.subscribe((scene) => {
-            this.canvasContent = scene;
-            this.canvasContent.set_pixel_region(
-                this.canvas.nativeElement.width,
-                this.canvas.nativeElement.height,
-            );
-        });
-
-        mouseInfo.mousePos$.subscribe((coords) => {
-            this.mouseCoords = coords;
-        });
-    }
+    ) {}
 
     ngAfterViewInit(): void {
         const width = this.canvas.nativeElement.offsetWidth;
         const height = this.canvas.nativeElement.offsetHeight;
         this.canvas.nativeElement.width = width;
         this.canvas.nativeElement.height = height;
+
+        this.scenesService.currentSceneChange$.subscribe(() => {
+            this.scenesService.currentSceneNow((scene) => {
+                scene.set_pixel_region(
+                    this.canvas.nativeElement.width,
+                    this.canvas.nativeElement.height,
+                );
+            });
+        });
 
         this.ctx = this.canvas.nativeElement.getContext("2d") as CanvasRenderingContext2D;
 
@@ -54,38 +48,48 @@ export class CanvasComponent implements AfterViewInit {
                 this.canvas.nativeElement.width = this.canvas.nativeElement.offsetWidth;
                 this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
 
-                if (this.canvasContent == null) return;
-                this.canvasContent.set_pixel_region(
-                    this.canvas.nativeElement.width,
-                    this.canvas.nativeElement.height,
-                );
+                this.scenesService.currentSceneNow((scene) => {
+                    scene.set_pixel_region(
+                        this.canvas.nativeElement.width,
+                        this.canvas.nativeElement.height,
+                    );
+                });
             }, 1);
         });
 
         this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
-        this.render();
+
+        animationFrames()
+            .pipe(
+                withLatestFrom(
+                    merge(
+                        of(null),
+                        this.mouseInfo.mousePos$,
+                        this.eventService.mouseLeave$.pipe(map(() => null)),
+                    ),
+                ),
+            )
+            .subscribe(([_, mouseInfo]) => {
+                this.scenesService.currentSceneNow((canvasContent) => {
+                    this.render(canvasContent, mouseInfo);
+                });
+            });
     }
 
-    public render() {
-        if (this.canvasContent == null) return;
+    public render(canvasContent: CanvasContent, mouseCoords: { x: number; y: number } | null) {
+        render(this.ctx, canvasContent);
 
-        console.log("render" + this.canvasContent.get_uuid());
-
-        render(this.ctx, this.canvasContent);
-
-        draw(this.selectionService.selection, this.canvasContent, this.ctx);
-        if (this.mouseCoords != null) {
+        draw(this.selectionService.selection, canvasContent, this.ctx);
+        if (mouseCoords != null) {
             draw_closest_pt(
                 this.selectionService.selection,
-                this.canvasContent,
+                canvasContent,
                 this.ctx,
-                new Point(this.mouseCoords.x, this.mouseCoords.y),
+                new Point(mouseCoords.x, mouseCoords.y),
             );
         }
 
         this.showCanvas();
-
-        window.requestAnimationFrame(this.render.bind(this));
     }
 
     public hideCanvas() {
@@ -98,22 +102,26 @@ export class CanvasComponent implements AfterViewInit {
 
     @HostListener("mousemove", ["$event"])
     public onMouseMove(event: MouseEvent) {
-        if (this.canvasContent == null) return;
-
         this.eventService.mouseMove.next(event);
     }
 
     @HostListener("wheel", ["$event"])
     public onMouseWheel(event: WheelEvent) {
-        if (this.canvasContent == null) return;
-
         this.eventService.wheel.next(event);
     }
 
     @HostListener("mousedown", ["$event"])
     public onMouseDown(event: MouseEvent) {
-        if (this.canvasContent == null) return;
-
         this.eventService.mouseDown.next(event);
+    }
+
+    @HostListener("mouseenter", ["$event"])
+    public onMouseEnter(event: MouseEvent) {
+        this.eventService.mouseEnter.next(event);
+    }
+
+    @HostListener("mouseleave", ["$event"])
+    public onMouseLeave(event: MouseEvent) {
+        this.eventService.mouseLeave.next(event);
     }
 }

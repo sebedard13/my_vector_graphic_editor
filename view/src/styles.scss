@@ -2,19 +2,40 @@
 
 @import "../node_modules/normalize.css/normalize.css";
 
-$color-bg: #363636;
-
 div {
     display: flex;
-    width: 100%;
-    height: 100%;
+    flex-direction: column;
+}
+
+.flex {
+    display: flex;
+}
+//Center in main axis
+.center-jc {
+    justify-content: center;
+}
+//Center in cross axis
+.center-ai {
+    align-items: center;
+}
+
+.center {
+    align-items: center;
+    justify-content: center;
+}
+
+.row {
+    flex-direction: row;
+}
+
+.column {
+    flex-direction: column;
 }
 
 body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
-    background: $color-bg;
 }
 
 *,
@@ -94,4 +115,53 @@ $side: (
         padding-top: $value;
         padding-bottom: $value;
     }
+}
+
+//generate class for gap
+@each $key, $value in $spacing {
+    .gap-#{$key} {
+        gap: $value;
+    }
+}
+
+@import "styles/theme.scss";
+
+//Generate border class b-{} for each side
+@each $sideKey, $sideValue in $side {
+    .b#{$sideKey} {
+        border-#{$sideValue}: $border;
+    }
+}
+
+//Generate border class b-{} for each side x and y
+.by {
+    border-top: $border;
+    border-bottom: $border;
+}
+
+.bx {
+    border-left: $border;
+    border-right: $border;
+}
+
+.b {
+    border: $border;
+}
+
+.h-100 {
+    height: 100%;
+}
+.w-100 {
+    width: 100%;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }

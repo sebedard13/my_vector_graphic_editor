@@ -4,7 +4,34 @@ This project reimagined a vector graphic named VGC. At this moment VGC is very l
 
 ## Building
 
-See Makefile commands for more details.
+### Dependencies
+
+- Rust with cargo
+- cargo-make
+- cargo-watch
+- wasm-pack
+- wasm-bindgen-cli
+- tauri
+- Node.js
+- Angular cli
+  
+### Build for development
+
+``cargo make serve``
+
+### Build for production
+
+#### Web
+
+``cargo make build-web``
+
+#### Desktop
+
+``cargo make build-desktop``
+
+### Others
+
+See Makefile.toml at the project root for others commands and details.
 
 ## Other tools
 

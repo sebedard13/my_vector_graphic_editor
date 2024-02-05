@@ -1,0 +1,20 @@
+
+[tasks.wasm_build]
+workspace = false
+description = "Build wasm"
+script = ["cd wasm_vgc", "wasm-pack build"]
+
+[tasks.view_npm_install]
+workspace = false
+description = "Install all dependencies"
+script = ["cd view", "npm i"]
+
+[tasks.view_build]
+workspace = false
+description = "Build view"
+script = ["cd view", "ng build"]
+
+[tasks.tauri_build]
+workspace = false
+description = "Script to build tauri will also build view automatically"
+script = ["cd desktop", "cargo tauri build"]

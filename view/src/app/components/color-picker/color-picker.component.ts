@@ -63,13 +63,15 @@ export class ColorPickerComponent implements AfterViewInit {
             alpha: false,
         }) as CanvasRenderingContext2D;
 
+        const width = this.canvasInvalidColor.nativeElement.width;
+
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(0, 0, 100, 100);
+        ctx.fillRect(0, 0, width, width);
         ctx.fillStyle = "#000000";
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.lineTo(0, 100);
-        ctx.lineTo(100, 0);
+        ctx.lineTo(0, width);
+        ctx.lineTo(width, 0);
         ctx.closePath();
         ctx.fill();
     }

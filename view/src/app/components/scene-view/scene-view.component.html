@@ -1,0 +1,30 @@
+@if (scenesService.hasScenes$ | async) {
+    <div class="h-100">
+        <div class="bg row w-100 bg bb">
+            @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
+                <button
+                    class="p-2 action scene-selector flex gap-1 center-ai"
+                    [class.active]="scene.isCurrent"
+                    (click)="scenesService.setCurrentScene(i)"
+                >
+                    {{ scene.canvas.get_name() }}
+                    <button
+                        class="p-1 action close-scene flex center"
+                        (click)="scenesService.removeScene(i)"
+                    >
+                        <fa-icon [icon]="faXmark"></fa-icon>
+                    </button>
+                </button>
+            }
+        </div>
+
+        <app-canvas class="w-100 h-100"></app-canvas>
+    </div>
+} @else {
+    <div class="w-100 h-100 p-2 empty-scene center">
+        <div class="row center">
+            Let's start with →
+            <button class="ml-1 p-2 action" (click)="newScene()">New scene</button>
+        </div>
+    </div>
+}

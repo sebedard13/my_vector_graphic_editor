@@ -1,0 +1,21 @@
+.submit-button {
+    justify-content: flex-end;
+}
+
+.checkbox-container {
+    display: block;
+}
+
+.checkbox-label-container {
+    label {
+        white-space: nowrap;
+        line-height: 1.3;
+    }
+    input {
+        width: 15px;
+    }
+}
+
+.aside-width-height {
+    justify-content: space-between;
+}

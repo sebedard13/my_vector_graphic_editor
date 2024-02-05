@@ -17,16 +17,16 @@ script = ["cargo fmt"]
 
 [tasks.view_lint]
 workspace = false
-script = ["cd view", "npx eslint ."]
+script = ["cd view", "npx eslint ./src"]
 
 [tasks.view_prettier]
 workspace = false
-script = ["cd view", "npx prettier . --check"]
+script = ["cd view", "npx prettier ./src --check"]
 
 [tasks.view_lint_fix]
 workspace = false
-script = ["cd view", "npx eslint . --fix"]
+script = ["cd view", "npx eslint ./src --fix"]
 
 [tasks.view_prettier_fix]
 workspace = false
-script = ["cd view", "npx prettier . --write"]
+script = ["cd view", "npx prettier ./src --write"]

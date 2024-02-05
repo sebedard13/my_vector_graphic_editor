@@ -1,11 +1,16 @@
-<div class="main-container">
-    <div class="top-row">
-        <app-save-load></app-save-load>
+<div class="main-container w-100 h-100">
+    <div class="top-row row bg bb">
+        <app-menu-bar></app-menu-bar>
         <app-mouse-info></app-mouse-info>
     </div>
-    <div class="main">
+    <div class="main w-100 h-100 row">
         <app-tools-bar></app-tools-bar>
-        <app-canvas></app-canvas>
-        <app-right-bar></app-right-bar>
+        <div class="w-100">
+            <app-scene-view class="w-100 h-100"></app-scene-view>
+        </div>
     </div>
+</div>
+
+<div class="modal center" [class.d-none]="(showModal$ | async) === false">
+    <div #modalContainer class="modal-content"></div>
 </div>
