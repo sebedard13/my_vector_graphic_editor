@@ -5,12 +5,12 @@ import { ModalService } from "src/app/modal.service";
 import { NewSceneComponent } from "src/app/new-scene/new-scene.component";
 
 @Component({
-    selector: "app-scene-selector",
-    templateUrl: "./scene-selector.component.html",
+    selector: 'app-scene-view',
+    templateUrl: './scene-view.component.html',
     styleUrl: "./scene-selector.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SceneSelectorComponent {
+export class SceneViewComponent {
     protected faXmark = faXmark;
 
     constructor(protected scenesService: ScenesService, private modalService: ModalService) {}
