@@ -5,7 +5,6 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use js_sys::Date;
 use vgc::{coord::Coord, Vgc};
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
@@ -35,11 +34,6 @@ pub struct CanvasContent {
     pub vgc_data: Vgc,
     #[wasm_bindgen(skip)]
     pub camera: Camera,
-    #[wasm_bindgen(skip)]
-    pub uuid: String,
-
-    #[wasm_bindgen(skip)]
-    pub name: String,
 }
 
 #[wasm_bindgen]
@@ -62,8 +56,6 @@ impl CanvasContent {
         Self {
             camera: Camera::new(vgc_data.ratio as f32),
             vgc_data,
-            uuid: Date::now().to_string(),
-            name: "Untitled".to_string(),
         }
     }
 
@@ -99,18 +91,6 @@ impl CanvasContent {
         self.camera.handle_pan((x, y));
     }
 
-    pub fn get_uuid(&self) -> String {
-        self.uuid.clone()
-    }
-
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
     pub fn get_ratio(&self) -> f64 {
         self.vgc_data.ratio
     }
@@ -138,9 +118,7 @@ impl Default for CanvasContent {
         vgc_data.ratio = 1.5;
         Self {
             camera: Camera::new(vgc_data.ratio as f32),
-            vgc_data,
-            uuid: Date::now().to_string(),
-            name: "Untitled".to_string(),
+            vgc_data
         }
     }
 }

@@ -24,11 +24,11 @@ export class MoveCoordService extends Functionality {
 
     activate(): void {
         this.subscription = this.eventsService.mouseMove$.subscribe((event) => {
-            this.sceneService.currentSceneNow((canvas) => {
+            this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons === 1) {
                     move_coords_of(
                         this.selectionService.selection,
-                        canvas,
+                        scene.canvasContent,
                         event.movementX,
                         event.movementY,
                     );

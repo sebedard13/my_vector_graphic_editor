@@ -24,7 +24,7 @@ export class MouseInfoService {
                     return { x: Infinity, y: Infinity };
                 }
 
-                return scene.get_project_mouse(coords.x, coords.y);
+                return scene.canvasContent.get_project_mouse(coords.x, coords.y);
             }),
         );
     }

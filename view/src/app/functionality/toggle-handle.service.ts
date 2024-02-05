@@ -22,11 +22,11 @@ export class ToggleHandleService extends Functionality {
 
     activate(): void {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
-            this.sceneService.currentSceneNow((canvasContent) => {
+            this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
                     toggle_handle(
                         this.selectionService.selection,
-                        canvasContent,
+                        scene.canvasContent,
                         event.offsetX,
                         event.offsetY,
                     );
