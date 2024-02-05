@@ -1,19 +1,25 @@
-<div class="bg row w-100">
-    @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
-        <button
-            class="p-2 action scene-selector gap-1"
-            [class.active]="scene.isCurrent"
-            (click)="scenesService.setCurrentScene(i)"
-        >
-            {{ scene.canvas.get_name() }}
-            <button class="p-1 action close-scene" (click)="scenesService.removeScene(i)">
-                <fa-icon [icon]="faXmark"></fa-icon>
+@if (scenesService.hasScenes$ | async) {
+    <div class="bg row w-100 bg bb">
+        @for (scene of scenesService.scenesList$ | async; track scene; let i = $index) {
+            <button
+                class="p-2 action scene-selector gap-1"
+                [class.active]="scene.isCurrent"
+                (click)="scenesService.setCurrentScene(i)"
+            >
+                {{ scene.canvas.get_name() }}
+                <button class="p-1 action close-scene" (click)="scenesService.removeScene(i)">
+                    <fa-icon [icon]="faXmark"></fa-icon>
+                </button>
             </button>
-        </button>
-    } @empty {
-        <div class="w-100 h-100 p-2 row">
-            <span class="mr-2" style="transform: rotate(90deg)">↲</span> Let's start with a new
-            scene
+        }
+    </div>
+
+    <app-canvas class="w-100 h-100"></app-canvas>
+} @else {
+    <div class="w-100 h-100 p-2 empty-scene">
+        <div class="row">
+            Let's start with -->
+            <button class="ml-1 p-2 action" (click)="newScene()">New scene</button>
         </div>
-    }
-</div>
+    </div>
+}

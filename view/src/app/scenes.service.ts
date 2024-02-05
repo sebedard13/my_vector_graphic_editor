@@ -15,6 +15,7 @@ export class ScenesService {
         map(() => {}),
     );
 
+    public hasScenes$: Observable<boolean> = this.scenes$.pipe(map((scenes) => scenes.length > 0));
     public scenesList$: Observable<{ canvas: CanvasContent; isCurrent: boolean }[]>;
 
     constructor() {
