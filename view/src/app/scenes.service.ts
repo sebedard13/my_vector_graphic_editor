@@ -56,15 +56,20 @@ export class ScenesService {
         const scenes = this.scenesSubject.getValue();
         const deleted = scenes.splice(index, 1);
         this.scenesSubject.next(scenes);
-
         deleted[0].free();
 
-        if (index === this.indexCurrentSceneSubject.getValue()) {
-            let newIndex: number | null = index - 1;
+        const current = this.indexCurrentSceneSubject.getValue();
+        if (current === null) {
+            return;
+        }
+
+        if (index <= current) {
+            const newIndex = current - 1;
             if (newIndex < 0) {
-                newIndex = null;
+                this.indexCurrentSceneSubject.next(null);
+            } else {
+                this.indexCurrentSceneSubject.next(newIndex);
             }
-            this.indexCurrentSceneSubject.next(newIndex);
         }
     }
 
