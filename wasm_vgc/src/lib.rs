@@ -40,21 +40,42 @@ pub struct CanvasContent {
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
+        console_log!("Creating new CanvasContent");
+        let (max_w, max_h, max_size) = {
+            if width > height {
+                (width / height, 1.0, -width / height)
+            } else {
+                (1.0, height / width, height / width)
+            }
+        };
+
         let mut vgc_data = vgc::generate_from_line(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 0.0 },
+            Coord {
+                x: 0.0 * max_w,
+                y: 0.0 * max_h,
+            },
+            Coord {
+                x: 0.0 * max_w,
+                y: 1.0 * max_h,
+            },
+            Coord {
+                x: 1.0 * max_w,
+                y: 1.0 * max_h,
+            },
+            Coord {
+                x: 1.0 * max_w,
+                y: 0.0 * max_h,
+            },
         ]]);
+        vgc_data.max_size = max_size;
 
         let shape = vgc_data.get_shape_mut(0).expect("Valid");
         shape.color.r = 255;
         shape.color.g = 255;
         shape.color.b = 255;
 
-        vgc_data.ratio = (width / height) as f64;
         Self {
-            camera: Camera::new(vgc_data.ratio as f32),
+            camera: Camera::new_center((vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
             vgc_data,
         }
     }
@@ -91,23 +112,41 @@ impl CanvasContent {
         self.camera.handle_pan((x, y));
     }
 
-    pub fn get_ratio(&self) -> f64 {
+    /*pub fn get_ratio(&self) -> f64 {
         self.vgc_data.ratio
-    }
+    }*/
 }
 
 impl Default for CanvasContent {
     fn default() -> Self {
         let mut vgc_data = vgc::generate_from_line(vec![
             vec![
-                Coord { x: 0.0, y: 0.1 },
-                Coord { x: 0.0, y: 1.0 },
-                Coord { x: 0.9, y: 1.0 },
+                Coord {
+                    x: 0.0 * 1.5,
+                    y: 0.1,
+                },
+                Coord {
+                    x: 0.0 * 1.5,
+                    y: 1.0,
+                },
+                Coord {
+                    x: 0.9 * 1.5,
+                    y: 1.0,
+                },
             ],
             vec![
-                Coord { x: 1.0, y: 0.9 },
-                Coord { x: 0.1, y: 0.0 },
-                Coord { x: 1.0, y: 0.0 },
+                Coord {
+                    x: 1.0 * 1.5,
+                    y: 0.9,
+                },
+                Coord {
+                    x: 0.1 * 1.5,
+                    y: 0.0,
+                },
+                Coord {
+                    x: 1.0 * 1.5,
+                    y: 0.0,
+                },
             ],
         ]);
 
@@ -115,10 +154,10 @@ impl Default for CanvasContent {
         shape.color.r = 128;
         shape.color.g = 0;
 
-        vgc_data.ratio = 1.5;
+        vgc_data.max_size = -1.5;
         Self {
-            camera: Camera::new(vgc_data.ratio as f32),
-            vgc_data
+            camera: Camera::new_center((vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
+            vgc_data,
         }
     }
 }
@@ -165,12 +204,7 @@ pub fn render_full(
 ) -> Result<(), JsValue> {
     let vgc = &canvas_content.vgc_data;
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(
-        ctx,
-        (0.0, 0.0),
-        width,
-        height,
-    );
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, (0.0, 0.0), width, height);
 
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {

@@ -12,7 +12,7 @@ export class RenderService {
         const width = 500;
 
         this.scenesServices.currentSceneNow((scene) => {
-            const height = width / scene.canvasContent.get_ratio();
+            const height = width;
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;
             canvas.width = width;

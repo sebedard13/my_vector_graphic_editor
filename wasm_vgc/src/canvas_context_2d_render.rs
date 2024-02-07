@@ -29,10 +29,18 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn fill_background(&mut self, color: &vgc::Rgba) -> Result<(), String> {
+    fn fill_background(
+        &mut self,
+        color: &vgc::Rgba,
+        max_coord: &vgc::coord::Coord,
+    ) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
-        self.context
-            .fill_rect(self.translate.0, self.translate.1, self.w, self.h);
+        self.context.fill_rect(
+            self.translate.0,
+            self.translate.1,
+            self.w * max_coord.x as f64,
+            self.h * max_coord.y as f64,
+        );
         Ok(())
     }
 

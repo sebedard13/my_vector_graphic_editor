@@ -3,7 +3,7 @@ use common::Rgba;
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
 
-    fn fill_background(&mut self, color: &Rgba) -> Result<(), String>;
+    fn fill_background(&mut self, color: &Rgba, coord_max: &Coord) -> Result<(), String>;
 
     fn get_transform(&self) -> Result<(f32, f32, f32, f32), String>;
 
@@ -22,8 +22,12 @@ pub fn render_true<T>(canvas: &Vgc, renderer: &mut T) -> Result<(), String>
 where
     T: VgcRenderer,
 {
+    let max_rect = canvas.max_rect();
+
+    let coord_max = Coord::new(max_rect.2, max_rect.3);
+
     renderer.create()?;
-    renderer.fill_background(&canvas.background)?;
+    renderer.fill_background(&canvas.background, &coord_max)?;
     let (move_x, move_y, scale_x, scale_y) = renderer.get_transform()?;
 
     for i_region in 0..canvas.shapes.len() {
@@ -95,7 +99,7 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
         Ok(())
     }
 
-    fn fill_background(&mut self, color: &Rgba) -> Result<(), String> {
+    fn fill_background(&mut self, color: &Rgba, _: &Coord) -> Result<(), String> {
         let pixmap = self.pixmap.as_mut().expect("Valid Pixmap");
         pixmap.fill(tiny_skia::Color::from_rgba8(
             color.r, color.g, color.b, color.a,

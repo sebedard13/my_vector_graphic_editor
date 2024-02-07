@@ -147,7 +147,7 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f
 pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
     let vgc_data =
         from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
-    let camera = Camera::new(vgc_data.ratio as f32);
+    let camera = Camera::new();
     return CanvasContent {
         vgc_data,
         camera

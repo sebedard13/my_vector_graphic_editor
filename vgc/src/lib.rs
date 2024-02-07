@@ -20,18 +20,27 @@ mod serialization;
 
 mod shape;
 
+/// Maximum size of the image, if we want to have detail for each pixel
+/// This is a limit because of f32 precision with 2^-23 for the smallest value
+/// 2560000 * 2^-23 < 1.0
+#[allow(dead_code)]
+static MAX_DETAIL_SIZE: u32 = 2560000;
+
 #[derive(Debug)]
 pub struct Vgc {
-    /// width/height
-    pub ratio: f64,
+    // The maximum size, if image is portrait, width, if landscape, height
+    // The other size will be the value 1.0
+    // The Orientation is determined by the sign value, if positive, portrait, if negative, landscape
+    // This will not ve changed by inserting a new coord or shape.
+    pub max_size: f32,
     pub background: Rgba,
     shapes: Vec<Shape>,
 }
 
 impl Vgc {
-    pub fn new(ratio: f64, background: Rgba) -> Vgc {
+    pub fn new(max_size: f32, background: Rgba) -> Vgc {
         Vgc {
-            ratio,
+            max_size,
             background,
             shapes: Vec::new(),
         }
@@ -142,6 +151,17 @@ impl Vgc {
 
     pub fn remove_shape(&mut self, shape_index: usize) {
         self.shapes.remove(shape_index);
+    }
+
+    pub fn max_rect(&self) -> (f32, f32, f32, f32) {
+        let (w, h) = {
+            if self.max_size > 0.0 {
+                (1.0, self.max_size)
+            } else {
+                (-self.max_size, 1.0)
+            }
+        };
+        (0.0, 0.0, w, h)
     }
 }
 
@@ -312,7 +332,7 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
         coord.x *= radius;
-        coord.y *= radius * canvas.ratio as f32;
+        coord.y *= radius;
         coord.x += center.x;
         coord.y += center.y;
     }
