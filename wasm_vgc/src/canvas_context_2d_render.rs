@@ -31,7 +31,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
 
     fn fill_background(
         &mut self,
-        color: &vgc::Rgba,
+        color: &common::Rgba,
         max_coord: &vgc::coord::Coord,
     ) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
@@ -44,7 +44,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn set_fill(&mut self, color: &vgc::Rgba) -> Result<(), String> {
+    fn set_fill(&mut self, color: &common::Rgba) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
         Ok(())
     }
