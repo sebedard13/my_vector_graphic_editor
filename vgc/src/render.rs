@@ -1,4 +1,5 @@
-use crate::{coord::Coord, Vgc};
+use crate::Vgc;
+use common::types::Coord;
 use common::Rgba;
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
@@ -121,14 +122,14 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
 
     fn start_shape(&mut self, start_point: &Coord) -> Result<(), String> {
         let mut pb = PathBuilder::new();
-        pb.move_to(start_point.x, start_point.y);
+        pb.move_to(start_point.x(), start_point.y());
         self.current_path = Some(pb);
         Ok(())
     }
 
     fn move_curve(&mut self, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Result<(), String> {
         let pb = self.current_path.as_mut().expect("Valid PathBuilder");
-        pb.cubic_to(cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y);
+        pb.cubic_to(cp0.x(), cp0.y(), cp1.x(), cp1.y(), p1.x(), p1.y());
         Ok(())
     }
 
@@ -160,7 +161,7 @@ mod test {
     #[cfg(feature = "tiny-skia_renderer")]
     fn test_tiny_skia_renderer() {
         use super::*;
-        use crate::coord::Coord;
+        use common::types::Coord;
         use crate::generate_from_push;
         use std::fs;
 

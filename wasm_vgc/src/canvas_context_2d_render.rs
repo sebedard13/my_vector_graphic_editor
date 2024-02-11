@@ -1,5 +1,7 @@
 use vgc::VgcRenderer;
 use web_sys::CanvasRenderingContext2d;
+use common::types::Coord;
+use common::Rgba;
 
 pub struct CanvasContext2DRender<'a> {
     context: &'a CanvasRenderingContext2d,
@@ -31,44 +33,44 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
 
     fn fill_background(
         &mut self,
-        color: &common::Rgba,
-        max_coord: &vgc::coord::Coord,
+        color: &Rgba,
+        max_coord: &Coord,
     ) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
         self.context.fill_rect(
             self.translate.0,
             self.translate.1,
-            self.w * max_coord.x as f64,
-            self.h * max_coord.y as f64,
+            self.w * max_coord.x() as f64,
+            self.h * max_coord.y() as f64,
         );
         Ok(())
     }
 
-    fn set_fill(&mut self, color: &common::Rgba) -> Result<(), String> {
+    fn set_fill(&mut self, color: &Rgba) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
         Ok(())
     }
 
-    fn start_shape(&mut self, start_point: &vgc::coord::Coord) -> Result<(), String> {
+    fn start_shape(&mut self, start_point: &Coord) -> Result<(), String> {
         self.context.begin_path();
         self.context
-            .move_to(start_point.x as f64, start_point.y as f64);
+            .move_to(start_point.x() as f64, start_point.y() as f64);
         Ok(())
     }
 
     fn move_curve(
         &mut self,
-        cp0: &vgc::coord::Coord,
-        cp1: &vgc::coord::Coord,
-        p1: &vgc::coord::Coord,
+        cp0: &Coord,
+        cp1: &Coord,
+        p1: &Coord,
     ) -> Result<(), String> {
         self.context.bezier_curve_to(
-            cp0.x as f64,
-            cp0.y as f64,
-            cp1.x as f64,
-            cp1.y as f64,
-            p1.x as f64,
-            p1.y as f64,
+            cp0.x() as f64,
+            cp0.y() as f64,
+            cp1.x() as f64,
+            cp1.y() as f64,
+            p1.x() as f64,
+            p1.y() as f64,
         );
         Ok(())
     }

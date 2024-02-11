@@ -5,11 +5,10 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use vgc::{coord::Coord, Vgc};
+use common::types::Coord;
+use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
-
-pub use vgc::Rgba;
 
 #[wasm_bindgen]
 #[derive(Clone, Copy, Debug)]
@@ -50,22 +49,10 @@ impl CanvasContent {
         };
 
         let mut vgc_data = vgc::generate_from_line(vec![vec![
-            Coord {
-                x: 0.0 * max_w,
-                y: 0.0 * max_h,
-            },
-            Coord {
-                x: 0.0 * max_w,
-                y: 1.0 * max_h,
-            },
-            Coord {
-                x: 1.0 * max_w,
-                y: 1.0 * max_h,
-            },
-            Coord {
-                x: 1.0 * max_w,
-                y: 0.0 * max_h,
-            },
+            Coord::new(0.0 * max_w, 0.0 * max_h),
+            Coord::new(0.0 * max_w, 1.0 * max_h),
+            Coord::new(1.0 * max_w, 1.0 * max_h),
+            Coord::new(1.0 * max_w, 0.0 * max_h),
         ]]);
         vgc_data.max_size = max_size;
 
@@ -121,32 +108,14 @@ impl Default for CanvasContent {
     fn default() -> Self {
         let mut vgc_data = vgc::generate_from_line(vec![
             vec![
-                Coord {
-                    x: 0.0 * 1.5,
-                    y: 0.1,
-                },
-                Coord {
-                    x: 0.0 * 1.5,
-                    y: 1.0,
-                },
-                Coord {
-                    x: 0.9 * 1.5,
-                    y: 1.0,
-                },
+                Coord::new(0.0 * 1.5, 0.1),
+                Coord::new(0.0 * 1.5, 1.0),
+                Coord::new(0.9 * 1.5, 1.0),
             ],
             vec![
-                Coord {
-                    x: 1.0 * 1.5,
-                    y: 0.9,
-                },
-                Coord {
-                    x: 0.1 * 1.5,
-                    y: 0.0,
-                },
-                Coord {
-                    x: 1.0 * 1.5,
-                    y: 0.0,
-                },
+                Coord::new(1.0 * 1.5, 0.9),
+                Coord::new(0.1 * 1.5, 0.0),
+                Coord::new(1.0 * 1.5, 0.0),
             ],
         ]);
 

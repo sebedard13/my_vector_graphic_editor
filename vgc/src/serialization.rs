@@ -1,11 +1,7 @@
+use common::types::Coord;
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{
-    coord::{Coord, CoordPtr},
-    curve::Curve,
-    shape::Shape,
-    Vgc,
-};
+use crate::{coord::CoordPtr, curve::Curve, shape::Shape, Vgc};
 use common::Rgba;
 use serde::{Deserialize, Serialize};
 
@@ -178,7 +174,7 @@ mod test {
     #[test]
     fn test_create_index_coord() {
         use super::*;
-        use crate::coord::Coord;
+        use common::types::Coord;
 
         let mut coord_map: Vec<(CoordPtr, usize)> = Vec::new();
         let mut index: usize = 0;
@@ -189,7 +185,7 @@ mod test {
             coords: Vec::new(),
         };
 
-        let start_ptr = Rc::new(RefCell::new(Coord { x: 0.0, y: 0.0 }));
+        let start_ptr = Rc::new(RefCell::new(Coord::new(0.0, 0.0)));
 
         let start_index = create_index_coord(
             &mut coord_map,
@@ -206,21 +202,16 @@ mod test {
     #[test]
     fn test_serialization() {
         use super::*;
-        use crate::{coord::Coord, generate_from_line};
+        use crate::generate_from_line;
+        use common::types::Coord;
         use postcard::{from_bytes, to_allocvec};
 
         let canvas_in = generate_from_line(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord {
-                x: -0.46193975,
-                y: 0.19134173,
-            },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord {
-                x: 0.46193975,
-                y: -0.19134173,
-            },
+            Coord::new(0.0, 0.0),
+            Coord::new(-0.46193975, 0.19134173),
+            Coord::new(0.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(0.46193975, -0.19134173),
         ]]);
 
         let output = to_allocvec(&canvas_in).expect("Serialization should be valid");

@@ -3,12 +3,11 @@ use crate::{
     user_selection::{point_in_radius, Selected},
     CanvasContent, Point,
 };
+use common::types::Coord;
+use common::Rgba;
 use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
-use vgc::{
-    coord::{Coord, RefCoordType},
-    Rgba, Vgc,
-};
+use vgc::{coord::RefCoordType, Vgc};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -27,8 +26,10 @@ pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x
     for shape in &selected.shapes {
         for coord in &shape.coords {
             let mut coord = coord.borrow_mut();
-            coord.x += x;
-            coord.y += y;
+            let c_x = coord.x();
+            let c_y = coord.y();
+            coord.set_x(c_x + x);
+            coord.set_y(c_y + y)
         }
     }
 }
@@ -50,7 +51,7 @@ pub fn add_or_remove_coord(
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x, coord.y),
+                &Point::new(coord.x(), coord.y()),
                 &Point::new(pos.0, pos.1),
                 camera.fixed_length(12.0),
             ) {
@@ -113,7 +114,7 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x, coord.y),
+                &Point::new(coord.x(), coord.y()),
                 &Point::new(pos.0, pos.1),
                 camera.fixed_length(12.0),
             ) {

@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use polynomen::Poly;
 
-use crate::coord::Coord;
+use common::{pures::Vec2, types::Coord};
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
@@ -27,7 +27,12 @@ impl Curve {
         let p1 = self.p1.borrow();
         format!(
             "C {} {} {} {} {} {}",
-            cp0.x, cp0.y, cp1.x, cp1.y, p1.x, p1.y
+            cp0.x(),
+            cp0.y(),
+            cp1.x(),
+            cp1.y(),
+            p1.x(),
+            p1.y()
         )
     }
 }
@@ -43,10 +48,10 @@ pub fn t_closest(
     cp1: &Coord,
     p1: &Coord,
 ) -> (f32, f32, Coord) {
-    let a = -1.0 * p0 + 3.0 * cp0 - 3.0 * cp1 + p1;
-    let b = 3.0 * p0 - 6.0 * cp0 + 3.0 * cp1;
-    let c = -3.0 * p0 + 3.0 * cp0;
-    let d = p0 - coord;
+    let a = -1.0 * p0.c + 3.0 * cp0.c - 3.0 * cp1.c + p1.c;
+    let b = 3.0 * p0.c - 6.0 * cp0.c + 3.0 * cp1.c;
+    let c = -3.0 * p0.c + 3.0 * cp0.c;
+    let d = p0.c - coord.c;
 
     // function of approximate distance between coord and curve for t
     //d(t):=(a_x*t^(3)+b_x*t^(2)+c_x*t+d_x)^(2)+(a_y*t^(3)+b_y*t^(2)+c_y*t+d_y)^(2)
@@ -84,13 +89,13 @@ pub fn t_closest(
 
     let mut min_distance = std::f32::MAX;
     let mut min_t = 0.0;
-    let mut min = Coord { x: 0.0, y: 0.0 };
+    let mut min = Vec2 { x: 0.0, y: 0.0 };
     real_roots
         .iter()
         .filter(|&&x| (0.0..=1.0).contains(&x))
         .for_each(|&t| {
-            let curve_coord = cubic_bezier(t as f32, p0, cp0, cp1, p1);
-            let distance = coord.approx_distance(&curve_coord);
+            let curve_coord = cubic_bezier(t as f32, &p0.c, &cp0.c, &cp1.c, &p1.c);
+            let distance = coord.c.approx_distance(curve_coord);
             if distance < min_distance {
                 min_distance = distance;
                 min_t = t as f32;
@@ -98,11 +103,11 @@ pub fn t_closest(
             }
         });
 
-    (min_t, min_distance.sqrt(), min)
+    (min_t, min_distance.sqrt(), Coord { c: min })
 }
 
 /// Evaluate the point at t of curve defined by p0, cp0, cp1, p1
-fn cubic_bezier(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
+fn cubic_bezier(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> Vec2 {
     (1.0 - t) * (1.0 - t) * (1.0 - t) * p0
         + 3.0 * (1.0 - t) * (1.0 - t) * t * cp0
         + 3.0 * (1.0 - t) * t * t * cp1
@@ -110,7 +115,7 @@ fn cubic_bezier(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coo
 }
 
 /// Evaluate the derivative or the slope at t of curve defined by p0, cp0, cp1, p1
-fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
+fn cubic_bezier_derivative(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> Vec2 {
     3.0 * (1.0 - t) * (1.0 - t) * (cp0 - p0)
         + 6.0 * (1.0 - t) * t * (cp1 - cp0)
         + 3.0 * t * t * (p1 - cp1)
@@ -118,24 +123,24 @@ fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Co
 
 /// Return the normalized tangent vector at t of curve defined by p0, cp0, cp1, p1
 /// Panic if no tangent vector found by having the same point for p0, cp0, cp1 and p1
-fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
+fn tangent_vector(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> Vec2 {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
-        return p0 - &Coord { x: 0.1, y: 0.1 };
+        return p0 - &Vec2 { x: 0.1, y: 0.1 };
     }
 
     let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
-    if tangent_vector != (Coord { x: 0.0, y: 0.0 }) {
+    if tangent_vector != (Vec2 { x: 0.0, y: 0.0 }) {
         //Normalize vector
-        return tangent_vector.normalize();
+        return tangent_vector.normal();
     }
 
     //Exception with (t = 1 and cp1 == p1) or (t = 0 and cp0 == p0)
     let t = t.clamp(0.0001, 0.9999);
 
     let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
-    if tangent_vector != (Coord { x: 0.0, y: 0.0 }) {
+    if tangent_vector != (Vec2 { x: 0.0, y: 0.0 }) {
         //Normalize vector
-        return tangent_vector.normalize();
+        return tangent_vector.normal();
     }
 
     panic!(
@@ -147,12 +152,9 @@ fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> C
 /// Return two control points to create a smooth curve at t of curve defined by p0, cp0, cp1, p1
 /// if t = 0.0 or 1.0 use tangent_cornor_pts() to use the sum of vector of two curve
 #[allow(dead_code)]
-fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> (Coord, Coord) {
+fn tangent_pts(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> (Vec2, Vec2) {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
-        return (
-            p0 - &Coord { x: 0.1, y: 0.1 },
-            p0 + &Coord { x: 0.1, y: 0.1 },
-        );
+        return (p0 - &Vec2 { x: 0.1, y: 0.1 }, p0 + &Vec2 { x: 0.1, y: 0.1 });
     }
 
     let tangent_vector = tangent_vector(t, p0, cp0, cp1, p1);
@@ -169,11 +171,11 @@ fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> (Coo
     };
 
     (
-        Coord {
+        Vec2 {
             x: coord.x - t_at * tangent_vector.x,
             y: coord.y - t_at * tangent_vector.y,
         },
-        Coord {
+        Vec2 {
             x: coord.x + t_at * tangent_vector.x,
             y: coord.y + t_at * tangent_vector.y,
         },
@@ -192,19 +194,19 @@ pub fn tangent_cornor_pts(
     cp3: &Coord,
     p2: &Coord,
 ) -> (Coord, Coord) {
-    let tangent_vector_l = tangent_vector(1.0, p0, cp0, cp1, p1);
-    let tangent_vector_r = tangent_vector(0.0, p1, cp2, cp3, p2);
+    let tangent_vector_l = tangent_vector(1.0, &p0.c, &cp0.c, &cp1.c, &p1.c);
+    let tangent_vector_r = tangent_vector(0.0, &p1.c, &cp2.c, &cp3.c, &p2.c);
 
-    let tangent_vector = (tangent_vector_l + tangent_vector_r).normalize();
+    let tangent_vector = (tangent_vector_l + tangent_vector_r).normal();
 
     let coord = p1;
 
     let t_at = {
         let mut array_distance = [
-            (p0.x - p1.x).abs() / 2.0,
-            (p0.y - p1.y).abs() / 2.0,
-            (p1.x - p2.x).abs() / 2.0,
-            (p1.y - p2.y).abs() / 2.0,
+            (p0.x() - p1.x()).abs() / 2.0,
+            (p0.y() - p1.y()).abs() / 2.0,
+            (p1.x() - p2.x()).abs() / 2.0,
+            (p1.y() - p2.y()).abs() / 2.0,
         ];
 
         array_distance.sort_by(|a, b| a.partial_cmp(b).expect("Should not be NaN"));
@@ -213,26 +215,26 @@ pub fn tangent_cornor_pts(
     };
 
     (
-        Coord {
-            x: coord.x - t_at * tangent_vector.x,
-            y: coord.y - t_at * tangent_vector.y,
-        },
-        Coord {
-            x: coord.x + t_at * tangent_vector.x,
-            y: coord.y + t_at * tangent_vector.y,
-        },
+        Coord::new(
+            coord.x() - t_at * tangent_vector.x,
+            coord.y() - t_at * tangent_vector.y,
+        ),
+        Coord::new(
+            coord.x() + t_at * tangent_vector.x,
+            coord.y() + t_at * tangent_vector.y,
+        ),
     )
 }
 
 ///For a curve defined by p0, cp0, cp1, p1, let's imagine we want to add a point at t without changing the actual curve.
 /// Return the handle and points to create a smooth curve at t so (cp0, cp1l, p1, cp1r, cp2, p2)
 pub fn add_smooth_result(
-    p0: &Coord,
-    cp0: &Coord,
-    cp1: &Coord,
-    p1: &Coord,
+    p0: &Vec2,
+    cp0: &Vec2,
+    cp1: &Vec2,
+    p1: &Vec2,
     t: f32,
-) -> (Coord, Coord, Coord, Coord, Coord) {
+) -> (Vec2, Vec2, Vec2, Vec2, Vec2) {
     let cp0_rtn = t * cp0 - (t - 1.0) * p0;
     let cp1l_rtn = t * t * cp1 - 2.0 * (t * (t - 1.0) * cp0 - 0.5 * (t * t - 2.0 * t + 1.0) * p0);
     let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);
@@ -251,93 +253,67 @@ mod test {
     use float_cmp::approx_eq;
 
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
-    use crate::coord::Coord;
-
-    use float_cmp::{ApproxEq, F32Margin};
-
-    impl ApproxEq for &Coord {
-        type Margin = F32Margin;
-
-        fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
-            let margin = margin.into();
-            self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
-        }
-    }
+    use common::{pures::Vec2, types::Coord};
 
     #[test]
     fn tangent_vector_same() {
-        let p0 = Coord { x: 1.0, y: 1.0 };
-        let cp0 = Coord { x: 1.0, y: 1.0 };
-        let cp1 = Coord { x: 1.0, y: 1.0 };
-        let p1 = Coord { x: 1.0, y: 1.0 };
+        let p0 = Vec2 { x: 1.0, y: 1.0 };
+        let cp0 = Vec2 { x: 1.0, y: 1.0 };
+        let cp1 = Vec2 { x: 1.0, y: 1.0 };
+        let p1 = Vec2 { x: 1.0, y: 1.0 };
 
         let tangent = tangent_vector(1.0, &p0, &cp0, &cp1, &p1);
 
         assert!(!tangent.x.is_nan());
         assert!(!tangent.y.is_nan());
 
-        assert_ne!(tangent, Coord { x: 0.0, y: 0.0 });
+        assert_ne!(tangent, Vec2 { x: 0.0, y: 0.0 });
     }
 
     #[test]
     fn tangent_vector_cornor() {
-        let p0 = Coord { x: 1.0, y: 0.0 };
-        let cp0 = Coord { x: 1.0, y: 0.0 };
-        let cp1 = Coord { x: 0.0, y: 0.0 };
-        let p1 = Coord { x: 0.0, y: 0.0 };
-        let cp2 = Coord { x: 0.0, y: 0.0 };
-        let cp3 = Coord { x: 0.0, y: 1.0 };
-        let p2 = Coord { x: 0.0, y: 1.0 };
+        let p0 = Coord::new(1.0, 0.0);
+        let cp0 = Coord::new(1.0, 0.0);
+        let cp1 = Coord::new(0.0, 0.0);
+        let p1 = Coord::new(0.0, 0.0);
+        let cp2 = Coord::new(0.0, 0.0);
+        let cp3 = Coord::new(0.0, 1.0);
+        let p2 = Coord::new(0.0, 1.0);
 
         let sin = (0.25 * PI).sin(); // 45deg
-        let result = (
-            Coord {
-                x: 0.5 * sin,
-                y: -0.5 * sin,
-            },
-            Coord {
-                x: -0.5 * sin,
-                y: 0.5 * sin,
-            },
+        let expected = (
+            Coord::new(0.5 * sin, -0.5 * sin),
+            Coord::new(-0.5 * sin, 0.5 * sin),
         );
 
-        assert_eq!(
-            tangent_cornor_pts(&p0, &cp0, &cp1, &p1, &cp2, &cp3, &p2),
-            result
-        );
+        let result = tangent_cornor_pts(&p0, &cp0, &cp1, &p1, &cp2, &cp3, &p2);
+
+        assert_eq!(result.0, expected.0);
+        assert_eq!(result.1, expected.1);
     }
 
     #[test]
     fn t_closest_cornor() {
-        let coord = Coord { x: 0.0, y: 0.0 };
-        let p0 = Coord { x: 0.0, y: 1.0 };
-        let cp0 = Coord { x: 0.0, y: 0.0 };
-        let cp1 = Coord { x: 0.0, y: 0.0 };
-        let p1 = Coord { x: 1.0, y: 0.0 };
+        let coord = Coord::new(0.0, 0.0);
+        let p0 = Coord::new(0.0, 1.0);
+        let cp0 = Coord::new(0.0, 0.0);
+        let cp1 = Coord::new(0.0, 0.0);
+        let p1 = Coord::new(1.0, 0.0);
 
         let (t, distance, closest) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
         assert_eq!(t, 0.5);
         assert_eq!(distance, 0.176776695297);
-        assert_eq!(closest, Coord { x: 0.125, y: 0.125 });
+        assert_eq!(closest.c, Vec2 { x: 0.125, y: 0.125 });
     }
 
     #[test]
     fn t_closest_weird() {
-        let coord = Coord {
-            x: 1.00800002,
-            y: 0.611999988,
-        };
-        let p0 = Coord { x: 1.0, y: 1.0 };
-        let cp0 = Coord { x: 1.0, y: 1.0 };
-        let cp1 = Coord {
-            x: 0.794221878,
-            y: 0.246179819,
-        };
-        let p1 = Coord {
-            x: 0.430000007,
-            y: 0.270000011,
-        };
+        let coord = Coord::new(1.00800002, 0.611999988);
+        let p0 = Coord::new(1.0, 1.0);
+        let cp0 = Coord::new(1.0, 1.0);
+        let cp1 = Coord::new(0.794221878, 0.246179819);
+        let p1 = Coord::new(0.430000007, 0.270000011);
 
         let (t, _, _) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
@@ -346,71 +322,71 @@ mod test {
 
     #[test]
     fn test_add_smooth_result() {
-        let p0 = Coord { x: 1.0, y: 0.0 };
-        let cp0 = Coord { x: 1.0, y: 0.5 };
-        let cp1 = Coord { x: 0.0, y: 0.1 };
-        let p1 = Coord { x: 0.0, y: 0.0 };
+        let p0 = Vec2 { x: 1.0, y: 0.0 };
+        let cp0 = Vec2 { x: 1.0, y: 0.5 };
+        let cp1 = Vec2 { x: 0.0, y: 0.1 };
+        let p1 = Vec2 { x: 0.0, y: 0.0 };
 
         let (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn) =
             add_smooth_result(&p0, &cp0, &cp1, &p1, 0.5);
 
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.0, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.125, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.25, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.25, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.5, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.375, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.75, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(1.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn),
             ulps = 2
         ));
 
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.625, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.25, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.5, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(0.875, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.75, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
             ulps = 2
         ));
         assert!(approx_eq!(
-            &Coord,
+            &Vec2,
             &cubic_bezier(1.0, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(1.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1),
             ulps = 2
@@ -419,11 +395,11 @@ mod test {
 
     #[test]
     fn bench_approx_distance_to_curve_and_t_closest_cornor() {
-        let coord = Coord { x: 0.0, y: 0.0 };
-        let p0 = Coord { x: 0.0, y: 1.0 };
-        let cp0 = Coord { x: 0.0, y: 0.0 };
-        let cp1 = Coord { x: 0.0, y: 0.0 };
-        let p1 = Coord { x: 1.0, y: 0.0 };
+        let coord = Coord::new(0.0, 0.0);
+        let p0 = Coord::new(0.0, 1.0);
+        let cp0 = Coord::new(0.0, 0.0);
+        let cp1 = Coord::new(0.0, 0.0);
+        let p1 = Coord::new(1.0, 0.0);
 
         let now_approx = Instant::now();
         for _ in 0..1000 {

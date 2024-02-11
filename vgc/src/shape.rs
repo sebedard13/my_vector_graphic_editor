@@ -1,6 +1,7 @@
-use crate::coord::{Coord, CoordPtr, CoordType};
+use crate::coord::{CoordPtr, CoordType};
 use crate::curve;
 use crate::curve::Curve;
+use common::types::Coord;
 use common::Rgba;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -68,7 +69,7 @@ impl Shape {
             let cp3 = &next_curve.cp1.borrow();
             let p2 = &next_curve.p1.borrow();
 
-            curve::tangent_cornor_pts(&p0, cp0, cp1, p1, cp2, cp3, p2)
+            curve::tangent_cornor_pts(&p0, &cp0, &cp1, &p1, &cp2, &cp3, &p2)
         };
 
         self.curves[curve_index_p1].cp1 = Rc::new(RefCell::new(coord_index0));
@@ -92,7 +93,7 @@ impl Shape {
     pub fn to_path(&self) -> String {
         let mut path = String::new();
         let start = self.start.borrow();
-        path.push_str(&format!("M {} {}", start.x, start.y));
+        path.push_str(&format!("M {} {}", start.x(), start.y()));
         for curve in &self.curves {
             path.push(' ');
             path.push_str(&curve.to_path());
@@ -188,23 +189,23 @@ impl Shape {
         match coord_type {
             CoordType::Start => {
                 let mut coord = self.start.borrow_mut();
-                coord.x = x;
-                coord.y = y;
+                coord.set_x(x);
+                coord.set_y(y);
             }
             CoordType::Cp0(index_curve) => {
                 let mut coord = self.curves[*index_curve].cp0.borrow_mut();
-                coord.x = x;
-                coord.y = y;
+                coord.set_x(x);
+                coord.set_y(y);
             }
             CoordType::Cp1(index_curve) => {
                 let mut coord = self.curves[*index_curve].cp1.borrow_mut();
-                coord.x = x;
-                coord.y = y;
+                coord.set_x(x);
+                coord.set_y(y);
             }
             CoordType::P1(index_curve) => {
                 let mut coord = self.curves[*index_curve].p1.borrow_mut();
-                coord.x = x;
-                coord.y = y;
+                coord.set_x(x);
+                coord.set_y(y);
             }
         }
     }
@@ -214,12 +215,18 @@ impl Shape {
         let (p0, cp0i, cp2i, p2) = self.get_coords_of_curve(curve_index);
 
         let (cp0, cp1l, p1, cp1r, cp2) = curve::add_smooth_result(
-            &p0.borrow(),
-            &cp0i.borrow(),
-            &cp2i.borrow(),
-            &p2.borrow(),
+            &p0.borrow().c,
+            &cp0i.borrow().c,
+            &cp2i.borrow().c,
+            &p2.borrow().c,
             t,
         );
+
+        let cp0 = Coord { c: cp0 };
+        let cp1l = Coord { c: cp1l };
+        let p1 = Coord { c: p1 };
+        let cp1r = Coord { c: cp1r };
+        let cp2 = Coord { c: cp2 };
 
         self.insert_coord_at(curve_index, p1);
 
@@ -287,7 +294,8 @@ impl Shape {
 mod test {
     use std::rc::Rc;
 
-    use crate::{coord::Coord, generate_from_push};
+    use crate::generate_from_push;
+    use common::types::Coord;
 
     #[test]
     fn cloest_pt() {
@@ -307,7 +315,7 @@ mod test {
         let shape = vgc.get_shape(0).expect("Shape should exist");
 
         let (_, _, _, coord) = shape.closest_curve(&Coord::new(1.008, 0.612));
-        assert_ne!(&coord.y, &1.0);
+        assert_ne!(&coord.y(), &1.0);
     }
 
     #[test]

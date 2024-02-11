@@ -4,7 +4,8 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::forward_ref_binop;
-use crate::vec2::Vec2;
+
+use super::Vec2;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]

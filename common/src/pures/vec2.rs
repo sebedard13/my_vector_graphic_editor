@@ -1,3 +1,4 @@
+use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Sub};
@@ -94,6 +95,20 @@ impl Mul<f32> for Vec2 {
 
 forward_ref_binop!(impl Mul, mul for Vec2, f32);
 
+impl Mul<Vec2> for f32 {
+    type Output = Vec2;
+
+    fn mul(self, other: Vec2) -> Vec2 {
+        Vec2 {
+            x: self * other.x,
+            y: self * other.y,
+        }
+    }
+}
+
+forward_ref_binop!(impl Mul, mul for f32, Vec2);
+
+
 impl Div<f32> for Vec2 {
     type Output = Vec2;
 
@@ -106,3 +121,13 @@ impl Div<f32> for Vec2 {
 }
 
 forward_ref_binop!(impl Div, div for Vec2, f32);
+
+
+impl ApproxEq for &Vec2 {
+    type Margin = F32Margin;
+
+    fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
+        let margin = margin.into();
+        self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
+    }
+}

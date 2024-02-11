@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::coord::Coord;
+use common::types::Coord;
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
-pub use common::Rgba;
+use common::Rgba;
 #[cfg(feature = "tiny-skia")]
 pub use render::TinySkiaRenderer;
 pub use render::VgcRenderer;
@@ -172,36 +172,30 @@ mod tests {
     #[test]
     fn get_closest_coord_on_shape_triangle() {
         let canvas = generate_from_line(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(1.0, 1.0),
         ]]);
 
         let shape = canvas.get_shape(0).unwrap();
         let (_, _, _, coord) = shape.closest_curve(&Coord::new(1.0, 0.0));
-        assert_eq!(coord.x, 0.5);
-        assert_eq!(coord.y, 0.5);
+        assert_eq!(coord.x(), 0.5);
+        assert_eq!(coord.y(), 0.5);
     }
 
     #[test]
     fn genreate_from_push() {
         let canvas = generate_from_push(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord {
-                x: -0.46193975,
-                y: 0.19134173,
-            },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord {
-                x: 0.46193975,
-                y: -0.19134173,
-            },
-            Coord { x: 0.0, y: 0.0 },
+            Coord::new(0.0, 0.0),
+            Coord::new(-0.46193975, 0.19134173),
+            Coord::new(0.0, 1.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(0.46193975, -0.19134173),
+            Coord::new(0.0, 0.0),
         ]]);
 
         assert_eq!(canvas.debug_string(), "M 0 0 C -0.46193975 0.19134173 0 1 0 1 C 0 1 1 1 1 1 C 1 1 0.46193975 -0.19134173 0 0 Z\n");
@@ -331,9 +325,6 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
 
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
-        coord.x *= radius;
-        coord.y *= radius;
-        coord.x += center.x;
-        coord.y += center.y;
+        (*coord) = (*coord).scale(center.x(), center.y(), radius, radius);
     }
 }

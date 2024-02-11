@@ -1,6 +1,7 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
-use vgc::{coord::Coord, Rgba};
+use common::types::Coord;
+use common::Rgba;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
 
@@ -133,7 +134,7 @@ impl Selected {
 
                 if point_in_radius(
                     &cursor_position,
-                    &Point::new(coord.x, coord.y),
+                    &Point::new(coord.x(), coord.y()),
                     canvas_context.camera.fixed_length(12.0),
                 ) {
                     shape_selected.hover_coord = Some(ref_coord_type.clone());
@@ -187,7 +188,7 @@ impl Selected {
                     let coord = ref_coord_type.borrow();
                     if point_in_radius(
                         &start_press,
-                        &Point::new(coord.x, coord.y),
+                        &Point::new(coord.x(), coord.y()),
                         canvas_context.camera.fixed_length(12.0),
                     ) {
                         shape_selected.coords.push(ref_coord_type.clone());
@@ -210,7 +211,7 @@ impl Selected {
                 let coord = ref_coord_type.borrow();
                 if point_in_radius(
                     &start_press,
-                    &Point::new(coord.x, coord.y),
+                    &Point::new(coord.x(), coord.y()),
                     canvas_context.camera.fixed_length(12.0),
                 ) {
                     let pos = shape_selected
@@ -300,17 +301,17 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
         //Draw line between cp and p
         shape.visit_full_curves(|_, p0, cp0, cp1, p1| {
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((p0.x, p0.y));
+            let from = canvas_context.camera.unproject((p0.x(), p0.y()));
 
             ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((cp0.x, cp0.y));
+            let to = canvas_context.camera.unproject((cp0.x(), cp0.y()));
             ctx.line_to(to.0 as f64, to.1 as f64);
             ctx.stroke();
 
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((cp1.x, cp1.y));
+            let from = canvas_context.camera.unproject((cp1.x(), cp1.y()));
             ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((p1.x, p1.y));
+            let to = canvas_context.camera.unproject((p1.x(), p1.y()));
             ctx.line_to(to.0 as f64, to.1 as f64);
             ctx.stroke();
         });
@@ -324,7 +325,7 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
                 CoordState::Selected => Rgba::new(0x3A, 0xD1, 0xEF, 255),
                 CoordState::None => Rgba::new(0xA1, 0xE9, 0xF7, 255),
             };
-            let center = Point::new(coord.x, coord.y as f32);
+            let center = Point::new(coord.x(), coord.y() as f32);
             let center = canvas_context.camera.unproject((center.x, center.y));
 
             ctx.begin_path();
@@ -346,13 +347,13 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
         let start_coord = shape.start.borrow();
         let start_coord = canvas_context
             .camera
-            .unproject((start_coord.x, start_coord.y));
+            .unproject((start_coord.x(), start_coord.y()));
         ctx.move_to(start_coord.0.into(), start_coord.1.into());
 
         shape.visit_full_curves(move |_, _, cp0, cp1, p1| {
-            let cp0 = canvas_context.camera.unproject((cp0.x, cp0.y));
-            let cp1 = canvas_context.camera.unproject((cp1.x, cp1.y));
-            let p1 = canvas_context.camera.unproject((p1.x, p1.y));
+            let cp0 = canvas_context.camera.unproject((cp0.x(), cp0.y()));
+            let cp1 = canvas_context.camera.unproject((cp1.x(), cp1.y()));
+            let p1 = canvas_context.camera.unproject((p1.x(), p1.y()));
 
             ctx.bezier_curve_to(
                 cp0.0.into(),
@@ -399,7 +400,7 @@ pub fn draw_closest_pt(
     }
 
     let color = Rgba::new(0x0E, 0x90, 0xAA, 255);
-    let center = Point::new(min_coord.x, min_coord.y);
+    let center = Point::new(min_coord.x(), min_coord.y());
 
     let center = canvas_context.camera.unproject((center.x, center.y));
 
