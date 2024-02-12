@@ -1,10 +1,7 @@
-use crate::{
-    camera::Camera,
-    user_selection::{point_in_radius, Selected},
-    CanvasContent, Point,
-};
+use crate::{camera::Camera, user_selection::Selected, CanvasContent};
 use common::types::Coord;
 use common::Rgba;
+use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
 use vgc::{coord::RefCoordType, Vgc};
@@ -38,21 +35,20 @@ pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x
 pub fn add_or_remove_coord(
     selected: &Selected,
     canvas_content: &mut CanvasContent,
-    x: f64,
-    y: f64,
+    coord_click: ScreenCoord,
 ) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
-    let pos = camera.project((x, y));
+    let pos = camera.project((coord_click.c.x, coord_click.c.y));
+    let pos = Coord::new(pos.0, pos.1);
+
     // if click is on a point, remove it
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x(), coord.y()),
-                &Point::new(pos.0, pos.1),
+                &coord.c,
+                &pos.c,
                 camera.fixed_length(12.0),
             ) {
                 to_do.push((shape_index, curve_index));
@@ -81,7 +77,7 @@ pub fn add_or_remove_coord(
     for shape_selected in &selected.shapes {
         let shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
 
-        let (curve_index, t, distance, _) = shape.closest_curve(&Coord::new(pos.0, pos.1));
+        let (curve_index, t, distance, _) = shape.closest_curve(&pos);
 
         if distance < min_distance {
             min_distance = distance;
@@ -103,19 +99,18 @@ pub fn add_or_remove_coord(
 }
 
 #[wasm_bindgen]
-pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_click: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
-    let pos = camera.project((x, y));
+    let pos = camera.project((coord_click.c.x, coord_click.c.y));
+    let pos = Coord::new(pos.0, pos.1);
 
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x(), coord.y()),
-                &Point::new(pos.0, pos.1),
+                &coord.c,
+                &pos.c,
                 camera.fixed_length(12.0),
             ) {
                 to_do.push((shape_index, curve_index));

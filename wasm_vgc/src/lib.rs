@@ -10,21 +10,6 @@ use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
 
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[wasm_bindgen]
-impl Point {
-    #[wasm_bindgen(constructor)]
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-}
-
 // Function to read from index 1 of our buffer
 // And return the value at the index
 #[wasm_bindgen]
@@ -76,9 +61,9 @@ impl CanvasContent {
         self.camera.pixel_region = (0.0, 0.0, width, height);
     }
 
-    pub fn get_project_mouse(&self, x: f32, y: f32) -> Point {
+    pub fn get_project_mouse(&self, x: f32, y: f32) -> Coord {
         let (x, y) = self.camera.project((x, y));
-        Point { x, y }
+        Coord::new(x, y)
     }
 
     pub fn get_zoom(&self) -> f32 {
