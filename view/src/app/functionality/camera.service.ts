@@ -3,6 +3,7 @@ import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
 import { Injectable, inject } from "@angular/core";
 import { Functionality } from "./functionality";
+import { ScreenCoord } from "wasm-vgc";
 
 @Injectable({
     providedIn: "root",
@@ -45,7 +46,7 @@ export class CameraService extends Functionality {
     activate(): void {
         const zoomEvent = this.eventsService.wheel$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
-                scene.canvasContent.zoom(event.deltaY * -1, event.offsetX, event.offsetY);
+                scene.canvasContent.zoom(event.deltaY * -1, new ScreenCoord(event.offsetX, event.offsetY));
                 this.zoomChange.next();
             });
         });

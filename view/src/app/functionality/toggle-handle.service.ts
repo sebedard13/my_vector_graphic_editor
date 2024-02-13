@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../events.service";
 import { Subscription } from "rxjs";
-import { toggle_handle } from "wasm-vgc";
+import { ScreenCoord, toggle_handle } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
 import { SelectionService } from "../selection.service";
 
@@ -27,8 +27,7 @@ export class ToggleHandleService extends Functionality {
                     toggle_handle(
                         this.selectionService.selection,
                         scene.canvasContent,
-                        event.offsetX,
-                        event.offsetY,
+                        new ScreenCoord(event.offsetX, event.offsetY),
                     );
                 }
             });

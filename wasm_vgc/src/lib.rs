@@ -5,10 +5,14 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use common::types::Coord;
+use common::types::{Coord, ScreenCoord, ScreenRect};
 use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
+
+pub use common;
+
+
 
 // Function to read from index 1 of our buffer
 // And return the value at the index
@@ -47,7 +51,10 @@ impl CanvasContent {
         shape.color.b = 255;
 
         Self {
-            camera: Camera::new_center((vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
+            camera: Camera::new_center(Coord::new(
+                vgc_data.max_rect().2 / 2.0,
+                vgc_data.max_rect().3 / 2.0,
+            )),
             vgc_data,
         }
     }
@@ -58,12 +65,11 @@ impl CanvasContent {
     }
 
     pub fn set_pixel_region(&mut self, width: f32, height: f32) {
-        self.camera.pixel_region = (0.0, 0.0, width, height);
+        self.camera.pixel_region = ScreenRect::new(0.0, 0.0, width, height);
     }
 
-    pub fn get_project_mouse(&self, x: f32, y: f32) -> Coord {
-        let (x, y) = self.camera.project((x, y));
-        Coord::new(x, y)
+    pub fn get_project_mouse(&self, coord: ScreenCoord) -> Coord {
+        self.camera.project(&coord)
     }
 
     pub fn get_zoom(&self) -> f32 {
@@ -76,17 +82,13 @@ impl CanvasContent {
     ///  * `movement` - positive for zoom in, negative for zoom out. Only 1 or -1 are supported.
     ///  * `x` - x coordinate of the center of the zoom
     ///  * `y` - y coordinate of the center of the zoom
-    pub fn zoom(&mut self, movement: f32, x: f32, y: f32) {
-        self.camera.handle_zoom(movement, (x, y));
+    pub fn zoom(&mut self, movement: f32, coord: ScreenCoord) {
+        self.camera.handle_zoom(movement, coord);
     }
 
     pub fn pan_camera(&mut self, x: f32, y: f32) {
         self.camera.handle_pan((x, y));
     }
-
-    /*pub fn get_ratio(&self) -> f64 {
-        self.vgc_data.ratio
-    }*/
 }
 
 impl Default for CanvasContent {
@@ -110,7 +112,7 @@ impl Default for CanvasContent {
 
         vgc_data.max_size = -1.5;
         Self {
-            camera: Camera::new_center((vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
+            camera: Camera::new_center(Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
             vgc_data,
         }
     }
@@ -133,10 +135,10 @@ pub fn render(
     );
 
     ctx.clear_rect(
-        canvas_content.camera.pixel_region.0 as f64,
-        canvas_content.camera.pixel_region.1 as f64,
-        canvas_content.camera.pixel_region.2 as f64,
-        canvas_content.camera.pixel_region.3 as f64,
+        canvas_content.camera.pixel_region.bottom_right.c.x as f64,
+        canvas_content.camera.pixel_region.bottom_right.c.y as f64,
+        canvas_content.camera.pixel_region.top_left.c.x as f64,
+        canvas_content.camera.pixel_region.top_left.c.y as f64,
     );
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {

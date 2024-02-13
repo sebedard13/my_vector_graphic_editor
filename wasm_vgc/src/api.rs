@@ -1,5 +1,4 @@
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
-use common::types::Coord;
 use common::Rgba;
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
@@ -39,18 +38,13 @@ pub fn add_or_remove_coord(
 ) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let pos = camera.project((coord_click.c.x, coord_click.c.y));
-    let pos = Coord::new(pos.0, pos.1);
+    let pos = camera.project(&coord_click);
 
     // if click is on a point, remove it
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(
-                &coord.c,
-                &pos.c,
-                camera.fixed_length(12.0),
-            ) {
+            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(12.0)) {
                 to_do.push((shape_index, curve_index));
             }
         }
@@ -102,17 +96,12 @@ pub fn add_or_remove_coord(
 pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_click: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let pos = camera.project((coord_click.c.x, coord_click.c.y));
-    let pos = Coord::new(pos.0, pos.1);
+    let pos = camera.project(&coord_click);
 
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(
-                &coord.c,
-                &pos.c,
-                camera.fixed_length(12.0),
-            ) {
+            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(12.0)) {
                 to_do.push((shape_index, curve_index));
             }
         }
@@ -127,16 +116,13 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_cli
 }
 
 #[wasm_bindgen]
-pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
 
-    if let Some(pos) = camera.project_in_canvas((x, y)) {
-        // if click create a new shape on point and ready to new point
-        vgc::create_circle(vgc_data, Coord::new(pos.0, pos.1), 0.1);
-    }
+    let pos = camera.project(&mouse);
+    // if click create a new shape on point and ready to new point
+    vgc::create_circle(vgc_data, pos, 0.1);
 }
 
 #[wasm_bindgen]

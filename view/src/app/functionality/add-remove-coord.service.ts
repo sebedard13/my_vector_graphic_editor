@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../events.service";
 import { Subscription } from "rxjs";
-import { add_or_remove_coord } from "wasm-vgc";
+import { ScreenCoord, add_or_remove_coord } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
 import { SelectionService } from "../selection.service";
 
@@ -27,8 +27,7 @@ export class AddRemoveCoordService extends Functionality {
                     add_or_remove_coord(
                         this.selectionService.selection,
                         scene.canvasContent,
-                        event.offsetX,
-                        event.offsetY,
+                        new ScreenCoord(event.offsetX, event.offsetY),
                     );
                 }
             });

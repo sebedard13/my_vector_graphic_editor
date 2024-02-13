@@ -286,18 +286,18 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
         //Draw line between cp and p
         shape.visit_full_curves(|_, p0, cp0, cp1, p1| {
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((p0.x(), p0.y()));
+            let from = canvas_context.camera.unproject(&p0);
 
-            ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((cp0.x(), cp0.y()));
-            ctx.line_to(to.0 as f64, to.1 as f64);
+            ctx.move_to(from.c.x as f64, from.c.y as f64);
+            let to = canvas_context.camera.unproject(&cp0);
+            ctx.line_to(to.c.x as f64, to.c.y as f64);
             ctx.stroke();
 
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((cp1.x(), cp1.y()));
-            ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((p1.x(), p1.y()));
-            ctx.line_to(to.0 as f64, to.1 as f64);
+            let from = canvas_context.camera.unproject(&cp1);
+            ctx.move_to(from.c.x as f64, from.c.y as f64);
+            let to = canvas_context.camera.unproject(&p1);
+            ctx.line_to(to.c.x as f64, to.c.y as f64);
             ctx.stroke();
         });
 
@@ -310,14 +310,13 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
                 CoordState::Selected => Rgba::new(0x3A, 0xD1, 0xEF, 255),
                 CoordState::None => Rgba::new(0xA1, 0xE9, 0xF7, 255),
             };
-            let center = (coord.x(), coord.y());
-            let center = canvas_context.camera.unproject(center);
+            let center = canvas_context.camera.unproject(&coord);
 
             ctx.begin_path();
             ctx.set_fill_style(&color.to_css_string().into());
             ctx.ellipse(
-                center.0.into(),
-                center.1.into(),
+                center.c.x as f64,
+                center.c.y as f64,
                 5.0,
                 5.0,
                 PI / 4.0,
@@ -332,21 +331,21 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
         let start_coord = shape.start.borrow();
         let start_coord = canvas_context
             .camera
-            .unproject((start_coord.x(), start_coord.y()));
-        ctx.move_to(start_coord.0.into(), start_coord.1.into());
+            .unproject(&start_coord);
+        ctx.move_to(start_coord.c.x.into(), start_coord.c.y.into());
 
         shape.visit_full_curves(move |_, _, cp0, cp1, p1| {
-            let cp0 = canvas_context.camera.unproject((cp0.x(), cp0.y()));
-            let cp1 = canvas_context.camera.unproject((cp1.x(), cp1.y()));
-            let p1 = canvas_context.camera.unproject((p1.x(), p1.y()));
+            let cp0 = canvas_context.camera.unproject(&cp0);
+            let cp1 = canvas_context.camera.unproject(&cp1);
+            let p1 = canvas_context.camera.unproject(&p1);
 
             ctx.bezier_curve_to(
-                cp0.0.into(),
-                cp0.1.into(),
-                cp1.0.into(),
-                cp1.1.into(),
-                p1.0.into(),
-                p1.1.into(),
+                cp0.c.x.into(),
+                cp0.c.y.into(),
+                cp1.c.x.into(),
+                cp1.c.y.into(),
+                p1.c.x.into(),
+                p1.c.y.into(),
             );
         });
 
@@ -365,8 +364,8 @@ pub fn draw_closest_pt(
 ) {
     let mut min_distance = std::f32::MAX;
     let mut min_coord = Coord::new(0.0, 0.0);
-    let pos = canvas_context.camera.project((mouse_pos.c.x, mouse_pos.c.y));
-    let pos = Coord::new(pos.0, pos.1);
+    let pos = canvas_context.camera.project(&mouse_pos);
+
     for shape_selected in &selected.shapes {
         let shape = canvas_context
             .vgc_data
@@ -387,13 +386,13 @@ pub fn draw_closest_pt(
 
     let color = Rgba::new(0x0E, 0x90, 0xAA, 255);
 
-    let center = canvas_context.camera.unproject((min_coord.x(), min_coord.y()));
+    let center = canvas_context.camera.unproject(&min_coord);
 
     ctx.begin_path();
     ctx.set_fill_style(&color.to_css_string().into());
     ctx.ellipse(
-        center.0.into(),
-        center.1.into(),
+        center.c.x as f64,
+        center.c.y as f64,
         3.0,
         3.0,
         PI / 4.0,

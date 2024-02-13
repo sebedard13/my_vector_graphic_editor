@@ -4,7 +4,7 @@ import { EventsService } from "src/app/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scenes.service";
 import { SelectionService } from "src/app/selection.service";
-import { CanvasContent, Point, draw, draw_closest_pt, render } from "wasm-vgc";
+import { CanvasContent, ScreenCoord, draw, draw_closest_pt, render } from "wasm-vgc";
 
 @Component({
     selector: "app-canvas",
@@ -85,7 +85,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.selectionService.selection,
                 canvasContent,
                 this.ctx,
-                new Point(mouseCoords.x, mouseCoords.y),
+                new ScreenCoord(mouseCoords.x, mouseCoords.y),
             );
         }
 
