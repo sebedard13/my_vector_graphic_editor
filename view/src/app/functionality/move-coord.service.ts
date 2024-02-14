@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core";
 import { EventsService } from "../events.service";
-import { move_coords_of } from "wasm-vgc";
+import {  ScreenLength2d, move_coords_of } from "wasm-vgc";
 import { ScenesService } from "../scenes.service";
 import { Subscription } from "rxjs";
 import { SelectionService } from "../selection.service";
@@ -29,8 +29,7 @@ export class MoveCoordService extends Functionality {
                     move_coords_of(
                         this.selectionService.selection,
                         scene.canvasContent,
-                        event.movementX,
-                        event.movementY,
+                        new ScreenLength2d(event.movementX, event.movementY),
                     );
                 }
             });

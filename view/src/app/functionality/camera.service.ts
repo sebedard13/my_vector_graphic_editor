@@ -2,8 +2,8 @@ import { ReplaySubject, Subject, Subscription, filter, map, shareReplay } from "
 import { EventsService } from "../events.service";
 import { ScenesService } from "../scenes.service";
 import { Injectable, inject } from "@angular/core";
+import { ScreenLength2d, ScreenCoord } from "wasm-vgc";
 import { Functionality } from "./functionality";
-import { ScreenCoord } from "wasm-vgc";
 
 @Injectable({
     providedIn: "root",
@@ -46,7 +46,10 @@ export class CameraService extends Functionality {
     activate(): void {
         const zoomEvent = this.eventsService.wheel$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
-                scene.canvasContent.zoom(event.deltaY * -1, new ScreenCoord(event.offsetX, event.offsetY));
+                scene.canvasContent.zoom(
+                    event.deltaY * -1,
+                    new ScreenCoord(event.offsetX, event.offsetY),
+                );
                 this.zoomChange.next();
             });
         });
@@ -56,7 +59,9 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    scene.canvasContent.pan_camera(event.movementX, event.movementY);
+                    scene.canvasContent.pan_camera(
+                        new ScreenLength2d(event.movementX, event.movementY),
+                    );
                 });
             });
         this.subscriptions.push(moveEvent);

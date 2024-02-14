@@ -1,6 +1,6 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
-use common::types::{Coord, ScreenCoord};
+use common::types::{Coord, ScreenCoord, ScreenLength};
 use common::Rgba;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
@@ -120,7 +120,7 @@ impl Selected {
                 if point_in_radius(
                     &cursor_position.c,
                     &coord.c,
-                    canvas_context.camera.fixed_length(12.0),
+                    canvas_context.camera.fixed_length(ScreenLength::new(12.0)).c,
                 ) {
                     shape_selected.hover_coord = Some(ref_coord_type.clone());
                     continue 'shape_loop;
@@ -174,7 +174,7 @@ impl Selected {
                     if point_in_radius(
                         &start_press.c,
                         &coord.c,
-                        canvas_context.camera.fixed_length(12.0),
+                        canvas_context.camera.fixed_length(ScreenLength::new(12.0)).c,
                     ) {
                         shape_selected.coords.push(ref_coord_type.clone());
                         return;
@@ -197,7 +197,7 @@ impl Selected {
                 if point_in_radius(
                     &start_press.c,
                     &coord.c,
-                    canvas_context.camera.fixed_length(12.0),
+                    canvas_context.camera.fixed_length(ScreenLength::new(12.0)).c,
                 ) {
                     let pos = shape_selected
                         .coords
@@ -380,7 +380,7 @@ pub fn draw_closest_pt(
         }
     }
 
-    if min_distance > canvas_context.camera.fixed_length(10.0) {
+    if min_distance > canvas_context.camera.fixed_length(ScreenLength::new(10.0)).c {
         return;
     }
 

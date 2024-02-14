@@ -55,7 +55,7 @@ pub struct ScreenCoord {
 }
 
 #[wasm_bindgen]
-impl ScreenCoord{
+impl ScreenCoord {
     #[wasm_bindgen(constructor)]
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { c: Vec2::new(x, y) }
@@ -131,23 +131,60 @@ impl ScreenRect {
     }
 }
 
-
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq, Copy)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenLength {
-    pub length: f32,
+    pub c: f32,
 }
-
+#[wasm_bindgen]
 impl ScreenLength {
+    #[wasm_bindgen(constructor)]
     pub fn new(length: f32) -> ScreenLength {
-        ScreenLength { length }
+        ScreenLength { c: length }
     }
 }
 
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq, Copy)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Length {
-    pub length: f32,
+    pub c: f32,
 }
 
+#[wasm_bindgen]
 impl Length {
+    #[wasm_bindgen(constructor)]
     pub fn new(length: f32) -> Length {
-        Length { length }
+        Length { c: length }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq, Copy)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+pub struct ScreenLength2d {
+    pub c: Vec2,
+}
+
+#[wasm_bindgen]
+impl ScreenLength2d {
+    #[wasm_bindgen(constructor)]
+    pub fn new(x: f32, y: f32) -> ScreenLength2d {
+        ScreenLength2d { c: Vec2::new(x, y) }
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Debug, PartialEq, Copy)]
+#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+pub struct Length2d {
+    pub c: Vec2,
+}
+#[wasm_bindgen]
+impl Length2d {
+    #[wasm_bindgen(constructor)]
+    pub fn new(x: f32, y: f32) -> Length2d {
+        Length2d { c: Vec2::new(x, y) }
     }
 }

@@ -1,5 +1,7 @@
 use common::math::lerp;
-use common::types::{Coord, Rect, ScreenCoord, ScreenRect};
+use common::types::{
+    Coord, Length, Length2d, Rect, ScreenCoord, ScreenLength, ScreenLength2d, ScreenRect,
+};
 
 #[derive(Debug, Clone)]
 pub struct Camera {
@@ -44,7 +46,7 @@ impl Camera {
         let x = self.position.x() - (width / 2.0);
         let y = self.position.y() - (height / 2.0);
 
-        Rect::new(x, y, width, height)
+        Rect::new(x, y, x + width, y + height)
     }
 
     /// Return the canvas coordinates of a given pixel point of the apps window.
@@ -110,11 +112,12 @@ impl Camera {
         };
     }
 
-    pub fn handle_pan(&mut self, movement: (f32, f32)) {
-        let scale_x = movement.0 / (Self::WIDTH * self.scaling);
-        let scale_y = movement.1 / (Self::WIDTH * self.scaling);
+    pub fn handle_pan(&mut self, movement: ScreenLength2d) {
+        let movement = self.fixed_2d_length(movement);
 
-        self.position = Coord::new(self.position.c.x - scale_x, self.position.c.y - scale_y)
+        self.position = Coord {
+            c: self.position.c - movement.c,
+        }
     }
 
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
@@ -131,18 +134,17 @@ impl Camera {
         );
     }
 
-    pub fn fixed_2d_length(&self, movement: (f32, f32)) -> (f32, f32) {
-        let transform = self.get_transform();
-
-        let x = movement.0 / transform.2;
-        let y = movement.1 / transform.3;
-
-        (x, y)
+    pub fn fixed_2d_length(&self, movement: ScreenLength2d) -> Length2d {
+        Length2d {
+            c: movement.c / self.scaling / Self::WIDTH,
+        }
     }
 
     /// Return the length of a given fixed pixel length in the canvas.
-    pub fn fixed_length(&self, length_px: f32) -> f32 {
-        length_px / self.scaling / Self::WIDTH
+    pub fn fixed_length(&self, length: ScreenLength) -> Length {
+        Length {
+            c: length.c / self.scaling / Self::WIDTH,
+        }
     }
 
     pub fn home(&mut self) {
@@ -232,7 +234,7 @@ mod test {
     }
 
     #[test]
-    fn test_no_zoom_then_region() {
+    fn no_zoom_then_region() {
         let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -240,8 +242,8 @@ mod test {
 
         assert_approx_eq!(f32, region.top_left.c.x, -0.5);
         assert_approx_eq!(f32, region.top_left.c.y, -0.5);
-        assert_approx_eq!(f32, region.bottom_right.c.x, 2.0);
-        assert_approx_eq!(f32, region.bottom_right.c.y, 2.0);
+        assert_approx_eq!(f32, region.bottom_right.c.x, 1.5);
+        assert_approx_eq!(f32, region.bottom_right.c.y, 1.5);
     }
 
     #[test]
@@ -358,7 +360,7 @@ mod test {
         assert_approx_eq!(f32, camera.scaling, 1.5);
         assert_approx_eq!(f32, region.top_left.c.x, -0.333333333);
         assert_approx_eq!(f32, region.top_left.c.y, -0.333333333);
-        assert_approx_eq!(f32, region.bottom_right.c.x, 1.333333333);
-        assert_approx_eq!(f32, region.bottom_right.c.y, 1.333333333);
+        assert_approx_eq!(f32, region.bottom_right.c.x, 1.0);
+        assert_approx_eq!(f32, region.bottom_right.c.y, 1.0);
     }
 }

@@ -1,4 +1,5 @@
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
+use common::types:: {ScreenLength, ScreenLength2d};
 use common::Rgba;
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
@@ -16,16 +17,19 @@ pub fn set_color_of(selected: &Selected, canvas_content: &mut CanvasContent, col
 }
 
 #[wasm_bindgen]
-pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
-    let (x, y) = canvas_content.camera.fixed_2d_length((x as f32, y as f32));
+pub fn move_coords_of(
+    selected: &Selected,
+    canvas_content: &mut CanvasContent,
+    movement: ScreenLength2d,
+) {
+    let movement = canvas_content.camera.fixed_2d_length(movement);
 
     for shape in &selected.shapes {
         for coord in &shape.coords {
             let mut coord = coord.borrow_mut();
-            let c_x = coord.x();
-            let c_y = coord.y();
-            coord.set_x(c_x + x);
-            coord.set_y(c_y + y)
+            let res_vec2 = coord.c + movement.c;
+            coord.set_x(res_vec2.x);
+            coord.set_y(res_vec2.y);
         }
     }
 }
@@ -44,7 +48,7 @@ pub fn add_or_remove_coord(
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(12.0)) {
+            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(ScreenLength::new(12.0)).c) {
                 to_do.push((shape_index, curve_index));
             }
         }
@@ -81,8 +85,8 @@ pub fn add_or_remove_coord(
         }
     }
 
-    let fixed_length = camera.fixed_length(10.0);
-    if min_distance <= fixed_length {
+    let fixed_length = camera.fixed_length(ScreenLength::new(10.0));
+    if min_distance <= fixed_length.c {
         let shape = vgc_data
             .get_shape_mut(min_shape_index)
             .expect("Shape is valid because it was selected");
@@ -101,7 +105,7 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_cli
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(12.0)) {
+            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(ScreenLength::new(12.0)).c) {
                 to_do.push((shape_index, curve_index));
             }
         }

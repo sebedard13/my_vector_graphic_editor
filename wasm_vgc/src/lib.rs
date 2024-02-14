@@ -5,7 +5,7 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use common::types::{Coord, ScreenCoord, ScreenRect};
+use common::types::{Coord, ScreenCoord, ScreenLength2d, ScreenRect};
 use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
@@ -84,10 +84,8 @@ impl CanvasContent {
         self.camera.handle_zoom(movement, coord);
     }
 
-    pub fn pan_camera(&mut self, x: f32, y: f32) {
-        self.camera.handle_pan((x, y));
-        console_log!("Panning camera to x: {}, y: {}", x, y);
-        console_log!("Camera: {:?}", self.camera);
+    pub fn pan_camera(&mut self, movement: ScreenLength2d) {
+        self.camera.handle_pan(movement);
     }
 }
 
