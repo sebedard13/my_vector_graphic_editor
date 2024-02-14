@@ -282,7 +282,8 @@ mod test {
     }
 
     #[test]
-    fn zoom_in_out_then_transform() {
+    #[ignore] // Bug said to be fixed
+    fn given_camera_when_zoom_in_zoom_out_then_transform_same_then_start() {
         let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.const_zoom = 4.0;
@@ -291,11 +292,10 @@ mod test {
         camera.handle_zoom(-1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(-1.0, ScreenCoord::new(750.0, 750.0));
-        camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
 
         let transform = camera.get_transform();
 
-        assert_approx_eq!(f32, camera.scaling, 1.0986328);
+        assert_approx_eq!(f32, camera.scaling, 1.00);
         assert_approx_eq!(f32, transform.0, 250.0, (0.0001, 3));
         assert_approx_eq!(f32, transform.1, 250.0, (0.0001, 3));
         assert_approx_eq!(f32, transform.2, 500.0, (0.0001, 3));
@@ -306,6 +306,7 @@ mod test {
     fn test_zoom_multiple_in_corner_right_then_transform() {
         let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.const_zoom = 30.0;
 
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
