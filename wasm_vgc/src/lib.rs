@@ -86,6 +86,8 @@ impl CanvasContent {
 
     pub fn pan_camera(&mut self, x: f32, y: f32) {
         self.camera.handle_pan((x, y));
+        console_log!("Panning camera to x: {}, y: {}", x, y);
+        console_log!("Camera: {:?}", self.camera);
     }
 }
 

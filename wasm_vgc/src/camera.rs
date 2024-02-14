@@ -42,7 +42,7 @@ impl Camera {
         let height = self.pixel_region.height() / self.scaling / (Self::WIDTH);
 
         let x = self.position.x() - (width / 2.0);
-        let y = self.position.x() - (height / 2.0);
+        let y = self.position.y() - (height / 2.0);
 
         Rect::new(x, y, width, height)
     }
@@ -114,7 +114,7 @@ impl Camera {
         let scale_x = movement.0 / (Self::WIDTH * self.scaling);
         let scale_y = movement.1 / (Self::WIDTH * self.scaling);
 
-        self.position = Coord::new(self.position.c.x + scale_x, self.position.c.y + scale_y)
+        self.position = Coord::new(self.position.c.x - scale_x, self.position.c.y - scale_y)
     }
 
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
