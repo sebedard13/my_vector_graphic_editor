@@ -167,7 +167,7 @@ mod test {
 
     #[test]
     fn test_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -181,7 +181,7 @@ mod test {
 
     #[test]
     fn change_size_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 250.0, 250.0);
 
@@ -195,7 +195,7 @@ mod test {
 
     #[test]
     fn test_zoom_in_center_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.const_zoom = 2.0;
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
@@ -217,7 +217,7 @@ mod test {
 
     #[test]
     fn zoom_in_corner_top_left_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.const_zoom = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.handle_zoom(1.0, ScreenCoord::new(250.0, 250.0));
@@ -233,20 +233,20 @@ mod test {
 
     #[test]
     fn test_no_zoom_then_region() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         let region = camera.region();
 
-        assert_approx_eq!(f32, region.bottom_right.c.x, -0.5);
-        assert_approx_eq!(f32, region.bottom_right.c.y, -0.5);
-        assert_approx_eq!(f32, region.top_left.c.x, 2.0);
-        assert_approx_eq!(f32, region.top_left.c.y, 2.0);
+        assert_approx_eq!(f32, region.top_left.c.x, -0.5);
+        assert_approx_eq!(f32, region.top_left.c.y, -0.5);
+        assert_approx_eq!(f32, region.bottom_right.c.x, 2.0);
+        assert_approx_eq!(f32, region.bottom_right.c.y, 2.0);
     }
 
     #[test]
     fn test_zoom_multiple_in_corner_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.const_zoom = 4.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -264,7 +264,7 @@ mod test {
 
     #[test]
     fn test_zoom_multiple_in_corner_fast_right_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.const_zoom = 4.0;
 
@@ -283,7 +283,7 @@ mod test {
 
     #[test]
     fn zoom_in_out_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.const_zoom = 4.0;
 
@@ -304,7 +304,7 @@ mod test {
 
     #[test]
     fn test_zoom_multiple_in_corner_right_then_transform() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
@@ -333,21 +333,21 @@ mod test {
 
     #[test]
     fn test_zoom_center_then_region() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.scaling = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         let region = camera.region();
 
-        assert_approx_eq!(f32, region.bottom_right.c.x, 0.0);
-        assert_approx_eq!(f32, region.bottom_right.c.y, 0.0);
-        assert_approx_eq!(f32, region.top_left.c.x, 1.0);
-        assert_approx_eq!(f32, region.top_left.c.y, 1.0);
+        assert_approx_eq!(f32, region.top_left.c.x, 0.0);
+        assert_approx_eq!(f32, region.top_left.c.y, 0.0);
+        assert_approx_eq!(f32, region.bottom_right.c.x, 1.0);
+        assert_approx_eq!(f32, region.bottom_right.c.y, 1.0);
     }
 
     #[test]
     fn test_zoom_top_left_corner_then_region() {
-        let mut camera = Camera::new();
+        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
         camera.const_zoom = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.handle_zoom(1.0, ScreenCoord::new(250.0, 250.0));
@@ -355,9 +355,9 @@ mod test {
         let region = camera.region();
 
         assert_approx_eq!(f32, camera.scaling, 1.5);
-        assert_approx_eq!(f32, region.bottom_right.c.x, -0.333333333);
-        assert_approx_eq!(f32, region.bottom_right.c.y, -0.333333333);
-        assert_approx_eq!(f32, region.top_left.c.x, 1.333333333);
-        assert_approx_eq!(f32, region.top_left.c.y, 1.333333333);
+        assert_approx_eq!(f32, region.top_left.c.x, -0.333333333);
+        assert_approx_eq!(f32, region.top_left.c.y, -0.333333333);
+        assert_approx_eq!(f32, region.bottom_right.c.x, 1.333333333);
+        assert_approx_eq!(f32, region.bottom_right.c.y, 1.333333333);
     }
 }

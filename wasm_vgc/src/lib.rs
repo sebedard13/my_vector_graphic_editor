@@ -12,8 +12,6 @@ use web_sys::CanvasRenderingContext2d;
 
 pub use common;
 
-
-
 // Function to read from index 1 of our buffer
 // And return the value at the index
 #[wasm_bindgen]
@@ -112,7 +110,10 @@ impl Default for CanvasContent {
 
         vgc_data.max_size = -1.5;
         Self {
-            camera: Camera::new_center(Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0)),
+            camera: Camera::new_center(Coord::new(
+                vgc_data.max_rect().2 / 2.0,
+                vgc_data.max_rect().3 / 2.0,
+            )),
             vgc_data,
         }
     }
@@ -135,10 +136,10 @@ pub fn render(
     );
 
     ctx.clear_rect(
-        canvas_content.camera.pixel_region.bottom_right.c.x as f64,
-        canvas_content.camera.pixel_region.bottom_right.c.y as f64,
         canvas_content.camera.pixel_region.top_left.c.x as f64,
         canvas_content.camera.pixel_region.top_left.c.y as f64,
+        canvas_content.camera.pixel_region.bottom_right.c.x as f64,
+        canvas_content.camera.pixel_region.bottom_right.c.y as f64,
     );
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {

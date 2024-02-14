@@ -21,6 +21,15 @@ pub fn contain(rect_min: &Vec2, rect_max: &Vec2, point: &Vec2) -> bool {
     point.x >= rect_min.x && point.x <= rect_max.x && point.y >= rect_min.y && point.y <= rect_max.y
 }
 
+/// Linear interpolation between two vectors
+/// ```rust
+/// use common::pures::Vec2;
+/// use common::math::lerp;
+///
+/// let a = Vec2::new(0.0, 0.0);
+/// let b = Vec2::new(1.0, 2.0);
+/// let t = 0.6;
+/// assert_eq!(lerp(&a, &b, t), Vec2::new(0.6, 1.2));
 pub fn lerp(a: &Vec2, b: &Vec2, t: f32) -> Vec2 {
     (1.0 - t) * a + t * b
 }
