@@ -26,7 +26,6 @@ pub struct CanvasContent {
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
-        console_log!("Creating new CanvasContent");
         let (max_w, max_h, max_size) = {
             if width > height {
                 (width / height, 1.0, -width / height)
@@ -48,13 +47,12 @@ impl CanvasContent {
         shape.color.g = 255;
         shape.color.b = 255;
 
-        Self {
-            camera: Camera::new_center(Coord::new(
-                vgc_data.max_rect().2 / 2.0,
-                vgc_data.max_rect().3 / 2.0,
-            )),
-            vgc_data,
-        }
+        let camera = Camera::new_center(
+            Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0),
+            width,
+        );
+
+        Self { camera, vgc_data }
     }
 
     #[wasm_bindgen]
@@ -109,13 +107,11 @@ impl Default for CanvasContent {
         shape.color.g = 0;
 
         vgc_data.max_size = -1.5;
-        Self {
-            camera: Camera::new_center(Coord::new(
-                vgc_data.max_rect().2 / 2.0,
-                vgc_data.max_rect().3 / 2.0,
-            )),
-            vgc_data,
-        }
+        let camera = Camera::new_center(
+            Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0),
+            750.0,
+        );
+        Self { camera, vgc_data }
     }
 }
 

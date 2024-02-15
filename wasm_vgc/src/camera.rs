@@ -9,39 +9,41 @@ pub struct Camera {
     pub scaling: f32,
     home: Coord,
     pub pixel_region: ScreenRect,
-    pub const_zoom: f32,
+    pub zoom_slope: f32,
+    pub width_at_zoom_1: ScreenLength,
 }
 
 impl Camera {
     pub const MIN_SCALING: f32 = 0.1;
     pub const MAX_SCALING: f32 = 50.0;
-    pub const WIDTH: f32 = 500.0;
 
     pub fn new() -> Self {
-        let default_translate = Coord::new(0.0, 0.0);
+        let default_translate = Coord::new(0.5, 0.5);
 
         Self {
             position: default_translate,
             scaling: 1.0,
             home: default_translate,
             pixel_region: ScreenRect::new(0.0, 0.0, 0.0, 0.0),
-            const_zoom: 15.0,
+            zoom_slope: 15.0,
+            width_at_zoom_1: ScreenLength::new(500.0),
         }
     }
 
-    pub fn new_center(default_translate: Coord) -> Self {
+    pub fn new_center(default_translate: Coord, width: f32) -> Self {
         Self {
             position: default_translate,
             scaling: 1.0,
             home: default_translate,
             pixel_region: ScreenRect::new(0.0, 0.0, 0.0, 0.0),
-            const_zoom: 15.0,
+            zoom_slope: 15.0,
+            width_at_zoom_1: ScreenLength::new(width),
         }
     }
 
     pub fn region(&self) -> Rect {
-        let width = self.pixel_region.width() / self.scaling / Self::WIDTH;
-        let height = self.pixel_region.height() / self.scaling / (Self::WIDTH);
+        let width = self.pixel_region.width() / self.scaling / self.width_at_zoom_1.c;
+        let height = self.pixel_region.height() / self.scaling / (self.width_at_zoom_1.c);
 
         let x = self.position.x() - (width / 2.0);
         let y = self.position.y() - (height / 2.0);
@@ -55,8 +57,9 @@ impl Camera {
     pub fn project(&self, position: &ScreenCoord) -> Coord {
         let region = &self.region();
 
-        let result = ((position.c - self.pixel_region.top_left.c) / self.scaling / Self::WIDTH)
-            + region.top_left.c;
+        let result =
+            ((position.c - self.pixel_region.top_left.c) / self.scaling / self.width_at_zoom_1.c)
+                + region.top_left.c;
 
         Coord { c: result }
     }
@@ -64,7 +67,7 @@ impl Camera {
     pub fn unproject(&self, position: &Coord) -> ScreenCoord {
         let region = &self.region();
 
-        let result = ((position.c - region.top_left.c) * self.scaling * Self::WIDTH)
+        let result = ((position.c - region.top_left.c) * self.scaling * self.width_at_zoom_1.c)
             + self.pixel_region.top_left.c;
 
         ScreenCoord { c: result }
@@ -97,7 +100,7 @@ impl Camera {
             let movement = f32::signum(movement);
             let old_scaling = self.scaling;
 
-            let new_scaling = (self.scaling * (1.0 + movement / self.const_zoom))
+            let new_scaling = (self.scaling * (1.0 + movement / self.zoom_slope))
                 .clamp(Self::MIN_SCALING, Self::MAX_SCALING);
 
             let projected_coord = self.project(&coord);
@@ -123,7 +126,7 @@ impl Camera {
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
         let top_left_on_screen = self.unproject(&Coord::new(0.0, 0.0));
 
-        let vgc_width = Self::WIDTH * self.scaling;
+        let vgc_width = self.width_at_zoom_1.c * self.scaling;
         let vgc_height = vgc_width;
 
         return (
@@ -136,14 +139,14 @@ impl Camera {
 
     pub fn fixed_2d_length(&self, movement: ScreenLength2d) -> Length2d {
         Length2d {
-            c: movement.c / self.scaling / Self::WIDTH,
+            c: movement.c / self.scaling / self.width_at_zoom_1.c,
         }
     }
 
     /// Return the length of a given fixed pixel length in the canvas.
     pub fn fixed_length(&self, length: ScreenLength) -> Length {
         Length {
-            c: length.c / self.scaling / Self::WIDTH,
+            c: length.c / self.scaling / self.width_at_zoom_1.c,
         }
     }
 
@@ -169,7 +172,7 @@ mod test {
 
     #[test]
     fn test_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -183,7 +186,7 @@ mod test {
 
     #[test]
     fn change_size_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 250.0, 250.0);
 
@@ -197,8 +200,8 @@ mod test {
 
     #[test]
     fn test_zoom_in_center_then_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
-        camera.const_zoom = 2.0;
+        let mut camera = Camera::new();
+        camera.zoom_slope = 2.0;
 
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -219,8 +222,8 @@ mod test {
 
     #[test]
     fn zoom_in_corner_top_left_then_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
-        camera.const_zoom = 2.0;
+        let mut camera = Camera::new();
+        camera.zoom_slope = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.handle_zoom(1.0, ScreenCoord::new(250.0, 250.0));
 
@@ -235,7 +238,7 @@ mod test {
 
     #[test]
     fn no_zoom_then_region() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         let region = camera.region();
@@ -248,8 +251,8 @@ mod test {
 
     #[test]
     fn test_zoom_multiple_in_corner_then_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
-        camera.const_zoom = 4.0;
+        let mut camera = Camera::new();
+        camera.zoom_slope = 4.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.handle_zoom(1.0, ScreenCoord::new(250.0, 250.0));
@@ -266,9 +269,9 @@ mod test {
 
     #[test]
     fn test_zoom_multiple_in_corner_fast_right_then_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
-        camera.const_zoom = 4.0;
+        camera.zoom_slope = 4.0;
 
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
@@ -286,9 +289,9 @@ mod test {
     #[test]
     #[ignore] // Bug said to be fixed
     fn given_camera_when_zoom_in_zoom_out_then_transform_same_then_start() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
-        camera.const_zoom = 4.0;
+        camera.zoom_slope = 4.0;
 
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(-1.0, ScreenCoord::new(750.0, 750.0));
@@ -306,9 +309,9 @@ mod test {
 
     #[test]
     fn test_zoom_multiple_in_corner_right_then_transform() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
-        camera.const_zoom = 30.0;
+        camera.zoom_slope = 30.0;
 
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
         camera.handle_zoom(1.0, ScreenCoord::new(750.0, 750.0));
@@ -336,7 +339,7 @@ mod test {
 
     #[test]
     fn test_zoom_center_then_region() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
+        let mut camera = Camera::new();
         camera.scaling = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
@@ -350,8 +353,8 @@ mod test {
 
     #[test]
     fn test_zoom_top_left_corner_then_region() {
-        let mut camera = Camera::new_center(Coord::new(0.5, 0.5));
-        camera.const_zoom = 2.0;
+        let mut camera = Camera::new();
+        camera.zoom_slope = 2.0;
         camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.handle_zoom(1.0, ScreenCoord::new(250.0, 250.0));
 
