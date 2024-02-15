@@ -1,0 +1,10 @@
+
+[tasks.cargo_test]
+workspace = false
+description = "Test Cargo project"
+script = ["cargo test"]
+
+[tasks.view_test]
+workspace = false
+description = "Test view/web"
+script = ["cd view", "ng test"]

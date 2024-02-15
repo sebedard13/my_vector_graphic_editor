@@ -65,3 +65,8 @@ run_task = { name = [
     "wasm_clean",
     "cargo_clean",
 ], parallel = true }
+
+[tasks.test-all]
+workspace = false
+description = "Run all tests"
+run_task = { name = ["cargo_test", "view_test"], parallel = false }
