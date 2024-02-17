@@ -48,7 +48,7 @@ impl CanvasContent {
         shape.color.b = 255;
 
         let camera = Camera::new_center(
-            Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0),
+            vgc_data.max_rect().center(),
             width,
         );
 
@@ -107,10 +107,7 @@ impl Default for CanvasContent {
         shape.color.g = 0;
 
         vgc_data.max_size = -1.5;
-        let camera = Camera::new_center(
-            Coord::new(vgc_data.max_rect().2 / 2.0, vgc_data.max_rect().3 / 2.0),
-            750.0,
-        );
+        let camera = Camera::new_center(vgc_data.max_rect().center(), 750.0);
         Self { camera, vgc_data }
     }
 }

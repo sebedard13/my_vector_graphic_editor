@@ -23,9 +23,7 @@ pub fn render_true<T>(canvas: &Vgc, renderer: &mut T) -> Result<(), String>
 where
     T: VgcRenderer,
 {
-    let max_rect = canvas.max_rect();
-
-    let coord_max = Coord::new(max_rect.2, max_rect.3);
+    let coord_max = canvas.max_rect().bottom_right;
 
     renderer.create()?;
     renderer.fill_background(&canvas.background, &coord_max)?;
@@ -161,8 +159,8 @@ mod test {
     #[cfg(feature = "tiny-skia_renderer")]
     fn test_tiny_skia_renderer() {
         use super::*;
-        use common::types::Coord;
         use crate::generate_from_push;
+        use common::types::Coord;
         use std::fs;
 
         let vgc = generate_from_push(vec![vec![

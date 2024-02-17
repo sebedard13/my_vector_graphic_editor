@@ -1,5 +1,5 @@
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
-use common::types:: {ScreenLength, ScreenLength2d};
+use common::types::{ScreenLength, ScreenLength2d};
 use common::Rgba;
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
@@ -48,7 +48,11 @@ pub fn add_or_remove_coord(
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(ScreenLength::new(12.0)).c) {
+            if point_in_radius(
+                &coord.c,
+                &pos.c,
+                camera.fixed_length(ScreenLength::new(12.0)).c,
+            ) {
                 to_do.push((shape_index, curve_index));
             }
         }
@@ -105,7 +109,11 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_cli
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
-            if point_in_radius(&coord.c, &pos.c, camera.fixed_length(ScreenLength::new(12.0)).c) {
+            if point_in_radius(
+                &coord.c,
+                &pos.c,
+                camera.fixed_length(ScreenLength::new(12.0)).c,
+            ) {
                 to_do.push((shape_index, curve_index));
             }
         }
@@ -133,7 +141,8 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse: Scree
 pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
     let vgc_data =
         from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
-    let camera = Camera::new();
+
+    let camera = Camera::new_center(vgc_data.max_rect().center(), 500.0);
     return CanvasContent { vgc_data, camera };
 }
 

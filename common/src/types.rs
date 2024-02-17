@@ -100,6 +100,13 @@ impl Rect {
     pub fn height(&self) -> f32 {
         self.bottom_right.c.y - self.top_left.c.y
     }
+
+    pub fn center(&self) -> Coord {
+        Coord::new(
+            (self.top_left.c.x + self.bottom_right.c.x) / 2.0,
+            (self.top_left.c.y + self.bottom_right.c.y) / 2.0,
+        )
+    }
 }
 
 /**

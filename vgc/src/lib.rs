@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use common::types::Coord;
+use common::types::{Coord, Rect};
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
@@ -153,7 +153,7 @@ impl Vgc {
         self.shapes.remove(shape_index);
     }
 
-    pub fn max_rect(&self) -> (f32, f32, f32, f32) {
+    pub fn max_rect(&self) -> Rect {
         let (w, h) = {
             if self.max_size > 0.0 {
                 (1.0, self.max_size)
@@ -161,7 +161,7 @@ impl Vgc {
                 (-self.max_size, 1.0)
             }
         };
-        (0.0, 0.0, w, h)
+        Rect::new(0.0, 0.0, w, h)
     }
 }
 
