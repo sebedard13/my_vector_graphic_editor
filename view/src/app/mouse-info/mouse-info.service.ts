@@ -25,7 +25,7 @@ export class MouseInfoService {
                     return { x: Infinity, y: Infinity };
                 }
 
-                const coord = scene.canvasContent.get_project_mouse(new ScreenCoord(coords.x, coords.y));
+                const coord = scene.canvasContent.camera_project(new ScreenCoord(coords.x, coords.y));
                 const rtn = { x: coord.x(), y: coord.y() };
                 coord.free();
                 return rtn;

@@ -22,7 +22,7 @@ pub fn move_coords_of(
     canvas_content: &mut CanvasContent,
     movement: ScreenLength2d,
 ) {
-    let movement = canvas_content.camera.fixed_2d_length(movement);
+    let movement = canvas_content.camera.transform_to_length2d(movement);
 
     for shape in &selected.shapes {
         for coord in &shape.coords {
@@ -38,11 +38,11 @@ pub fn move_coords_of(
 pub fn add_or_remove_coord(
     selected: &Selected,
     canvas_content: &mut CanvasContent,
-    coord_click: ScreenCoord,
+    mouse_position: ScreenCoord,
 ) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let pos = camera.project(&coord_click);
+    let pos = camera.project(mouse_position);
 
     // if click is on a point, remove it
     let mut to_do: Vec<(usize, usize)> = Vec::new();
@@ -51,7 +51,7 @@ pub fn add_or_remove_coord(
             if point_in_radius(
                 &coord.c,
                 &pos.c,
-                camera.fixed_length(ScreenLength::new(12.0)).c,
+                camera.transform_to_length(ScreenLength::new(12.0)).c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -89,7 +89,7 @@ pub fn add_or_remove_coord(
         }
     }
 
-    let fixed_length = camera.fixed_length(ScreenLength::new(10.0));
+    let fixed_length = camera.transform_to_length(ScreenLength::new(10.0));
     if min_distance <= fixed_length.c {
         let shape = vgc_data
             .get_shape_mut(min_shape_index)
@@ -101,10 +101,10 @@ pub fn add_or_remove_coord(
 }
 
 #[wasm_bindgen]
-pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_click: ScreenCoord) {
+pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let pos = camera.project(&coord_click);
+    let pos = camera.project(mouse_position);
 
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
@@ -112,7 +112,7 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_cli
             if point_in_radius(
                 &coord.c,
                 &pos.c,
-                camera.fixed_length(ScreenLength::new(12.0)).c,
+                camera.transform_to_length(ScreenLength::new(12.0)).c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -128,11 +128,11 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, coord_cli
 }
 
 #[wasm_bindgen]
-pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse: ScreenCoord) {
+pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
 
-    let pos = camera.project(&mouse);
+    let pos = camera.project(mouse_position);
     // if click create a new shape on point and ready to new point
     vgc::create_circle(vgc_data, pos, 0.1);
 }
@@ -142,7 +142,7 @@ pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
     let vgc_data =
         from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
 
-    let camera = Camera::new_center(vgc_data.max_rect().center(), 500.0);
+    let camera = Camera::new(vgc_data.max_rect().center(), 500.0);
     return CanvasContent { vgc_data, camera };
 }
 

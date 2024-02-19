@@ -31,7 +31,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.scenesService.currentSceneChange$.subscribe(() => {
             this.scenesService.currentSceneNow((scene) => {
-                scene.canvasContent.set_pixel_region(
+                scene.canvasContent.camera_set_pixel_region(
                     this.canvas.nativeElement.width,
                     this.canvas.nativeElement.height,
                 );
@@ -49,7 +49,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
 
                 this.scenesService.currentSceneNow((scene) => {
-                    scene.canvasContent.set_pixel_region(
+                    scene.canvasContent.camera_set_pixel_region(
                         this.canvas.nativeElement.width,
                         this.canvas.nativeElement.height,
                     );

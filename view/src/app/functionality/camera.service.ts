@@ -30,7 +30,7 @@ export class CameraService extends Functionality {
                     if (scene == null) {
                         return -1;
                     }
-                    return scene.canvasContent.get_zoom();
+                    return scene.canvasContent.camera_get_zoom();
                 }),
                 shareReplay(1),
             )
@@ -46,7 +46,7 @@ export class CameraService extends Functionality {
     activate(): void {
         const zoomEvent = this.eventsService.wheel$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
-                scene.canvasContent.zoom(
+                scene.canvasContent.camera_zoom_at(
                     event.deltaY * -1,
                     new ScreenCoord(event.offsetX, event.offsetY),
                 );
@@ -59,7 +59,7 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    scene.canvasContent.pan_camera(
+                    scene.canvasContent.camera_pan_by(
                         new ScreenLength2d(event.movementX, event.movementY),
                     );
                 });
