@@ -27,7 +27,6 @@ pub struct CanvasContent {
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
-        console_log!("new width: {}, height: {}", width, height);
         let (max_w, max_h, max_size) = {
             if width > height {
                 (width / height, 1.0, -width / height)
@@ -138,7 +137,6 @@ pub fn render_cover(
     width: f64,
     height: f64,
 ) -> Result<(), JsValue> {
-    console_log!("render_full width: {}, height: {}", width, height);
     let vgc = &canvas_content.vgc_data;
 
     let max_rect = vgc.max_rect();

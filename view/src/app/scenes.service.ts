@@ -87,7 +87,12 @@ export class ScenesService {
                     const buffer = reader.result as ArrayBuffer;
                     const canvasContent = load_from_arraybuffer(new Uint8Array(buffer));
                     const scene = new Scene(canvasContent);
-                    scene.metadata.name = file.name;
+                    let filename = file.name;
+                    if (filename.endsWith(".vgc")) {
+                        filename = filename.slice(0, -4);
+                    }
+
+                    scene.metadata.name = filename;
 
                     const scenes = this.scenesSubject.getValue();
                     scenes.push(scene);

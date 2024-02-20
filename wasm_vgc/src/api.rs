@@ -101,7 +101,11 @@ pub fn add_or_remove_coord(
 }
 
 #[wasm_bindgen]
-pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
+pub fn toggle_handle(
+    _: &Selected,
+    canvas_content: &mut CanvasContent,
+    mouse_position: ScreenCoord,
+) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
     let pos = camera.project(mouse_position);
@@ -139,15 +143,44 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_positi
 
 #[wasm_bindgen]
 pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
-    let vgc_data =
-        from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
+    let vec = array.to_vec();
+    let main_slice = vec.as_slice();
+    let first_4_bytes = main_slice.get(0..4).unwrap();
+    let length = u32::from_le_bytes([
+        first_4_bytes[0],
+        first_4_bytes[1],
+        first_4_bytes[2],
+        first_4_bytes[3],
+    ]) as usize;
 
-    let camera = Camera::new(vgc_data.max_rect().center(), 500.0);
+    let slice = main_slice.get(4..(4 + length)).unwrap();
+
+    let vgc_data = from_bytes::<Vgc>(slice).expect("Deserialization should be valid");
+
+    let camera_slice = main_slice.get((4 + length)..(4 + length + 16)).unwrap();
+
+    let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN);
+    camera.deserialize(camera_slice);
+
     return CanvasContent { vgc_data, camera };
 }
 
 #[wasm_bindgen]
 pub fn save_to_arraybuffer(canvas_content: &CanvasContent) -> Vec<u8> {
     let vec = to_allocvec::<Vgc>(&canvas_content.vgc_data).expect("Serialization should be valid");
-    return vec;
+
+    let length = (vec.len() as u32).to_le_bytes();
+
+    let mut result = Vec::new();
+
+    result.push(length[0]);
+    result.push(length[1]);
+    result.push(length[2]);
+    result.push(length[3]);
+    result.extend(vec);
+
+    let camera_slice = canvas_content.camera.serialize();
+    result.extend(camera_slice);
+
+    return result;
 }

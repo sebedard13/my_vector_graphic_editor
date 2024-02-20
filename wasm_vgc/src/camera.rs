@@ -4,7 +4,7 @@ use common::types::{
 };
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::{console_log, CanvasContent};
+use crate::CanvasContent;
 
 #[derive(Debug, Clone, Copy)]
 #[wasm_bindgen]
@@ -160,11 +160,9 @@ impl Camera {
     ///  * `movement` - positive for zoom in, negative for zoom out
 
     pub fn zoom_at(&mut self, movement: f32, coord: ScreenCoord) {
-        console_log!("self {:?}", self);
         if movement < 0.0 && self.scaling >= self.settings.min_scaling()
             || movement > 0.0 && self.scaling <= self.settings.max_scaling()
         {
-            console_log!("zoom_at2s {:?}, {:?}", movement, coord);
             let old_scaling = self.scaling;
 
             let new_scaling = self.compute_zoom(movement);
@@ -245,6 +243,61 @@ impl Camera {
             vgc_width as f32,
             vgc_height as f32,
         );
+    }
+
+    pub fn serialize(&self) -> [u8; 16] {
+        let mut result = [0u8; 16];
+
+        let camera_scale = self.settings.base_scale.c;
+
+        let scale = camera_scale.to_le_bytes();
+        result[0] = scale[0];
+        result[1] = scale[1];
+        result[2] = scale[2];
+        result[3] = scale[3];
+
+        let pos_x = self.position.c.x.to_le_bytes();
+        let pos_y = self.position.c.y.to_le_bytes();
+
+        result[4] = pos_x[0];
+        result[5] = pos_x[1];
+        result[6] = pos_x[2];
+        result[7] = pos_x[3];
+
+        result[8] = pos_y[0];
+        result[9] = pos_y[1];
+        result[10] = pos_y[2];
+        result[11] = pos_y[3];
+
+        let scale = self.scaling.to_le_bytes();
+        result[12] = scale[0];
+        result[13] = scale[1];
+        result[14] = scale[2];
+        result[15] = scale[3];
+
+        return result;
+    }
+
+    pub fn deserialize(&mut self, data: &[u8]) {
+        let mut scale = [0u8; 4];
+        scale.copy_from_slice(&data[0..4]);
+        let scale = f32::from_le_bytes(scale);
+        self.settings.base_scale = ScreenLength::new(scale);
+
+        let mut pos_x = [0u8; 4];
+        pos_x.copy_from_slice(&data[4..8]);
+        let pos_x = f32::from_le_bytes(pos_x);
+
+        let mut pos_y = [0u8; 4];
+        pos_y.copy_from_slice(&data[8..12]);
+        let pos_y = f32::from_le_bytes(pos_y);
+
+        self.position = Coord::new(pos_x, pos_y);
+
+        let mut scale = [0u8; 4];
+        scale.copy_from_slice(&data[12..16]);
+        let scale = f32::from_le_bytes(scale);
+        self.scaling = scale;
     }
 }
 
