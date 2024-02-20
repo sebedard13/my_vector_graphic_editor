@@ -9,7 +9,7 @@ use crate::{console_log, CanvasContent};
 #[derive(Debug, Clone, Copy)]
 #[wasm_bindgen]
 pub struct CameraSettings {
-    pub base_width: ScreenLength,
+    pub base_scale: ScreenLength,
 
     pub zoom_slope: f32,
     pub min_scaling_step: i32,
@@ -20,7 +20,7 @@ impl Default for CameraSettings {
     fn default() -> Self {
         Self {
             zoom_slope: 1.1,
-            base_width: ScreenLength::new(500.0),
+            base_scale: ScreenLength::new(500.0),
             min_scaling_step: 35,
             max_scaling_step: 50,
         }
@@ -28,9 +28,9 @@ impl Default for CameraSettings {
 }
 
 impl CameraSettings {
-    pub fn new(base_width: ScreenLength) -> Self {
+    pub fn new(base_scale: ScreenLength) -> Self {
         Self {
-            base_width: base_width,
+            base_scale: base_scale,
             ..Default::default()
         }
     }
@@ -105,13 +105,13 @@ impl Camera {
         self.pixel_region = ScreenRect::new(0.0, 0.0, width, height);
     }
 
-    pub fn get_base_width(&self) -> ScreenLength {
-        self.settings.base_width
+    pub fn get_base_scale(&self) -> ScreenLength {
+        self.settings.base_scale
     }
 
     pub fn region(&self) -> Rect {
-        let width = self.pixel_region.width() / self.scaling / self.settings.base_width.c;
-        let height = self.pixel_region.height() / self.scaling / (self.settings.base_width.c);
+        let width = self.pixel_region.width() / self.scaling / self.get_base_scale().c;
+        let height = self.pixel_region.height() / self.scaling / self.get_base_scale().c;
 
         let x = self.position.x() - (width / 2.0);
         let y = self.position.y() - (height / 2.0);
@@ -125,10 +125,9 @@ impl Camera {
     pub fn project(&self, position: ScreenCoord) -> Coord {
         let region = &self.region();
 
-        let result = ((position.c - self.pixel_region.top_left.c)
-            / self.scaling
-            / self.settings.base_width.c)
-            + region.top_left.c;
+        let result =
+            ((position.c - self.pixel_region.top_left.c) / self.scaling / self.get_base_scale().c)
+                + region.top_left.c;
 
         Coord { c: result }
     }
@@ -136,7 +135,7 @@ impl Camera {
     pub fn unproject(&self, position: Coord) -> ScreenCoord {
         let region = &self.region();
 
-        let result = ((position.c - region.top_left.c) * self.scaling * self.settings.base_width.c)
+        let result = ((position.c - region.top_left.c) * self.scaling * self.get_base_scale().c)
             + self.pixel_region.top_left.c;
 
         ScreenCoord { c: result }
@@ -144,14 +143,14 @@ impl Camera {
 
     pub fn transform_to_length2d(&self, movement: ScreenLength2d) -> Length2d {
         Length2d {
-            c: movement.c / self.scaling / self.settings.base_width.c,
+            c: movement.c / self.scaling / self.get_base_scale().c,
         }
     }
 
     /// Return the length of a given fixed pixel length in the canvas.
     pub fn transform_to_length(&self, length: ScreenLength) -> Length {
         Length {
-            c: length.c / self.scaling / self.settings.base_width.c,
+            c: length.c / self.scaling / self.get_base_scale().c,
         }
     }
 
@@ -222,7 +221,7 @@ impl Camera {
 generate_child_methods!(CanvasContent, camera,
     (camera_get_zoom, get_zoom(), f32),
     (camera_set_pixel_region, set_pixel_region(width: f32, height: f32)),
-    (camera_get_base_width, get_base_width(), ScreenLength),
+    (camera_get_base_width, get_base_scale(), ScreenLength),
     (camera_region, region(), Rect),
     (camera_project, project(position: ScreenCoord), Coord),
     (camera_unproject, unproject(position: Coord), ScreenCoord),
@@ -237,7 +236,7 @@ impl Camera {
     pub fn get_transform(&self) -> (f32, f32, f32, f32) {
         let top_left_on_screen = self.unproject(Coord::new(0.0, 0.0));
 
-        let vgc_width = self.settings.base_width.c * self.scaling;
+        let vgc_width = self.get_base_scale().c * self.scaling;
         let vgc_height = vgc_width;
 
         return (

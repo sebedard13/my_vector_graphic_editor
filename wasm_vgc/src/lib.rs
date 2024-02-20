@@ -27,6 +27,7 @@ pub struct CanvasContent {
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
+        console_log!("new width: {}, height: {}", width, height);
         let (max_w, max_h, max_size) = {
             if width > height {
                 (width / height, 1.0, -width / height)
@@ -48,16 +49,20 @@ impl CanvasContent {
         shape.color.g = 255;
         shape.color.b = 255;
 
-        let camera = Camera::new(vgc_data.max_rect().center(), width);
+        let scale = f32::min(width, height);
+
+        let camera = Camera::new(vgc_data.max_rect().center(), scale);
 
         Self { camera, vgc_data }
     }
 
     pub fn get_render_rect(&self) -> ScreenRect {
-        let width = self.camera.get_base_width();
+        let width = self.camera.get_base_scale();
+
         let rect = self.vgc_data.max_rect();
 
-        ScreenRect::new(0.0, 0.0, width.c, width.c * rect.height() / rect.width())
+        let sc = ScreenRect::new(0.0, 0.0, width.c * rect.width(), width.c * rect.height());
+        sc
     }
 
     #[wasm_bindgen]
@@ -86,7 +91,7 @@ impl Default for CanvasContent {
         shape.color.g = 0;
 
         vgc_data.max_size = -1.5;
-        let camera = Camera::new(vgc_data.max_rect().center(), 750.0);
+        let camera = Camera::new(vgc_data.max_rect().center(), 500.0);
         Self { camera, vgc_data }
     }
 }
@@ -108,6 +113,7 @@ pub fn render(
     );
 
     let pixel_region = canvas_content.camera.get_pixel_region();
+
     ctx.clear_rect(
         pixel_region.top_left.c.x as f64,
         pixel_region.top_left.c.y as f64,
@@ -126,15 +132,21 @@ pub fn render(
 }
 
 #[wasm_bindgen]
-pub fn render_full(
+pub fn render_cover(
     ctx: &CanvasRenderingContext2d,
     canvas_content: &CanvasContent,
     width: f64,
     height: f64,
 ) -> Result<(), JsValue> {
+    console_log!("render_full width: {}, height: {}", width, height);
     let vgc = &canvas_content.vgc_data;
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, (0.0, 0.0), width, height);
+    let max_rect = vgc.max_rect();
+
+    let scale_x = width / max_rect.width() as f64;
+    let scale_y = height / max_rect.height() as f64;
+
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, (0.0, 0.0), scale_x, scale_y);
 
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {
