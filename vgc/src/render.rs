@@ -1,12 +1,13 @@
 use crate::Vgc;
-use common::types::Coord;
+use common::pures::Vec2;
 use common::Rgba;
+use common::{pures::Mat2x3, types::Coord};
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
 
     fn fill_background(&mut self, color: &Rgba, coord_max: &Coord) -> Result<(), String>;
 
-    fn get_transform(&self) -> Result<(f32, f32, f32, f32), String>;
+    fn get_transform(&self) -> Result<Mat2x3, String>;
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String>;
 
@@ -27,34 +28,21 @@ where
 
     renderer.create()?;
     renderer.fill_background(&canvas.background, &coord_max)?;
-    let (move_x, move_y, scale_x, scale_y) = renderer.get_transform()?;
+    let transform = renderer.get_transform()?;
+    let m = &transform;
 
     for i_region in 0..canvas.shapes.len() {
         let region = &canvas.shapes[i_region];
 
         renderer.set_fill(&region.color)?;
 
-        renderer.start_shape(
-            &region
-                .start
-                .borrow()
-                .scale(move_x, move_y, scale_x, scale_y),
-        )?;
+        renderer.start_shape(&region.start.borrow().transform(m))?;
 
         for i_curve in 0..region.curves.len() {
             renderer.move_curve(
-                &region.curves[i_curve]
-                    .cp0
-                    .borrow()
-                    .scale(move_x, move_y, scale_x, scale_y),
-                &region.curves[i_curve]
-                    .cp1
-                    .borrow()
-                    .scale(move_x, move_y, scale_x, scale_y),
-                &region.curves[i_curve]
-                    .p1
-                    .borrow()
-                    .scale(move_x, move_y, scale_x, scale_y),
+                &region.curves[i_curve].cp0.borrow().transform(m),
+                &region.curves[i_curve].cp1.borrow().transform(m),
+                &region.curves[i_curve].p1.borrow().transform(m),
             )?;
         }
         renderer.close_shape()?;
@@ -71,15 +59,17 @@ use tiny_skia::{Paint, PathBuilder, Pixmap};
 #[derive(Default)]
 #[cfg(feature = "tiny-skia_renderer")]
 pub struct TinySkiaRenderer<'a> {
-    pub size: (f32, f32),
+    transform: Mat2x3,
     pixmap: Option<Pixmap>,
     paint: Option<Paint<'a>>,
     current_path: Option<PathBuilder>,
 }
 
 impl<'a> TinySkiaRenderer<'a> {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(width: f32, height: f32) -> Self {
+        let mut rtn = Self::default();
+        rtn.transform = Mat2x3::from_scale(Vec2::new(width, height));
+        rtn
     }
 
     pub fn get_rgba(self) -> Option<Vec<u8>> {
@@ -93,8 +83,13 @@ impl<'a> TinySkiaRenderer<'a> {
 #[cfg(feature = "tiny-skia_renderer")]
 impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
     fn create(&mut self) -> Result<(), String> {
-        self.pixmap =
-            Some(Pixmap::new(self.size.0 as u32, self.size.1 as u32).expect("Valid Size"));
+        self.pixmap = Some(
+            Pixmap::new(
+                self.transform.get_scale().x as u32,
+                self.transform.get_scale().y as u32,
+            )
+            .expect("Valid Size"),
+        );
         Ok(())
     }
 
@@ -106,8 +101,8 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
         Ok(())
     }
 
-    fn get_transform(&self) -> Result<(f32, f32, f32, f32), String> {
-        Ok((0.0, 0.0, self.size.0, self.size.1))
+    fn get_transform(&self) -> Result<Mat2x3, String> {
+        Ok(self.transform)
     }
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String> {
@@ -176,8 +171,7 @@ mod test {
             Coord::new(0.43, 0.27),
         ]]);
 
-        let renderer = &mut TinySkiaRenderer::default();
-        renderer.size = (512.0, 512.0);
+        let renderer = &mut TinySkiaRenderer::new(512.0, 512.0);
 
         let res = vgc.render(renderer);
         assert!(res.is_ok());

@@ -5,15 +5,16 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use common::types::{Coord, ScreenRect};
+use common::{
+    pures::{Mat2x3, Vec2},
+    types::{Coord, ScreenRect},
+};
 use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
 
 pub use common;
 
-// Function to read from index 1 of our buffer
-// And return the value at the index
 #[wasm_bindgen]
 pub struct CanvasContent {
     #[wasm_bindgen(skip)]
@@ -104,12 +105,7 @@ pub fn render(
 
     let transform = canvas_content.camera.get_transform();
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(
-        ctx,
-        (transform.0 as f64, transform.1 as f64),
-        transform.2 as f64,
-        transform.3 as f64,
-    );
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, transform);
 
     let pixel_region = canvas_content.camera.get_pixel_region();
 
@@ -134,17 +130,18 @@ pub fn render(
 pub fn render_cover(
     ctx: &CanvasRenderingContext2d,
     canvas_content: &CanvasContent,
-    width: f64,
-    height: f64,
+    width: f32,
+    height: f32,
 ) -> Result<(), JsValue> {
     let vgc = &canvas_content.vgc_data;
 
     let max_rect = vgc.max_rect();
 
-    let scale_x = width / max_rect.width() as f64;
-    let scale_y = height / max_rect.height() as f64;
+    let scale_x = width / max_rect.width();
+    let scale_y = height / max_rect.height();
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, (0.0, 0.0), scale_x, scale_y);
+    let mut ctx_2d_renderer =
+        CanvasContext2DRender::new(ctx, Mat2x3::from_scale(Vec2::new(scale_x, scale_y)));
 
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {

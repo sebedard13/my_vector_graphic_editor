@@ -1,4 +1,4 @@
-use crate::pures::Vec2;
+use crate::pures::{Mat2x3, Vec2};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -41,6 +41,12 @@ impl Coord {
         let y = self.c.y * scale_y + y;
 
         Coord::new(x, y)
+    }
+
+    pub fn transform(&self, m: &Mat2x3) -> Coord {
+        let c = m * self.c;
+
+        Coord { c }
     }
 }
 

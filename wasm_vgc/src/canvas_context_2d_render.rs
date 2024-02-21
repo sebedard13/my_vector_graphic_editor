@@ -1,28 +1,17 @@
-use vgc::VgcRenderer;
-use web_sys::CanvasRenderingContext2d;
+use common::pures::Mat2x3;
 use common::types::Coord;
 use common::Rgba;
+use vgc::VgcRenderer;
+use web_sys::CanvasRenderingContext2d;
 
 pub struct CanvasContext2DRender<'a> {
     context: &'a CanvasRenderingContext2d,
-    translate: (f64, f64),
-    w: f64,
-    h: f64,
+    transform: Mat2x3,
 }
 
 impl<'a> CanvasContext2DRender<'a> {
-    pub fn new(
-        context: &'a CanvasRenderingContext2d,
-        translate: (f64, f64),
-        w: f64,
-        h: f64,
-    ) -> Self {
-        Self {
-            context,
-            translate,
-            w,
-            h,
-        }
+    pub fn new(context: &'a CanvasRenderingContext2d, transform: Mat2x3) -> Self {
+        Self { context, transform }
     }
 }
 
@@ -31,17 +20,17 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn fill_background(
-        &mut self,
-        color: &Rgba,
-        max_coord: &Coord,
-    ) -> Result<(), String> {
+    fn fill_background(&mut self, color: &Rgba, max_coord: &Coord) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
+
+        let start = Coord::new(0.0, 0.0).transform(&self.transform);
+        let end = max_coord.transform(&self.transform);
+
         self.context.fill_rect(
-            self.translate.0,
-            self.translate.1,
-            self.w * max_coord.x() as f64,
-            self.h * max_coord.y() as f64,
+            start.x() as f64,
+            start.y() as f64,
+            (end.x() - start.x()) as f64,
+            (end.y() - start.y()) as f64,
         );
         Ok(())
     }
@@ -58,12 +47,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn move_curve(
-        &mut self,
-        cp0: &Coord,
-        cp1: &Coord,
-        p1: &Coord,
-    ) -> Result<(), String> {
+    fn move_curve(&mut self, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Result<(), String> {
         self.context.bezier_curve_to(
             cp0.x() as f64,
             cp0.y() as f64,
@@ -85,12 +69,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn get_transform(&self) -> Result<(f32, f32, f32, f32), String> {
-        Ok((
-            self.translate.0 as f32,
-            self.translate.1 as f32,
-            self.w as f32,
-            self.h as f32,
-        ))
+    fn get_transform(&self) -> Result<Mat2x3, String> {
+        Ok(self.transform)
     }
 }

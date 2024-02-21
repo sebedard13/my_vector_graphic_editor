@@ -1,4 +1,5 @@
 use common::math::lerp;
+use common::pures::{Mat2x3, Vec2};
 use common::types::{
     Coord, Length, Length2d, Rect, ScreenCoord, ScreenLength, ScreenLength2d, ScreenRect,
 };
@@ -231,18 +232,14 @@ generate_child_methods!(CanvasContent, camera,
 );
 
 impl Camera {
-    pub fn get_transform(&self) -> (f32, f32, f32, f32) {
+    pub fn get_transform(&self) -> Mat2x3 {
         let top_left_on_screen = self.unproject(Coord::new(0.0, 0.0));
 
         let vgc_width = self.get_base_scale().c * self.scaling;
         let vgc_height = vgc_width;
 
-        return (
-            top_left_on_screen.c.x as f32,
-            top_left_on_screen.c.y as f32,
-            vgc_width as f32,
-            vgc_height as f32,
-        );
+        return Mat2x3::from_scale(Vec2::new(vgc_width, vgc_height))
+            .translate(Vec2::new(top_left_on_screen.c.x, top_left_on_screen.c.y));
     }
 
     pub fn serialize(&self) -> [u8; 16] {
@@ -315,10 +312,10 @@ mod test {
 
         let transform = camera.get_transform();
 
-        assert_approx_eq!(f32, transform.0, 250.0);
-        assert_approx_eq!(f32, transform.1, 250.0);
-        assert_approx_eq!(f32, transform.2, 500.0);
-        assert_approx_eq!(f32, transform.3, 500.0);
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0);
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0);
     }
 
     #[test]
@@ -329,10 +326,10 @@ mod test {
 
         let transform = camera.get_transform();
 
-        assert_approx_eq!(f32, transform.0, -125.0);
-        assert_approx_eq!(f32, transform.1, -125.0);
-        assert_approx_eq!(f32, transform.2, 500.0);
-        assert_approx_eq!(f32, transform.3, 500.0);
+        assert_approx_eq!(f32, transform.get_translation().x, -125.0);
+        assert_approx_eq!(f32, transform.get_translation().y, -125.0);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0);
     }
 
     #[test]
@@ -350,10 +347,10 @@ mod test {
 
         let minus = ((500.0 * camera.scaling) - 500.0) / 2.0;
 
-        assert_eq!(transform.0, 250.0 - minus);
-        assert_eq!(transform.1, 250.0 - minus);
-        assert_eq!(transform.2, 500.0 * camera.scaling);
-        assert_eq!(transform.3, 500.0 * camera.scaling);
+        assert_eq!(transform.get_translation().x, 250.0 - minus);
+        assert_eq!(transform.get_translation().y, 250.0 - minus);
+        assert_eq!(transform.get_scale().x, 500.0 * camera.scaling);
+        assert_eq!(transform.get_scale().y, 500.0 * camera.scaling);
     }
 
     #[test]
@@ -367,10 +364,10 @@ mod test {
         let transform = camera.get_transform();
 
         assert_approx_eq!(f32, camera.scaling, 1.5);
-        assert_approx_eq!(f32, transform.0, 250.0);
-        assert_approx_eq!(f32, transform.1, 250.0);
-        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling);
-        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0);
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling);
     }
 
     #[test]
@@ -398,10 +395,10 @@ mod test {
         let transform = camera.get_transform();
 
         assert_approx_eq!(f32, camera.scaling, 1.6);
-        assert_approx_eq!(f32, transform.0, 250.0);
-        assert_approx_eq!(f32, transform.1, 250.0);
-        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling);
-        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0);
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling);
     }
 
     #[test]
@@ -417,10 +414,10 @@ mod test {
 
         let minus = (500.0 * camera.scaling) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 1.6);
-        assert_approx_eq!(f32, transform.0, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.1, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling, (0.0001, 3));
-        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling, (0.0001, 3));
     }
 
     #[test]
@@ -436,10 +433,10 @@ mod test {
         let transform = camera.get_transform();
 
         assert_approx_eq!(f32, camera.scaling, 1.00);
-        assert_approx_eq!(f32, transform.0, 250.0, (0.0001, 3));
-        assert_approx_eq!(f32, transform.1, 250.0, (0.0001, 3));
-        assert_approx_eq!(f32, transform.2, 500.0, (0.0001, 3));
-        assert_approx_eq!(f32, transform.3, 500.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0, (0.0001, 3));
     }
 
     #[test]
@@ -465,10 +462,10 @@ mod test {
 
         let minus = (500.0 * camera.scaling) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 3.4, (0.0001, 3));
-        assert_approx_eq!(f32, transform.0, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.1, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.2, 500.0 * camera.scaling, (0.0001, 3));
-        assert_approx_eq!(f32, transform.3, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling, (0.0001, 3));
     }
 
     #[test]

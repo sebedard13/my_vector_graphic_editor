@@ -77,6 +77,14 @@ impl Mat2x3 {
         }
     }
 
+    pub fn get_scale(&self) -> Vec2 {
+        Vec2::new(self.m00, self.m11)
+    }
+
+    pub fn get_translation(&self) -> Vec2 {
+        Vec2::new(self.m20, self.m21)
+    }
+
     pub fn from_rotation(angle: f32) -> Mat2x3 {
         let (s, c) = angle.sin_cos();
         Mat2x3 {
@@ -143,55 +151,29 @@ impl Mat2x3 {
             m21: 0.0,
         }
     }
-
-    pub fn rotate(&mut self, angle: f32) {
-        *self = Mat2x3::from_rotation(angle) * *self;
-    }
-
-    pub fn scale(&mut self, scale: Vec2) {
-        *self = Mat2x3::from_scale(scale) * *self;
-    }
-
-    pub fn translate(&mut self, translation: Vec2) {
-        *self = Mat2x3::from_translate(translation) * *self;
-    }
-
-    pub fn reflect_origin(&mut self) {
-        *self = Mat2x3::from_reflect_origin() * *self;
-    }
-
-    pub fn reflect_x(&mut self) {
-        *self = Mat2x3::from_reflect_x() * *self;
-    }
-
-    pub fn reflect_y(&mut self) {
-        *self = Mat2x3::from_reflect_y() * *self;
-    }
-
-    pub fn rotate_copy(&self, angle: f32) -> Mat2x3 {
-        Mat2x3::from_rotation(angle) * *self
-    }
-
-    pub fn scale_copy(&self, scale: Vec2) -> Mat2x3 {
-        Mat2x3::from_scale(scale) * *self
-    }
-
-    pub fn translate_copy(&self, translation: Vec2) -> Mat2x3 {
-        Mat2x3::from_translate(translation) * *self
-    }
-
-    pub fn reflect_origin_copy(&self) -> Mat2x3 {
-        Mat2x3::from_reflect_origin() * *self
-    }
-
-    pub fn reflect_x_copy(&self) -> Mat2x3 {
-        Mat2x3::from_reflect_x() * *self
-    }
-
-    pub fn reflect_y_copy(&self) -> Mat2x3 {
-        Mat2x3::from_reflect_y() * *self
-    }
 }
+
+macro_rules! from_to_self_and_copy {
+    ($from_method:ident $(($($param:ident : $type:ty),* ))?, $method:ident, $copy_method:ident ) => {
+        impl Mat2x3 {
+            pub fn $method(&mut self $(, $($param : $type),* )?) -> Self {
+                *self = Mat2x3::$from_method($( $($param),* )?) * *self;
+                *self
+            }
+
+            pub fn $copy_method(&self $(, $($param : $type),* )?) -> Mat2x3 {
+                Mat2x3::$from_method($( $($param),* )?) * *self
+            }
+        }
+    };
+}
+
+from_to_self_and_copy!(from_rotation (angle: f32), rotate, rotate_copy);
+from_to_self_and_copy!(from_scale (scale: Vec2), scale, scale_copy);
+from_to_self_and_copy!(from_translate (translation: Vec2), translate, translate_copy);
+from_to_self_and_copy!(from_reflect_origin (), reflect_origin, reflect_origin_copy);
+from_to_self_and_copy!(from_reflect_x (), reflect_x, reflect_x_copy);
+from_to_self_and_copy!(from_reflect_y (), reflect_y, reflect_y_copy);
 
 impl Mul<Mat2x3> for Mat2x3 {
     type Output = Mat2x3;
@@ -223,7 +205,8 @@ impl Mul<Vec2> for Mat2x3 {
 
 forward_ref_binop!(impl Mul, mul for Mat2x3, Vec2);
 
-mod tests {
+#[cfg(test)]
+mod test {
     use crate::pures::{Mat2x3, Vec2};
 
     #[test]
