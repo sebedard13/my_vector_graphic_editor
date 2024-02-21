@@ -1,5 +1,6 @@
 use std::{fmt::Display, ops::Mul};
 
+use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -168,12 +169,12 @@ macro_rules! from_to_self_and_copy {
     };
 }
 
-from_to_self_and_copy!(from_rotation (angle: f32), rotate, rotate_copy);
-from_to_self_and_copy!(from_scale (scale: Vec2), scale, scale_copy);
-from_to_self_and_copy!(from_translate (translation: Vec2), translate, translate_copy);
-from_to_self_and_copy!(from_reflect_origin (), reflect_origin, reflect_origin_copy);
-from_to_self_and_copy!(from_reflect_x (), reflect_x, reflect_x_copy);
-from_to_self_and_copy!(from_reflect_y (), reflect_y, reflect_y_copy);
+from_to_self_and_copy!(from_rotation(angle: f32), rotate, rotate_copy);
+from_to_self_and_copy!(from_scale(scale: Vec2), scale, scale_copy);
+from_to_self_and_copy!(from_translate(translation: Vec2), translate, translate_copy);
+from_to_self_and_copy!(from_reflect_origin(), reflect_origin, reflect_origin_copy);
+from_to_self_and_copy!(from_reflect_x(), reflect_x, reflect_x_copy);
+from_to_self_and_copy!(from_reflect_y(), reflect_y, reflect_y_copy);
 
 impl Mul<Mat2x3> for Mat2x3 {
     type Output = Mat2x3;
@@ -204,6 +205,20 @@ impl Mul<Vec2> for Mat2x3 {
 }
 
 forward_ref_binop!(impl Mul, mul for Mat2x3, Vec2);
+
+impl ApproxEq for Mat2x3 {
+    type Margin = F32Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+        self.m00.approx_eq(other.m00, margin)
+            && self.m01.approx_eq(other.m01, margin)
+            && self.m10.approx_eq(other.m10, margin)
+            && self.m11.approx_eq(other.m11, margin)
+            && self.m20.approx_eq(other.m20, margin)
+            && self.m21.approx_eq(other.m21, margin)
+    }
+}
 
 #[cfg(test)]
 mod test {

@@ -10,7 +10,7 @@ use crate::CanvasContent;
 #[derive(Debug, Clone, Copy)]
 #[wasm_bindgen]
 pub struct CameraSettings {
-    pub base_scale: ScreenLength,
+    pub pixel_region: ScreenRect,
 
     pub zoom_slope: f32,
     pub min_scaling_step: i32,
@@ -20,8 +20,8 @@ pub struct CameraSettings {
 impl Default for CameraSettings {
     fn default() -> Self {
         Self {
+            pixel_region: ScreenRect::new(0.0, 0.0, 0.0, 0.0),
             zoom_slope: 1.1,
-            base_scale: ScreenLength::new(500.0),
             min_scaling_step: 35,
             max_scaling_step: 50,
         }
@@ -29,13 +29,6 @@ impl Default for CameraSettings {
 }
 
 impl CameraSettings {
-    pub fn new(base_scale: ScreenLength) -> Self {
-        Self {
-            base_scale: base_scale,
-            ..Default::default()
-        }
-    }
-
     pub fn min_scaling(&self) -> f32 {
         1.0 / (self.zoom_slope.powi(self.min_scaling_step))
     }
@@ -49,10 +42,14 @@ impl CameraSettings {
 pub struct Camera {
     position: Coord,
     scaling: f32,
-    home: Coord,
-    pixel_region: ScreenRect,
+    rotation: f32,
+    reflect_x: bool,
+    reflect_y: bool,
+    base_scale: ScreenLength,
 
-    settings: CameraSettings,
+    cache_transform: Mat2x3,
+    home: Coord,
+    pub settings: CameraSettings,
 }
 
 impl Default for Camera {
@@ -62,8 +59,13 @@ impl Default for Camera {
         Self {
             position: default_translate,
             scaling: 1.0,
+            rotation: 0.0,
+            reflect_x: false,
+            reflect_y: false,
+            base_scale: ScreenLength::new(500.0),
+
+            cache_transform: Mat2x3::identity(),
             home: default_translate,
-            pixel_region: ScreenRect::new(0.0, 0.0, 0.0, 0.0),
             settings: CameraSettings::default(),
         }
     }
@@ -88,9 +90,14 @@ impl Camera {
         Self {
             position: default_translate,
             scaling: 1.0,
+            rotation: 0.0, //f32::to_radians(45.0),
+            reflect_x: false,
+            reflect_y: false,
+            base_scale: ScreenLength::new(width),
+
+            cache_transform: Mat2x3::identity(),
             home: default_translate,
-            pixel_region: ScreenRect::new(0.0, 0.0, 0.0, 0.0),
-            settings: CameraSettings::new(ScreenLength::new(width)),
+            settings: CameraSettings::default(),
         }
     }
 
@@ -99,45 +106,35 @@ impl Camera {
     }
 
     pub fn get_pixel_region(&self) -> ScreenRect {
-        self.pixel_region
+        self.settings.pixel_region
     }
 
     pub fn set_pixel_region(&mut self, width: f32, height: f32) {
-        self.pixel_region = ScreenRect::new(0.0, 0.0, width, height);
+        self.settings.pixel_region = ScreenRect::new(0.0, 0.0, width, height);
     }
 
     pub fn get_base_scale(&self) -> ScreenLength {
-        self.settings.base_scale
+        self.base_scale
     }
 
     pub fn region(&self) -> Rect {
-        let width = self.pixel_region.width() / self.scaling / self.get_base_scale().c;
-        let height = self.pixel_region.height() / self.scaling / self.get_base_scale().c;
+        let length = self.transform_to_length2d(self.settings.pixel_region.length());
 
-        let x = self.position.x() - (width / 2.0);
-        let y = self.position.y() - (height / 2.0);
+        let pos = self.position.c - length.c / 2.0;
 
-        Rect::new(x, y, x + width, y + height)
+        Rect::new(pos.x, pos.y, pos.x + length.c.x, pos.y + length.c.y)
     }
 
     /// Return the canvas coordinates of a given pixel point of the apps window.
     /// (0,0) is the top left corner of the window.
-    ///
     pub fn project(&self, position: ScreenCoord) -> Coord {
-        let region = &self.region();
-
-        let result =
-            ((position.c - self.pixel_region.top_left.c) / self.scaling / self.get_base_scale().c)
-                + region.top_left.c;
+        let result = self.get_inverse_transform() * position.c;
 
         Coord { c: result }
     }
 
     pub fn unproject(&self, position: Coord) -> ScreenCoord {
-        let region = &self.region();
-
-        let result = ((position.c - region.top_left.c) * self.scaling * self.get_base_scale().c)
-            + self.pixel_region.top_left.c;
+        let result = self.get_transform() * position.c;
 
         ScreenCoord { c: result }
     }
@@ -153,6 +150,12 @@ impl Camera {
         Length {
             c: length.c / self.scaling / self.get_base_scale().c,
         }
+    }
+
+    pub fn transform_to_length2d_with_rotation(&self, movement: ScreenLength2d) -> Length2d {
+        let m = self.get_inverse_transform();
+        let result = m * movement.c - m * Vec2::new(0.0, 0.0);
+        return Length2d { c: result };
     }
 
     ///  Zooms the camera in or out by the given amount, centered on the given point.
@@ -204,7 +207,7 @@ impl Camera {
     }
 
     pub fn pan_by(&mut self, movement: ScreenLength2d) {
-        let movement = self.transform_to_length2d(movement);
+        let movement = self.transform_to_length2d_with_rotation(movement);
 
         self.position = Coord {
             c: self.position.c - movement.c,
@@ -233,19 +236,29 @@ generate_child_methods!(CanvasContent, camera,
 
 impl Camera {
     pub fn get_transform(&self) -> Mat2x3 {
-        let top_left_on_screen = self.unproject(Coord::new(0.0, 0.0));
+        let mut rtn = Mat2x3::identity()
+            .translate(self.region().top_left.c * -1.0)
+            .scale(Vec2::new(self.scaling, self.scaling))
+            .scale(Vec2::new(self.get_base_scale().c, self.get_base_scale().c))
+            .rotate(self.rotation);
+        if self.reflect_x {
+            rtn.reflect_x();
+        }
+        if self.reflect_y {
+            rtn.reflect_y();
+        }
 
-        let vgc_width = self.get_base_scale().c * self.scaling;
-        let vgc_height = vgc_width;
-
-        return Mat2x3::from_scale(Vec2::new(vgc_width, vgc_height))
-            .translate(Vec2::new(top_left_on_screen.c.x, top_left_on_screen.c.y));
+        rtn
     }
 
-    pub fn serialize(&self) -> [u8; 16] {
-        let mut result = [0u8; 16];
+    pub fn get_inverse_transform(&self) -> Mat2x3 {
+        self.get_transform().inverse()
+    }
 
-        let camera_scale = self.settings.base_scale.c;
+    pub fn serialize(&self) -> [u8; 22] {
+        let mut result = [0u8; 22];
+
+        let camera_scale = self.base_scale.c;
 
         let scale = camera_scale.to_le_bytes();
         result[0] = scale[0];
@@ -272,6 +285,24 @@ impl Camera {
         result[14] = scale[2];
         result[15] = scale[3];
 
+        let rotation = self.rotation.to_le_bytes();
+        result[16] = rotation[0];
+        result[17] = rotation[1];
+        result[18] = rotation[2];
+        result[19] = rotation[3];
+
+        if self.reflect_x {
+            result[20] = 1;
+        } else {
+            result[20] = 0;
+        }
+
+        if self.reflect_y {
+            result[21] = 1;
+        } else {
+            result[21] = 0;
+        }
+
         return result;
     }
 
@@ -279,7 +310,7 @@ impl Camera {
         let mut scale = [0u8; 4];
         scale.copy_from_slice(&data[0..4]);
         let scale = f32::from_le_bytes(scale);
-        self.settings.base_scale = ScreenLength::new(scale);
+        self.base_scale = ScreenLength::new(scale);
 
         let mut pos_x = [0u8; 4];
         pos_x.copy_from_slice(&data[4..8]);
@@ -295,6 +326,14 @@ impl Camera {
         scale.copy_from_slice(&data[12..16]);
         let scale = f32::from_le_bytes(scale);
         self.scaling = scale;
+
+        let mut rotation = [0u8; 4];
+        rotation.copy_from_slice(&data[16..20]);
+        let rotation = f32::from_le_bytes(rotation);
+        self.rotation = rotation;
+
+        self.reflect_x = data[20] == 1;
+        self.reflect_y = data[21] == 1;
     }
 }
 
@@ -308,7 +347,7 @@ mod test {
     fn test_transform() {
         let mut camera = Camera::default();
 
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         let transform = camera.get_transform();
 
@@ -322,7 +361,7 @@ mod test {
     fn change_size_transform() {
         let mut camera = Camera::default();
 
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 250.0, 250.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 250.0, 250.0);
 
         let transform = camera.get_transform();
 
@@ -336,7 +375,7 @@ mod test {
     fn test_zoom_in_center_then_transform() {
         let mut camera = Camera::default();
 
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(500.0, 500.0));
         camera.zoom_at(1.0, ScreenCoord::new(500.0, 500.0));
@@ -358,7 +397,7 @@ mod test {
         let mut camera = Camera::default();
         camera.settings.zoom_slope = 1.5;
 
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.zoom_at(1.0, ScreenCoord::new(250.0, 250.0));
 
         let transform = camera.get_transform();
@@ -373,7 +412,7 @@ mod test {
     #[test]
     fn no_zoom_then_region() {
         let mut camera = Camera::default();
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         let region = camera.region();
 
@@ -387,7 +426,7 @@ mod test {
     fn test_zoom_multiple_in_corner_then_transform() {
         let mut camera = Camera::default();
         camera.settings.zoom_slope = 1.25;
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(250.0, 250.0));
         camera.zoom_at(1.0, ScreenCoord::new(250.0, 250.0));
@@ -405,7 +444,7 @@ mod test {
     fn test_zoom_multiple_in_corner_fast_right_then_transform() {
         let mut camera = Camera::default();
         camera.settings.zoom_slope = 1.25;
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(750.0, 750.0));
         camera.zoom_at(1.0, ScreenCoord::new(750.0, 750.0));
@@ -414,16 +453,36 @@ mod test {
 
         let minus = (500.0 * camera.scaling) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 1.6);
-        assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(
+            f32,
+            transform.get_translation().x,
+            250.0 - minus,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_translation().y,
+            250.0 - minus,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_scale().x,
+            500.0 * camera.scaling,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_scale().y,
+            500.0 * camera.scaling,
+            (0.0001, 3)
+        );
     }
 
     #[test]
     fn given_camera_when_zoom_in_zoom_out_then_transform_same_then_start() {
         let mut camera = Camera::default();
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(750.0, 750.0));
         camera.zoom_at(-1.0, ScreenCoord::new(750.0, 750.0));
@@ -442,7 +501,7 @@ mod test {
     #[test]
     fn test_zoom_multiple_in_corner_right_then_transform() {
         let mut camera = Camera::default();
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(750.0, 750.0));
         camera.zoom_at(1.0, ScreenCoord::new(750.0, 750.0));
@@ -462,17 +521,37 @@ mod test {
 
         let minus = (500.0 * camera.scaling) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 3.4, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling, (0.0001, 3));
-        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling, (0.0001, 3));
+        assert_approx_eq!(
+            f32,
+            transform.get_translation().x,
+            250.0 - minus,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_translation().y,
+            250.0 - minus,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_scale().x,
+            500.0 * camera.scaling,
+            (0.0001, 3)
+        );
+        assert_approx_eq!(
+            f32,
+            transform.get_scale().y,
+            500.0 * camera.scaling,
+            (0.0001, 3)
+        );
     }
 
     #[test]
     fn test_zoom_center_then_region() {
         let mut camera = Camera::default();
         camera.settings.zoom_slope = 2.0;
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
 
         camera.zoom_at(1.0, ScreenCoord::new(500.0, 500.0));
 
@@ -488,7 +567,7 @@ mod test {
     fn test_zoom_top_left_corner_then_region() {
         let mut camera = Camera::default();
         camera.settings.zoom_slope = 1.5;
-        camera.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
         camera.zoom_at(1.0, ScreenCoord::new(250.0, 250.0));
 
         let region = camera.region();
@@ -498,5 +577,18 @@ mod test {
         assert_approx_eq!(f32, region.top_left.c.y, -0.333333333);
         assert_approx_eq!(f32, region.bottom_right.c.x, 1.0);
         assert_approx_eq!(f32, region.bottom_right.c.y, 1.0);
+    }
+
+    #[test]
+    fn test_zoom_top_left_corner_then_project() {
+        let mut camera = Camera::default();
+        camera.settings.zoom_slope = 1.5;
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+        camera.zoom_at(1.0, ScreenCoord::new(250.0, 250.0));
+
+        let coord = camera.project(ScreenCoord::new(0.0, 0.0));
+
+        assert_approx_eq!(f32, coord.c.x, -0.333333333);
+        assert_approx_eq!(f32, coord.c.y, -0.333333333);
     }
 }
