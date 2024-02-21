@@ -1,4 +1,4 @@
-use crate::pures::{Mat2x2, Vec2};
+use crate::pures::Vec2;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -60,17 +60,6 @@ impl ScreenCoord {
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { c: Vec2::new(x, y) }
     }
-}
-
-/**
- * A transform matrix with offset
- */
-#[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-pub struct Transform {
-    pub transform: Mat2x2,
-    pub offset: Vec2,
 }
 
 /**
