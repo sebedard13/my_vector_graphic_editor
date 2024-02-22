@@ -108,7 +108,6 @@ impl Mul<Vec2> for f32 {
 
 forward_ref_binop!(impl Mul, mul for f32, Vec2);
 
-
 impl Div<f32> for Vec2 {
     type Output = Vec2;
 
@@ -122,8 +121,16 @@ impl Div<f32> for Vec2 {
 
 forward_ref_binop!(impl Div, div for Vec2, f32);
 
-
 impl ApproxEq for &Vec2 {
+    type Margin = F32Margin;
+
+    fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
+        let margin = margin.into();
+        self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
+    }
+}
+
+impl ApproxEq for Vec2 {
     type Margin = F32Margin;
 
     fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {

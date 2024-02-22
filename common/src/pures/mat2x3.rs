@@ -90,8 +90,8 @@ impl Mat2x3 {
         let (s, c) = angle.sin_cos();
         Mat2x3 {
             m00: c,
-            m01: -s,
-            m10: s,
+            m01: s,
+            m10: -s,
             m11: c,
             m20: 0.0,
             m21: 0.0,
@@ -198,8 +198,8 @@ impl Mul<Vec2> for Mat2x3 {
 
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.m00 * rhs.x + self.m01 * rhs.y + self.m20,
-            y: self.m10 * rhs.x + self.m11 * rhs.y + self.m21,
+            x: self.m00 * rhs.x + self.m10 * rhs.y + self.m20,
+            y: self.m01 * rhs.x + self.m11 * rhs.y + self.m21,
         }
     }
 }
@@ -222,6 +222,8 @@ impl ApproxEq for Mat2x3 {
 
 #[cfg(test)]
 mod test {
+    use float_cmp::assert_approx_eq;
+
     use crate::pures::{Mat2x3, Vec2};
 
     #[test]
@@ -245,8 +247,7 @@ mod test {
         let mat = Mat2x3::from_rotation(std::f32::consts::PI / 2.0);
         let vec = Vec2::new(1.0, 0.0);
         let rotated = mat * vec;
-        assert!((rotated.x - 0.0).abs() < f32::EPSILON);
-        assert!((rotated.y - 1.0).abs() < f32::EPSILON);
+        assert_approx_eq!(Vec2, rotated, Vec2::new(0.0, 1.0));
     }
 
     #[test]
@@ -290,5 +291,39 @@ mod test {
         let vec = Vec2::new(1.0, 1.0);
         let result = reflect * vec;
         assert_eq!(result, Vec2::new(-1.0, 1.0));
+    }
+
+    #[test]
+    fn rotation_of_square_at_center() {
+        let mat = Mat2x3::identity()
+            .translate(Vec2::new(-0.5, -0.5))
+            .rotate(std::f32::consts::PI / 4.0)
+            .translate(Vec2::new(0.5, 0.5));
+
+        let m_res = Mat2x3::new(
+            0.70710677,
+            0.70710677,
+            -0.70710677,
+            0.70710677,
+            0.5,
+            -0.20710677,
+        );
+
+        assert_approx_eq!(Mat2x3, mat, m_res);
+
+        let p00 = Vec2::new(0.0, 0.0);
+        let p01 = Vec2::new(1.0, 0.0);
+        let p10 = Vec2::new(0.0, 1.0);
+        let p11 = Vec2::new(1.0, 1.0);
+
+        let p00 = mat * p00;
+        let p01 = mat * p01;
+        let p10 = mat * p10;
+        let p11 = mat * p11;
+
+        assert_approx_eq!(Vec2, p00, Vec2::new(0.5, -0.20710677));
+        assert_approx_eq!(Vec2, p01, Vec2::new(1.20710677, 0.5));
+        assert_approx_eq!(Vec2, p10, Vec2::new(-0.20710677, 0.5));
+        assert_approx_eq!(Vec2, p11, Vec2::new(0.5, 1.20710677));
     }
 }

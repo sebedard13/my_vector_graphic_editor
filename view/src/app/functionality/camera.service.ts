@@ -65,6 +65,66 @@ export class CameraService extends Functionality {
                 });
             });
         this.subscriptions.push(moveEvent);
+
+        const rotate5 = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "q"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    let angle = scene.canvasContent.camera_get_rotation();
+                    angle += 0.0872664626;
+                    scene.canvasContent.camera_set_rotation(angle);
+                });
+            });
+        this.subscriptions.push(rotate5);
+
+        const rotateHome = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "r"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    scene.canvasContent.camera_set_rotation(0);
+                });
+            });
+        this.subscriptions.push(rotateHome);
+
+        const rotateMinus5 = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "e"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    let angle = scene.canvasContent.camera_get_rotation();
+                    angle -= 0.0872664626;
+                    scene.canvasContent.camera_set_rotation(angle);
+                });
+            });
+        this.subscriptions.push(rotateMinus5);
+
+        const flipX = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "z"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    const flip = scene.canvasContent.camera_get_reflect_x();
+                    scene.canvasContent.camera_set_reflect_x(!flip);
+                });
+            });
+        this.subscriptions.push(flipX);
+
+        const flipY = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "x"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    const flip = scene.canvasContent.camera_get_reflect_y();
+                    scene.canvasContent.camera_set_reflect_y(!flip);
+                });
+            });
+        this.subscriptions.push(flipY);
+
+        const reset = this.eventsService.keydown$
+            .pipe(filter((event) => event.key == "c"))
+            .subscribe((_) => {
+                this.sceneService.currentSceneNow((scene) => {
+                    scene.canvasContent.camera_home();
+                });
+            });
+        this.subscriptions.push(reset);
     }
 
     desactivate(): void {

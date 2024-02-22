@@ -22,7 +22,9 @@ pub fn move_coords_of(
     canvas_content: &mut CanvasContent,
     movement: ScreenLength2d,
 ) {
-    let movement = canvas_content.camera.transform_to_length2d(movement);
+    let movement = canvas_content
+        .camera
+        .transform_to_length2d_with_rotation(movement);
 
     for shape in &selected.shapes {
         for coord in &shape.coords {

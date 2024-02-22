@@ -47,7 +47,6 @@ pub struct Camera {
     reflect_y: bool,
     base_scale: ScreenLength,
 
-    cache_transform: Mat2x3,
     home: Coord,
     pub settings: CameraSettings,
 }
@@ -64,7 +63,6 @@ impl Default for Camera {
             reflect_y: false,
             base_scale: ScreenLength::new(500.0),
 
-            cache_transform: Mat2x3::identity(),
             home: default_translate,
             settings: CameraSettings::default(),
         }
@@ -95,7 +93,6 @@ impl Camera {
             reflect_y: false,
             base_scale: ScreenLength::new(width),
 
-            cache_transform: Mat2x3::identity(),
             home: default_translate,
             settings: CameraSettings::default(),
         }
@@ -115,6 +112,30 @@ impl Camera {
 
     pub fn get_base_scale(&self) -> ScreenLength {
         self.base_scale
+    }
+
+    pub fn set_rotation(&mut self, rotation: f32) {
+        self.rotation = rotation;
+    }
+
+    pub fn get_rotation(&self) -> f32 {
+        self.rotation
+    }
+
+    pub fn set_reflect_x(&mut self, reflect_x: bool) {
+        self.reflect_x = reflect_x;
+    }
+
+    pub fn get_reflect_x(&self) -> bool {
+        self.reflect_x
+    }
+
+    pub fn set_reflect_y(&mut self, reflect_y: bool) {
+        self.reflect_y = reflect_y;
+    }
+
+    pub fn get_reflect_y(&self) -> bool {
+        self.reflect_y
     }
 
     pub fn region(&self) -> Rect {
@@ -217,6 +238,9 @@ impl Camera {
     pub fn home(&mut self) {
         self.position = self.home;
         self.scaling = 1.0;
+        self.rotation = 0.0;
+        self.reflect_x = false;
+        self.reflect_y = false;
     }
 }
 
@@ -224,6 +248,12 @@ generate_child_methods!(CanvasContent, camera,
     (camera_get_zoom, get_zoom(), f32),
     (camera_set_pixel_region, set_pixel_region(width: f32, height: f32)),
     (camera_get_base_width, get_base_scale(), ScreenLength),
+    (camera_set_rotation, set_rotation(rotation: f32)),
+    (camera_get_rotation, get_rotation(), f32),
+    (camera_set_reflect_x, set_reflect_x(reflect_x: bool)),
+    (camera_get_reflect_x, get_reflect_x(), bool),
+    (camera_set_reflect_y, set_reflect_y(reflect_y: bool)),
+    (camera_get_reflect_y, get_reflect_y(), bool),
     (camera_region, region(), Rect),
     (camera_project, project(position: ScreenCoord), Coord),
     (camera_unproject, unproject(position: Coord), ScreenCoord),
@@ -236,16 +266,34 @@ generate_child_methods!(CanvasContent, camera,
 
 impl Camera {
     pub fn get_transform(&self) -> Mat2x3 {
-        let mut rtn = Mat2x3::identity()
-            .translate(self.region().top_left.c * -1.0)
+        let translate_center = self.settings.pixel_region.center().c;
+
+        let m_rot = Mat2x3::identity()
+            .translate(translate_center * -1.0)
+            .rotate(-self.rotation)
+            .translate(translate_center);
+
+        let m_scale = Mat2x3::identity()
             .scale(Vec2::new(self.scaling, self.scaling))
-            .scale(Vec2::new(self.get_base_scale().c, self.get_base_scale().c))
-            .rotate(self.rotation);
+            .scale(Vec2::new(self.get_base_scale().c, self.get_base_scale().c));
+
+        let m_translate = Mat2x3::from_translate(self.region().top_left.c * -1.0);
+
+        let mut rtn = m_rot * m_scale * m_translate;
+
         if self.reflect_x {
-            rtn.reflect_x();
+            let reflect_x = Mat2x3::identity()
+                .translate(translate_center * -1.0)
+                .reflect_x()
+                .translate(translate_center);
+            rtn = reflect_x * rtn;
         }
         if self.reflect_y {
-            rtn.reflect_y();
+            let reflect_y = Mat2x3::identity()
+                .translate(translate_center * -1.0)
+                .reflect_y()
+                .translate(translate_center);
+            rtn = reflect_y * rtn;
         }
 
         rtn
@@ -590,5 +638,25 @@ mod test {
 
         assert_approx_eq!(f32, coord.c.x, -0.333333333);
         assert_approx_eq!(f32, coord.c.y, -0.333333333);
+    }
+
+    #[test]
+    fn rotation_90deg_then_unproject() {
+        let mut camera = Camera::default();
+        camera.settings.pixel_region = ScreenRect::new(0.0, 0.0, 1000.0, 1000.0);
+
+        let coord = camera.unproject(Coord::new(0.0, 0.0));
+        assert_approx_eq!(Vec2, coord.c, Vec2::new(250.0, 250.0));
+
+        let coord = camera.unproject(Coord::new(1.0, 0.0));
+        assert_approx_eq!(Vec2, coord.c, Vec2::new(750.0, 250.0));
+
+        camera.set_rotation(f32::to_radians(90.0));
+
+        let coord = camera.unproject(Coord::new(0.0, 0.0));
+        assert_approx_eq!(Vec2, coord.c, Vec2::new(250.0, 750.0));
+
+        let coord = camera.unproject(Coord::new(1.0, 0.0));
+        assert_approx_eq!(Vec2, coord.c, Vec2::new(250.0, 250.0));
     }
 }
