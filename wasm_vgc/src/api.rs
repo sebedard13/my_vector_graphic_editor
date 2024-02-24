@@ -161,7 +161,7 @@ pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
 
     let camera_slice = main_slice.get((4 + length)..(4 + length + 22)).unwrap();
 
-    let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN);
+    let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN, f32::NAN);
     camera.deserialize(camera_slice);
 
     return CanvasContent { vgc_data, camera };

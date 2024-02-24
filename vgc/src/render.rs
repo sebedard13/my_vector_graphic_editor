@@ -5,7 +5,7 @@ use common::{pures::Mat2x3, types::Coord};
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
 
-    fn fill_background(&mut self, color: &Rgba, coord_max: &Coord) -> Result<(), String>;
+    fn fill_background(&mut self, color: &Rgba) -> Result<(), String>;
 
     fn get_transform(&self) -> Result<Mat2x3, String>;
 
@@ -24,10 +24,8 @@ pub fn render_true<T>(canvas: &Vgc, renderer: &mut T) -> Result<(), String>
 where
     T: VgcRenderer,
 {
-    let coord_max = canvas.max_rect().bottom_right;
-
     renderer.create()?;
-    renderer.fill_background(&canvas.background, &coord_max)?;
+    renderer.fill_background(&canvas.background)?;
     let transform = renderer.get_transform()?;
     let m = &transform;
 
@@ -68,7 +66,9 @@ pub struct TinySkiaRenderer<'a> {
 impl<'a> TinySkiaRenderer<'a> {
     pub fn new(width: f32, height: f32) -> Self {
         let mut rtn = Self::default();
-        rtn.transform = Mat2x3::from_scale(Vec2::new(width, height));
+        rtn.transform = Mat2x3::from_translate(Vec2::new(1.0, 1.0))
+            .scale(Vec2::new(0.5, 0.5))
+            .scale(Vec2::new(width, height));
         rtn
     }
 
@@ -85,15 +85,15 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
     fn create(&mut self) -> Result<(), String> {
         self.pixmap = Some(
             Pixmap::new(
-                self.transform.get_scale().x as u32,
-                self.transform.get_scale().y as u32,
+                (self.transform.get_scale().x * 2.0) as u32,
+                (self.transform.get_scale().y * 2.0) as u32,
             )
             .expect("Valid Size"),
         );
         Ok(())
     }
 
-    fn fill_background(&mut self, color: &Rgba, _: &Coord) -> Result<(), String> {
+    fn fill_background(&mut self, color: &Rgba) -> Result<(), String> {
         let pixmap = self.pixmap.as_mut().expect("Valid Pixmap");
         pixmap.fill(tiny_skia::Color::from_rgba8(
             color.r, color.g, color.b, color.a,
@@ -156,19 +156,18 @@ mod test {
         use super::*;
         use crate::generate_from_push;
         use common::types::Coord;
-        use std::fs;
 
         let vgc = generate_from_push(vec![vec![
-            Coord::new(0.43, 0.27),
-            Coord::new(0.06577811, 0.2938202),
-            Coord::new(0.0, 1.0),
-            Coord::new(0.0, 1.0),
-            Coord::new(0.0, 1.0),
+            Coord::new(0.43 * 2.0 - 1.0, 0.27 * 2.0 - 1.0),
+            Coord::new(0.06577811 * 2.0 - 1.0, 0.2938202 * 2.0 - 1.0),
+            Coord::new(0.0 * 2.0 - 1.0, 1.0),
+            Coord::new(0.0 * 2.0 - 1.0, 1.0),
+            Coord::new(0.0 * 2.0 - 1.0, 1.0),
             Coord::new(1.0, 1.0),
             Coord::new(1.0, 1.0),
             Coord::new(1.0, 1.0),
-            Coord::new(0.7942219, 0.24617982),
-            Coord::new(0.43, 0.27),
+            Coord::new(0.7942219 * 2.0 - 1.0, 0.24617982 * 2.0 - 1.0),
+            Coord::new(0.43 * 2.0 - 1.0, 0.27 * 2.0 - 1.0),
         ]]);
 
         let renderer = &mut TinySkiaRenderer::new(512.0, 512.0);
@@ -177,8 +176,18 @@ mod test {
         assert!(res.is_ok());
 
         let pixmap = renderer.pixmap.take().expect("Valid Pixmap");
-        let image = pixmap.encode_png().expect("Valid Image");
 
-        fs::write("test.png", image).expect("Unable to write file");
+        let black = tiny_skia::ColorU8::from_rgba(0, 0, 0, 255);
+        let white = tiny_skia::ColorU8::from_rgba(255, 255, 255, 255);
+
+        assert!(pixmap.pixel(511, 511).is_some());
+        assert!(pixmap.pixel(514, 514).is_none());
+
+        assert!(pixmap.pixel(107, 190).unwrap().demultiply() == white);
+        assert!(pixmap.pixel(118, 200).unwrap().demultiply() == black);
+        assert!(pixmap.pixel(482, 484).unwrap().demultiply() == black);
+        assert!(pixmap.pixel(511, 494).unwrap().demultiply() == white);
+
+        assert!(pixmap.encode_png().is_ok());
     }
 }

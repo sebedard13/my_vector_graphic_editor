@@ -22,25 +22,19 @@ mod shape;
 
 /// Maximum size of the image, if we want to have detail for each pixel
 /// This is a limit because of f32 precision with 2^-23 for the smallest value
-/// 2560000 * 2^-23 < 1.0
+/// See decision.md for more information
 #[allow(dead_code)]
-static MAX_DETAIL_SIZE: u32 = 2560000;
+static MAX_DETAIL_SIZE: u32 = 52000000;
 
 #[derive(Debug)]
 pub struct Vgc {
-    // The maximum size, if image is portrait, width, if landscape, height
-    // The other size will be the value 1.0
-    // The Orientation is determined by the sign value, if positive, portrait, if negative, landscape
-    // This will not ve changed by inserting a new coord or shape.
-    pub max_size: f32,
     pub background: Rgba,
     shapes: Vec<Shape>,
 }
 
 impl Vgc {
-    pub fn new(max_size: f32, background: Rgba) -> Vgc {
+    pub fn new(background: Rgba) -> Vgc {
         Vgc {
-            max_size,
             background,
             shapes: Vec::new(),
         }
@@ -154,14 +148,7 @@ impl Vgc {
     }
 
     pub fn max_rect(&self) -> Rect {
-        let (w, h) = {
-            if self.max_size > 0.0 {
-                (1.0, self.max_size)
-            } else {
-                (-self.max_size, 1.0)
-            }
-        };
-        Rect::new(0.0, 0.0, w, h)
+        Rect::new(-1.0, -1.0, 1.0, 1.0)
     }
 }
 
@@ -210,7 +197,7 @@ pub fn generate_from_line(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(1.0, color);
+    let mut canvas = Vgc::new(color);
 
     for shape_coords in shapes_coords {
         if !shape_coords.is_empty() {
@@ -248,7 +235,7 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(1.0, color);
+    let mut canvas = Vgc::new(color);
 
     for shape_coords in shapes_coords {
         if !shape_coords.is_empty() {

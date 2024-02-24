@@ -5,7 +5,7 @@ use common::types::{
 };
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::CanvasContent;
+use crate::{console_log, CanvasContent};
 
 #[derive(Debug, Clone, Copy)]
 #[wasm_bindgen]
@@ -45,7 +45,7 @@ pub struct Camera {
     rotation: f32,
     reflect_x: bool,
     reflect_y: bool,
-    base_scale: ScreenLength,
+    base_scale: ScreenLength2d,
 
     home: Coord,
     pub settings: CameraSettings,
@@ -53,7 +53,7 @@ pub struct Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        let default_translate = Coord::new(0.5, 0.5);
+        let default_translate = Coord::new(0.0, 0.0);
 
         Self {
             position: default_translate,
@@ -61,7 +61,7 @@ impl Default for Camera {
             rotation: 0.0,
             reflect_x: false,
             reflect_y: false,
-            base_scale: ScreenLength::new(500.0),
+            base_scale: ScreenLength2d::new(500.0, 500.0),
 
             home: default_translate,
             settings: CameraSettings::default(),
@@ -84,14 +84,15 @@ macro_rules! generate_child_methods {
 }
 
 impl Camera {
-    pub fn new(default_translate: Coord, width: f32) -> Self {
+    pub fn new(default_translate: Coord, width: f32, height: f32) -> Self {
+        console_log!("default_translate: {:?}", default_translate);
         Self {
             position: default_translate,
             scaling: 1.0,
             rotation: 0.0, //f32::to_radians(45.0),
             reflect_x: false,
             reflect_y: false,
-            base_scale: ScreenLength::new(width),
+            base_scale: ScreenLength2d::new(width, height),
 
             home: default_translate,
             settings: CameraSettings::default(),
@@ -110,7 +111,7 @@ impl Camera {
         self.settings.pixel_region = ScreenRect::new(0.0, 0.0, width, height);
     }
 
-    pub fn get_base_scale(&self) -> ScreenLength {
+    pub fn get_base_scale(&self) -> ScreenLength2d {
         self.base_scale
     }
 
@@ -161,15 +162,20 @@ impl Camera {
     }
 
     pub fn transform_to_length2d(&self, movement: ScreenLength2d) -> Length2d {
-        Length2d {
-            c: movement.c / self.scaling / self.get_base_scale().c,
-        }
+        let res = movement.c / self.scaling;
+        let res = Vec2::new(
+            res.x / self.get_base_scale().c.x,
+            res.y / self.get_base_scale().c.y,
+        );
+
+        Length2d { c: res }
     }
 
     /// Return the length of a given fixed pixel length in the canvas.
     pub fn transform_to_length(&self, length: ScreenLength) -> Length {
+        let min_scale = f32::min(self.get_base_scale().c.x, self.get_base_scale().c.y);
         Length {
-            c: length.c / self.scaling / self.get_base_scale().c,
+            c: length.c / self.scaling / min_scale,
         }
     }
 
@@ -247,7 +253,6 @@ impl Camera {
 generate_child_methods!(CanvasContent, camera,
     (camera_get_zoom, get_zoom(), f32),
     (camera_set_pixel_region, set_pixel_region(width: f32, height: f32)),
-    (camera_get_base_width, get_base_scale(), ScreenLength),
     (camera_set_rotation, set_rotation(rotation: f32)),
     (camera_get_rotation, get_rotation(), f32),
     (camera_set_reflect_x, set_reflect_x(reflect_x: bool)),
@@ -274,8 +279,9 @@ impl Camera {
             .translate(translate_center);
 
         let m_scale = Mat2x3::identity()
+            .scale(Vec2::new(0.5, 0.5))
             .scale(Vec2::new(self.scaling, self.scaling))
-            .scale(Vec2::new(self.get_base_scale().c, self.get_base_scale().c));
+            .scale(self.get_base_scale().c);
 
         let m_translate = Mat2x3::from_translate(self.region().top_left.c * -1.0);
 
@@ -303,85 +309,101 @@ impl Camera {
         self.get_transform().inverse()
     }
 
-    pub fn serialize(&self) -> [u8; 22] {
-        let mut result = [0u8; 22];
+    pub fn serialize(&self) -> [u8; 26] {
+        let mut result = [0u8; 26];
 
-        let camera_scale = self.base_scale.c;
+        let base_width = self.base_scale.c.x.to_le_bytes();
+        let base_height = self.base_scale.c.y.to_le_bytes();
+        result[0] = base_width[0];
+        result[1] = base_width[1];
+        result[2] = base_width[2];
+        result[3] = base_width[3];
 
-        let scale = camera_scale.to_le_bytes();
-        result[0] = scale[0];
-        result[1] = scale[1];
-        result[2] = scale[2];
-        result[3] = scale[3];
+        result[4] = base_height[0];
+        result[5] = base_height[1];
+        result[6] = base_height[2];
+        result[7] = base_height[3];
 
         let pos_x = self.position.c.x.to_le_bytes();
         let pos_y = self.position.c.y.to_le_bytes();
 
-        result[4] = pos_x[0];
-        result[5] = pos_x[1];
-        result[6] = pos_x[2];
-        result[7] = pos_x[3];
+        result[8] = pos_x[0];
+        result[9] = pos_x[1];
+        result[10] = pos_x[2];
+        result[11] = pos_x[3];
 
-        result[8] = pos_y[0];
-        result[9] = pos_y[1];
-        result[10] = pos_y[2];
-        result[11] = pos_y[3];
+        result[12] = pos_y[0];
+        result[13] = pos_y[1];
+        result[14] = pos_y[2];
+        result[15] = pos_y[3];
 
         let scale = self.scaling.to_le_bytes();
-        result[12] = scale[0];
-        result[13] = scale[1];
-        result[14] = scale[2];
-        result[15] = scale[3];
+        result[16] = scale[0];
+        result[17] = scale[1];
+        result[18] = scale[2];
+        result[19] = scale[3];
 
         let rotation = self.rotation.to_le_bytes();
-        result[16] = rotation[0];
-        result[17] = rotation[1];
-        result[18] = rotation[2];
-        result[19] = rotation[3];
+        result[20] = rotation[0];
+        result[21] = rotation[1];
+        result[22] = rotation[2];
+        result[23] = rotation[3];
 
         if self.reflect_x {
-            result[20] = 1;
+            result[24] = 1;
         } else {
-            result[20] = 0;
+            result[24] = 0;
         }
 
         if self.reflect_y {
-            result[21] = 1;
+            result[25] = 1;
         } else {
-            result[21] = 0;
+            result[25] = 0;
         }
 
         return result;
     }
 
     pub fn deserialize(&mut self, data: &[u8]) {
-        let mut scale = [0u8; 4];
-        scale.copy_from_slice(&data[0..4]);
-        let scale = f32::from_le_bytes(scale);
-        self.base_scale = ScreenLength::new(scale);
+        let mut scale_width = [0u8; 4];
+        scale_width.copy_from_slice(&data[0..4]);
+        let scale_width = f32::from_le_bytes(scale_width);
+
+        let mut scale_height = [0u8; 4];
+        scale_height.copy_from_slice(&data[4..8]);
+        let scale_height = f32::from_le_bytes(scale_height);
+
+        self.base_scale = ScreenLength2d::new(scale_width, scale_height);
 
         let mut pos_x = [0u8; 4];
-        pos_x.copy_from_slice(&data[4..8]);
+        pos_x.copy_from_slice(&data[8..12]);
         let pos_x = f32::from_le_bytes(pos_x);
 
         let mut pos_y = [0u8; 4];
-        pos_y.copy_from_slice(&data[8..12]);
+        pos_y.copy_from_slice(&data[12..16]);
         let pos_y = f32::from_le_bytes(pos_y);
 
         self.position = Coord::new(pos_x, pos_y);
 
         let mut scale = [0u8; 4];
-        scale.copy_from_slice(&data[12..16]);
-        let scale = f32::from_le_bytes(scale);
-        self.scaling = scale;
+        scale.copy_from_slice(&data[16..20]);
+        self.scaling = f32::from_le_bytes(scale);
 
         let mut rotation = [0u8; 4];
-        rotation.copy_from_slice(&data[16..20]);
-        let rotation = f32::from_le_bytes(rotation);
-        self.rotation = rotation;
+        rotation.copy_from_slice(&data[20..24]);
+        self.rotation = f32::from_le_bytes(rotation);
 
-        self.reflect_x = data[20] == 1;
-        self.reflect_y = data[21] == 1;
+        if data[24] == 1 {
+            self.reflect_x = true;
+        } else {
+            self.reflect_x = false;
+        }
+
+        if data[25] == 1 {
+            self.reflect_y = true;
+        } else {
+            self.reflect_y = false;
+        }
     }
 }
 
@@ -434,10 +456,10 @@ mod test {
 
         let minus = ((500.0 * camera.scaling) - 500.0) / 2.0;
 
-        assert_eq!(transform.get_translation().x, 250.0 - minus);
-        assert_eq!(transform.get_translation().y, 250.0 - minus);
-        assert_eq!(transform.get_scale().x, 500.0 * camera.scaling);
-        assert_eq!(transform.get_scale().y, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus);
+        assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling);
     }
 
     #[test]

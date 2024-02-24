@@ -28,40 +28,27 @@ pub struct CanvasContent {
 impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
-        let (max_w, max_h, max_size) = {
-            if width > height {
-                (width / height, 1.0, -width / height)
-            } else {
-                (1.0, height / width, height / width)
-            }
-        };
-
         let mut vgc_data = vgc::generate_from_line(vec![vec![
-            Coord::new(0.0 * max_w, 0.0 * max_h),
-            Coord::new(0.0 * max_w, 1.0 * max_h),
-            Coord::new(1.0 * max_w, 1.0 * max_h),
-            Coord::new(1.0 * max_w, 0.0 * max_h),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, -1.0),
         ]]);
-        vgc_data.max_size = max_size;
 
         let shape = vgc_data.get_shape_mut(0).expect("Valid");
         shape.color.r = 255;
         shape.color.g = 255;
         shape.color.b = 255;
 
-        let scale = f32::min(width, height);
-
-        let camera = Camera::new(vgc_data.max_rect().center(), scale);
+        let camera = Camera::new(vgc_data.max_rect().center(), width, height);
 
         Self { camera, vgc_data }
     }
 
     pub fn get_render_rect(&self) -> ScreenRect {
-        let width = self.camera.get_base_scale();
+        let size = self.camera.get_base_scale();
 
-        let rect = self.vgc_data.max_rect();
-
-        let sc = ScreenRect::new(0.0, 0.0, width.c * rect.width(), width.c * rect.height());
+        let sc = ScreenRect::new(0.0, 0.0, size.c.x, size.c.y);
         sc
     }
 
@@ -75,14 +62,14 @@ impl Default for CanvasContent {
     fn default() -> Self {
         let mut vgc_data = vgc::generate_from_line(vec![
             vec![
-                Coord::new(0.0 * 1.5, 0.1),
-                Coord::new(0.0 * 1.5, 1.0),
-                Coord::new(0.9 * 1.5, 1.0),
+                Coord::new(-1.0, -0.9),
+                Coord::new(-1.0, 1.0),
+                Coord::new(0.9, 1.0),
             ],
             vec![
-                Coord::new(1.0 * 1.5, 0.9),
-                Coord::new(0.1 * 1.5, 0.0),
-                Coord::new(1.0 * 1.5, 0.0),
+                Coord::new(1.0, 0.9),
+                Coord::new(-0.9, -1.0),
+                Coord::new(1.0, -1.0),
             ],
         ]);
 
@@ -90,8 +77,7 @@ impl Default for CanvasContent {
         shape.color.r = 128;
         shape.color.g = 0;
 
-        vgc_data.max_size = -1.5;
-        let camera = Camera::new(vgc_data.max_rect().center(), 500.0);
+        let camera = Camera::new(vgc_data.max_rect().center(), 750.0, 500.0);
         Self { camera, vgc_data }
     }
 }

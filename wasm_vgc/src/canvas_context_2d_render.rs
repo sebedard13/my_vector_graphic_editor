@@ -20,13 +20,13 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn fill_background(&mut self, color: &Rgba, max_coord: &Coord) -> Result<(), String> {
+    fn fill_background(&mut self, color: &Rgba) -> Result<(), String> {
         self.context.set_fill_style(&color.to_css_string().into());
 
-        let corner0 = Coord::new(0.0, 0.0).transform(&self.transform);
-        let corner1 = Coord::new(0.0, max_coord.y()).transform(&self.transform);
-        let corner2 = max_coord.transform(&self.transform);
-        let corner3 = Coord::new(max_coord.x(), 0.0).transform(&self.transform);
+        let corner0 = Coord::new(-1.0, -1.0).transform(&self.transform);
+        let corner1 = Coord::new(-1.0, 1.0).transform(&self.transform);
+        let corner2 = Coord::new(1.0, 1.0).transform(&self.transform);
+        let corner3 = Coord::new(1.0, -1.0).transform(&self.transform);
 
         self.context.begin_path();
         self.context.move_to(corner0.x() as f64, corner0.y() as f64);

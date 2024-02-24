@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct VgcSerialization {
-    max_size: f32,
     background: Rgba,
     shapes: Vec<ShapeSerialization>,
     coords: Vec<Coord>,
@@ -30,7 +29,6 @@ struct CurveSerialization {
 impl VgcSerialization {
     fn from_vgc(vgc: &Vgc) -> VgcSerialization {
         let mut vgc_serialization = VgcSerialization {
-            max_size: vgc.max_size,
             background: vgc.background.clone(),
             shapes: Vec::new(),
             coords: Vec::new(),
@@ -91,7 +89,7 @@ impl VgcSerialization {
     }
 
     fn into_vgc(self) -> Vgc {
-        let mut vgc = Vgc::new(self.max_size, self.background);
+        let mut vgc = Vgc::new(self.background);
         let mut coord_map: Vec<CoordPtr> = Vec::new();
 
         for coord in self.coords.iter() {
@@ -179,7 +177,6 @@ mod test {
         let mut coord_map: Vec<(CoordPtr, usize)> = Vec::new();
         let mut index: usize = 0;
         let mut vgc_serialization = VgcSerialization {
-            max_size: 1.0,
             background: Rgba::new(0, 0, 0, 0),
             shapes: Vec::new(),
             coords: Vec::new(),
@@ -219,7 +216,6 @@ mod test {
         let canvas_out = from_bytes::<Vgc>(&output).expect("Deserialization should be valid");
 
         assert_eq!(canvas_in.debug_string(), canvas_out.debug_string());
-        assert_eq!(canvas_in.max_size, canvas_out.max_size);
         assert_eq!(canvas_in.background, canvas_out.background);
         assert_eq!(canvas_in.shapes.len(), canvas_out.shapes.len());
         assert_eq!(canvas_in.shapes[0].color, canvas_out.shapes[0].color);
