@@ -1,8 +1,6 @@
 use common::math::lerp;
 use common::pures::{Mat2x3, Vec2};
-use common::types::{
-    Coord, Length, Length2d, Rect, ScreenCoord, ScreenLength, ScreenLength2d, ScreenRect,
-};
+use common::types::{Coord, Length2d, Rect, ScreenCoord, ScreenLength2d, ScreenRect};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::{console_log, CanvasContent};
@@ -171,12 +169,13 @@ impl Camera {
         Length2d { c: res }
     }
 
-    /// Return the length of a given fixed pixel length in the canvas.
-    pub fn transform_to_length(&self, length: ScreenLength) -> Length {
-        let min_scale = f32::min(self.get_base_scale().c.x, self.get_base_scale().c.y);
-        Length {
-            c: length.c / self.scaling / min_scale,
-        }
+    pub fn transform_to_length2d_no_scale(&self, length: ScreenLength2d) -> Length2d {
+        let res = Vec2::new(
+            length.c.x / self.get_base_scale().c.x / 0.5,
+            length.c.y / self.get_base_scale().c.y / 0.5,
+        );
+
+        Length2d { c: res }
     }
 
     pub fn transform_to_length2d_with_rotation(&self, movement: ScreenLength2d) -> Length2d {
@@ -263,7 +262,6 @@ generate_child_methods!(CanvasContent, camera,
     (camera_project, project(position: ScreenCoord), Coord),
     (camera_unproject, unproject(position: Coord), ScreenCoord),
     (camera_transform_to_length2d, transform_to_length2d(movement: ScreenLength2d), Length2d),
-    (camera_transform_to_length, transform_to_length(length: ScreenLength), Length),
     (camera_zoom_at, zoom_at(movement: f32, coord: ScreenCoord)),
     (camera_pan_by, pan_by(movement: ScreenLength2d)),
     (camera_home, home())
@@ -607,12 +605,12 @@ mod test {
 
         let transform = camera.get_transform();
 
-        let minus = (500.0 * camera.scaling/2.0) - 500.0;
+        let minus = (500.0 * camera.scaling / 2.0) - 500.0;
         assert_approx_eq!(f32, camera.scaling, 3.4);
         assert_approx_eq!(f32, transform.get_translation().x, 250.0 - minus);
         assert_approx_eq!(f32, transform.get_translation().y, 250.0 - minus);
-        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling/2.0);
-        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling/2.0);
+        assert_approx_eq!(f32, transform.get_scale().x, 500.0 * camera.scaling / 2.0);
+        assert_approx_eq!(f32, transform.get_scale().y, 500.0 * camera.scaling / 2.0);
     }
 
     #[test]

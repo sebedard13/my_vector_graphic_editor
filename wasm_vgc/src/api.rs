@@ -1,5 +1,5 @@
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
-use common::types::{ScreenLength, ScreenLength2d};
+use common::types::{Coord, ScreenLength2d};
 use common::Rgba;
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
@@ -53,7 +53,9 @@ pub fn add_or_remove_coord(
             if point_in_radius(
                 &coord.c,
                 &pos.c,
-                camera.transform_to_length(ScreenLength::new(12.0)).c,
+                &camera
+                    .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                    .c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -76,23 +78,27 @@ pub fn add_or_remove_coord(
     let mut min_distance = std::f32::MAX;
     let mut min_shape_index = 0;
     let mut min_curve_index = 0;
+    let mut min_coord = Coord::new(100.0, 100.0);
     let mut min_t = 0.0;
 
     for shape_selected in &selected.shapes {
         let shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
 
-        let (curve_index, t, distance, _) = shape.closest_curve(&pos);
+        let (curve_index, t, distance, coord) = shape.closest_curve(&pos);
 
         if distance < min_distance {
             min_distance = distance;
             min_shape_index = shape_selected.shape_index;
             min_curve_index = curve_index;
+            min_coord = coord;
             min_t = t;
         }
     }
 
-    let fixed_length = camera.transform_to_length(ScreenLength::new(10.0));
-    if min_distance <= fixed_length.c {
+    let fixed_length = camera
+        .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
+        .c;
+    if point_in_radius(&pos.c, &min_coord.c, &fixed_length) {
         let shape = vgc_data
             .get_shape_mut(min_shape_index)
             .expect("Shape is valid because it was selected");
@@ -118,7 +124,9 @@ pub fn toggle_handle(
             if point_in_radius(
                 &coord.c,
                 &pos.c,
-                camera.transform_to_length(ScreenLength::new(12.0)).c,
+                &camera
+                    .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                    .c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -138,9 +146,11 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_positi
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
 
+    let radius = camera.transform_to_length2d_no_scale(ScreenLength2d::new(50.0, 50.0));
+
     let pos = camera.project(mouse_position);
     // if click create a new shape on point and ready to new point
-    vgc::create_circle(vgc_data, pos, 0.1);
+    vgc::create_circle(vgc_data, pos, radius.c.x, radius.c.y);
 }
 
 #[wasm_bindgen]
@@ -159,7 +169,7 @@ pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
 
     let vgc_data = from_bytes::<Vgc>(slice).expect("Deserialization should be valid");
 
-    let camera_slice = main_slice.get((4 + length)..(4 + length + 22)).unwrap();
+    let camera_slice = main_slice.get((4 + length)..(4 + length + 26)).unwrap();
 
     let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN, f32::NAN);
     camera.deserialize(camera_slice);

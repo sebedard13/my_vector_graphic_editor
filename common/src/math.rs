@@ -7,16 +7,15 @@ use super::pures::Vec2;
 ///
 /// let cursor = Vec2::new(10.0, 10.0);
 /// let center = Vec2::new(0.0, 0.0);
-/// let radius = 5.0;
-/// assert_eq!(point_in_radius(&cursor, &center, radius), false);
+/// let radius = Vec2::new(5.0, 5.0);
+/// assert_eq!(point_in_radius(&cursor, &center, &radius), false);
 /// let cursor = Vec2::new(-3.0, 0.0);
-/// assert_eq!(point_in_radius(&cursor, &center, radius), true);
+/// assert_eq!(point_in_radius(&cursor, &center, &radius), true);
 ///```
-pub fn point_in_radius(point: &Vec2, center: &Vec2, radius: f32) -> bool {
-    let x = point.x - center.x;
-    let y = point.y - center.y;
-    let distance = x * x + y * y;
-    distance < (radius * radius)
+pub fn point_in_radius(point: &Vec2, center: &Vec2, radius: &Vec2) -> bool {
+
+    let value  = (point - center)/radius;
+    value.x * value.x + value.y * value.y < 1.0
 }
 
 pub fn contain(rect_min: &Vec2, rect_max: &Vec2, point: &Vec2) -> bool {

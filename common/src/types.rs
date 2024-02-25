@@ -147,35 +147,6 @@ impl ScreenRect {
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-pub struct ScreenLength {
-    pub c: f32,
-}
-#[wasm_bindgen]
-impl ScreenLength {
-    #[wasm_bindgen(constructor)]
-    pub fn new(length: f32) -> ScreenLength {
-        ScreenLength { c: length }
-    }
-}
-
-#[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-pub struct Length {
-    pub c: f32,
-}
-
-#[wasm_bindgen]
-impl Length {
-    #[wasm_bindgen(constructor)]
-    pub fn new(length: f32) -> Length {
-        Length { c: length }
-    }
-}
-
-#[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenLength2d {
     pub c: Vec2,
 }

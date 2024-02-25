@@ -268,7 +268,7 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     canvas
 }
 
-pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
+pub fn create_circle(canvas: &mut Vgc, center: Coord, radius_x: f32, radius_y: f32) {
     //https://spencermortensen.com/articles/bezier-circle/
     let a = 1.000_055_2;
     let b = 0.553_426_9;
@@ -312,6 +312,6 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
 
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
-        (*coord) = (*coord).scale(center.x(), center.y(), radius, radius);
+        (*coord) = (*coord).scale(center.x(), center.y(), radius_x, radius_y);
     }
 }

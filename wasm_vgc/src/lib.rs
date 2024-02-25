@@ -126,8 +126,12 @@ pub fn render_cover(
     let scale_x = width / max_rect.width();
     let scale_y = height / max_rect.height();
 
-    let mut ctx_2d_renderer =
-        CanvasContext2DRender::new(ctx, Mat2x3::from_scale(Vec2::new(scale_x, scale_y)));
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(
+        ctx,
+        Mat2x3::identity()
+            .translate(max_rect.top_left.c * -1.0)
+            .scale(Vec2::new(scale_x, scale_y)),
+    );
 
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {

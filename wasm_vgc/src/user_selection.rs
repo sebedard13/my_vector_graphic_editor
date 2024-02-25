@@ -1,6 +1,6 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
-use common::types::{Coord, ScreenCoord, ScreenLength};
+use common::types::{Coord, ScreenCoord, ScreenLength2d};
 use common::Rgba;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
@@ -120,9 +120,9 @@ impl Selected {
                 if point_in_radius(
                     &cursor_position.c,
                     &coord.c,
-                    canvas_context
+                    &canvas_context
                         .camera
-                        .transform_to_length(ScreenLength::new(12.0))
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
                         .c,
                 ) {
                     shape_selected.hover_coord = Some(ref_coord_type.clone());
@@ -175,9 +175,9 @@ impl Selected {
                     if point_in_radius(
                         &start_press.c,
                         &coord.c,
-                        canvas_context
+                        &canvas_context
                             .camera
-                            .transform_to_length(ScreenLength::new(12.0))
+                            .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
                             .c,
                     ) {
                         shape_selected.coords.push(ref_coord_type.clone());
@@ -201,9 +201,9 @@ impl Selected {
                 if point_in_radius(
                     &start_press.c,
                     &coord.c,
-                    canvas_context
+                    &canvas_context
                         .camera
-                        .transform_to_length(ScreenLength::new(12.0))
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
                         .c,
                 ) {
                     let pos = shape_selected
@@ -383,12 +383,14 @@ pub fn draw_closest_pt(
         }
     }
 
-    if min_distance
-        > canvas_context
+    if !point_in_radius(
+        &pos.c,
+        &min_coord.c,
+        &canvas_context
             .camera
-            .transform_to_length(ScreenLength::new(10.0))
-            .c
-    {
+            .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
+            .c,
+    ) {
         return;
     }
 
