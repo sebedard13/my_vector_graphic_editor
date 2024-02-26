@@ -29,8 +29,7 @@ impl Display for Affine {
         write!(
             f,
             "({},{},{})\n({},{},{})",
-            self.m00, self.m01, self.m02, 
-            self.m10, self.m11, self.m12
+            self.m00, self.m01, self.m02, self.m10, self.m11, self.m12
         )
     }
 }

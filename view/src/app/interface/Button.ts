@@ -1,6 +1,11 @@
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Functionality } from "../functionality/functionality";
-import { faArrowPointer, faPenNib, faBezierCurve, faPaintBrush } from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowPointer,
+    faPenNib,
+    faBezierCurve,
+    faPaintBrush,
+} from "@fortawesome/free-solid-svg-icons";
 import { MoveCoordService } from "../functionality/move-coord.service";
 import { inject } from "@angular/core";
 import { AddRemoveCoordService } from "../functionality/add-remove-coord.service";
@@ -22,6 +27,6 @@ export function toolsbarSvgBtn(): Button[] {
             functionality: inject(AddRemoveCoordService),
         },
         { title: "Edit curve", icon: faBezierCurve, functionality: inject(ToggleHandleService) },
-        { title: "Draw shape", icon: faPaintBrush, functionality: inject(DrawShapeService)  },
+        { title: "Draw shape", icon: faPaintBrush, functionality: inject(DrawShapeService) },
     ];
 }

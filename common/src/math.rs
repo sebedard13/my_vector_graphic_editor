@@ -13,8 +13,7 @@ use super::pures::Vec2;
 /// assert_eq!(point_in_radius(&cursor, &center, &radius), true);
 ///```
 pub fn point_in_radius(point: &Vec2, center: &Vec2, radius: &Vec2) -> bool {
-
-    let value  = (point - center)/radius;
+    let value = (point - center) / radius;
     value.x * value.x + value.y * value.y < 1.0
 }
 

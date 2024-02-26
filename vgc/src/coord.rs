@@ -1,9 +1,8 @@
+use common::types::Coord;
 use std::cell::{Ref, RefCell};
 use std::rc::Rc;
-use common::types::Coord;
 
 pub type CoordPtr = Rc<RefCell<Coord>>;
-
 
 pub enum RefCoordType<'a> {
     Start(Ref<'a, Coord>),

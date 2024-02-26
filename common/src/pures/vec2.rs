@@ -121,7 +121,6 @@ impl Div<f32> for Vec2 {
 
 forward_ref_binop!(impl Div, div for Vec2, f32);
 
-
 impl Mul<Vec2> for Vec2 {
     type Output = Vec2;
 
@@ -147,7 +146,6 @@ impl Div<Vec2> for Vec2 {
 }
 
 forward_ref_binop!(impl Div, div for Vec2, Vec2);
-
 
 impl ApproxEq for &Vec2 {
     type Margin = F32Margin;
