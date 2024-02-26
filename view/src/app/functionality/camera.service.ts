@@ -1,6 +1,6 @@
 import { ReplaySubject, Subject, Subscription, filter, map, shareReplay } from "rxjs";
-import { EventsService } from "../events.service";
-import { ScenesService } from "../scenes.service";
+import { EventsService } from "../scene/events.service";
+import { ScenesService } from "../scene/scenes.service";
 import { Injectable, inject } from "@angular/core";
 import { ScreenLength2d, ScreenCoord } from "wasm-vgc";
 import { Functionality } from "./functionality";

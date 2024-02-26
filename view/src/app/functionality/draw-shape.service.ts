@@ -1,10 +1,10 @@
 import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
-import { EventsService } from "../events.service";
+import { EventsService } from "../scene/events.service";
 import { Subscription } from "rxjs";
 import { ScreenCoord, draw_shape } from "wasm-vgc";
-import { ScenesService } from "../scenes.service";
-import { SelectionService } from "../selection.service";
+import { ScenesService } from "../scene/scenes.service";
+import { SelectionService } from "../scene/selection.service";
 
 @Injectable({
     providedIn: "root",

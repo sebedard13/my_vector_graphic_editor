@@ -1,9 +1,9 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
 import { animationFrames, map, merge, of, withLatestFrom } from "rxjs";
-import { EventsService } from "src/app/events.service";
+import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
-import { ScenesService } from "src/app/scenes.service";
-import { SelectionService } from "src/app/selection.service";
+import { ScenesService } from "src/app/scene/scenes.service";
+import { SelectionService } from "src/app/scene/selection.service";
 import { CanvasContent, ScreenCoord, draw, draw_closest_pt, render } from "wasm-vgc";
 
 @Component({

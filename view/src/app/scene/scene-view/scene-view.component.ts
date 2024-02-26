@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from "@angular/core";
-import { ScenesService } from "src/app/scenes.service";
+import { ScenesService } from "src/app/scene/scenes.service";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import { ModalService } from "src/app/modal.service";
 import { NewSceneComponent } from "src/app/new-scene/new-scene.component";

@@ -1,5 +1,5 @@
 import { Component, ComponentRef, Type, ViewChild, ViewContainerRef } from "@angular/core";
-import { EventsService } from "./events.service";
+import { EventsService } from "./scene/events.service";
 import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
 import { map } from "rxjs";
@@ -31,7 +31,7 @@ export class AppComponent {
         this.modalService.getModalObservable().subscribe((data) => {
             if (data) {
                 this.loadModalComponent(data);
-            } else if(this.currentComponent) {
+            } else if (this.currentComponent) {
                 this.removeModal();
             }
         });

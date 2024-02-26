@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { Observable, Subject, map } from "rxjs";
-import { EventsService } from "../events.service";
-import { ScenesService } from "../scenes.service";
+import { EventsService } from "../scene/events.service";
+import { ScenesService } from "../scene/scenes.service";
 import { ScreenCoord } from "wasm-vgc";
 
 @Injectable({
@@ -25,7 +25,9 @@ export class MouseInfoService {
                     return { x: Infinity, y: Infinity };
                 }
 
-                const coord = scene.canvasContent.camera_project(new ScreenCoord(coords.x, coords.y));
+                const coord = scene.canvasContent.camera_project(
+                    new ScreenCoord(coords.x, coords.y),
+                );
                 const rtn = { x: coord.x(), y: coord.y() };
                 coord.free();
                 return rtn;

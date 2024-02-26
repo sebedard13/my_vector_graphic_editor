@@ -1,7 +1,5 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, OnDestroy } from "@angular/core";
-import { Button } from "../../interface/button";
-import { toolsbarSvgBtn } from "src/app/interface/button";
-
+import { Button, toolsbarSvgBtn  } from "../../interface/button";
 @Component({
     selector: "app-tools-bar",
     templateUrl: "./tools-bar.component.html",

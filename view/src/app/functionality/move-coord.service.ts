@@ -1,9 +1,9 @@
 import { Injectable, inject } from "@angular/core";
-import { EventsService } from "../events.service";
-import {  ScreenLength2d, move_coords_of } from "wasm-vgc";
-import { ScenesService } from "../scenes.service";
+import { EventsService } from "../scene/events.service";
+import { ScreenLength2d, move_coords_of } from "wasm-vgc";
+import { ScenesService } from "../scene/scenes.service";
 import { Subscription } from "rxjs";
-import { SelectionService } from "../selection.service";
+import { SelectionService } from "../scene/selection.service";
 import { Functionality } from "./functionality";
 
 @Injectable({

@@ -33,11 +33,15 @@ export class SelectionService {
         eventsService.mouseDown$.pipe(filter((event) => event.buttons == 1)).subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
                 if (event.shiftKey) {
-                    const point = scene.canvasContent.camera_project(new ScreenCoord(event.offsetX, event.offsetY));
+                    const point = scene.canvasContent.camera_project(
+                        new ScreenCoord(event.offsetX, event.offsetY),
+                    );
                     this.selection.add_selection(scene.canvasContent, point);
                     this.selectionHasChanged.next();
                 } else {
-                    const point = scene.canvasContent.camera_project(new ScreenCoord(event.offsetX, event.offsetY));
+                    const point = scene.canvasContent.camera_project(
+                        new ScreenCoord(event.offsetX, event.offsetY),
+                    );
                     this.selection.change_selection(scene.canvasContent, point);
                     this.selectionHasChanged.next();
                 }
@@ -46,7 +50,9 @@ export class SelectionService {
 
         eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
-                const pt = scene.canvasContent.camera_project(new ScreenCoord(event.offsetX, event.offsetY));
+                const pt = scene.canvasContent.camera_project(
+                    new ScreenCoord(event.offsetX, event.offsetY),
+                );
 
                 //selection
                 this.selection.change_hover(scene.canvasContent, pt);
