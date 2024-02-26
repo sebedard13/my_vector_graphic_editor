@@ -159,6 +159,15 @@ impl Camera {
         ScreenCoord { c: result }
     }
 
+    pub fn unproject_to_canvas(&self, position: Coord) -> ScreenCoord {
+        let m = Mat2x3::identity()
+            .translate(Vec2::new(1.0, 1.0))
+            .scale(self.base_scale.c / 2.0);
+        let result = m * position.c;
+
+        ScreenCoord { c: result }
+    }
+
     pub fn transform_to_length2d(&self, movement: ScreenLength2d) -> Length2d {
         let res = movement.c / self.scaling;
         let res = Vec2::new(
@@ -261,6 +270,7 @@ generate_child_methods!(CanvasContent, camera,
     (camera_region, region(), Rect),
     (camera_project, project(position: ScreenCoord), Coord),
     (camera_unproject, unproject(position: Coord), ScreenCoord),
+    (camera_unproject_to_canvas, unproject_to_canvas(position: Coord), ScreenCoord),
     (camera_transform_to_length2d, transform_to_length2d(movement: ScreenLength2d), Length2d),
     (camera_zoom_at, zoom_at(movement: f32, coord: ScreenCoord)),
     (camera_pan_by, pan_by(movement: ScreenLength2d)),

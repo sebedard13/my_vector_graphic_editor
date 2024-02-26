@@ -66,6 +66,22 @@ impl ScreenCoord {
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { c: Vec2::new(x, y) }
     }
+
+    pub fn x(&self) -> f32 {
+        self.c.x
+    }
+
+    pub fn y(&self) -> f32 {
+        self.c.y
+    }
+
+    pub fn set_x(&mut self, x: f32) {
+        self.c.x = x;
+    }
+
+    pub fn set_y(&mut self, y: f32) {
+        self.c.y = y;
+    }
 }
 
 /**

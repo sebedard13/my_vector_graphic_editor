@@ -59,21 +59,16 @@ export class CanvasComponent implements AfterViewInit {
 
         this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
 
-        animationFrames()
-            .pipe(
-                withLatestFrom(
-                    merge(
-                        of(null),
-                        this.mouseInfo.mousePos$,
-                        this.eventService.mouseLeave$.pipe(map(() => null)),
-                    ),
-                ),
-            )
-            .subscribe(([_, mouseInfo]) => {
-                this.scenesService.currentSceneNow((scene) => {
-                    this.render(scene.canvasContent, mouseInfo);
-                });
+        animationFrames().subscribe((_) => {
+            let mouseInfo: { x: number; y: number } | null = null;
+            if (this.mouseInfo.mouseInCanvas()) {
+                mouseInfo = this.mouseInfo.mouseCanvasPosSignal();
+            }
+
+            this.scenesService.currentSceneNow((scene) => {
+                this.render(scene.canvasContent, mouseInfo);
             });
+        });
     }
 
     public render(canvasContent: CanvasContent, mouseCoords: { x: number; y: number } | null) {
