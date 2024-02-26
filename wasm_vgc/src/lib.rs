@@ -6,7 +6,7 @@ pub mod user_selection;
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
 use common::{
-    pures::{Mat2x3, Vec2},
+    pures::{Affine, Vec2},
     types::{Coord, ScreenRect},
 };
 use vgc::Vgc;
@@ -128,7 +128,7 @@ pub fn render_cover(
 
     let mut ctx_2d_renderer = CanvasContext2DRender::new(
         ctx,
-        Mat2x3::identity()
+        Affine::identity()
             .translate(max_rect.top_left.c * -1.0)
             .scale(Vec2::new(scale_x, scale_y)),
     );

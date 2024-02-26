@@ -1,5 +1,5 @@
 use common::math::lerp;
-use common::pures::{Mat2x3, Vec2};
+use common::pures::{Affine, Vec2};
 use common::types::{Coord, Length2d, Rect, ScreenCoord, ScreenLength2d, ScreenRect};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -160,7 +160,7 @@ impl Camera {
     }
 
     pub fn unproject_to_canvas(&self, position: Coord) -> ScreenCoord {
-        let m = Mat2x3::identity()
+        let m = Affine::identity()
             .translate(Vec2::new(1.0, 1.0))
             .scale(self.base_scale.c / 2.0);
         let result = m * position.c;
@@ -278,32 +278,32 @@ generate_child_methods!(CanvasContent, camera,
 );
 
 impl Camera {
-    pub fn get_transform(&self) -> Mat2x3 {
+    pub fn get_transform(&self) -> Affine {
         let translate_center = self.settings.pixel_region.center().c;
 
-        let m_rot = Mat2x3::identity()
+        let m_rot = Affine::identity()
             .translate(translate_center * -1.0)
             .rotate(-self.rotation)
             .translate(translate_center);
 
-        let m_scale = Mat2x3::identity()
+        let m_scale = Affine::identity()
             .scale(Vec2::new(0.5, 0.5))
             .scale(Vec2::new(self.scaling, self.scaling))
             .scale(self.get_base_scale().c);
 
-        let m_translate = Mat2x3::from_translate(self.region().top_left.c * -1.0);
+        let m_translate = Affine::from_translate(self.region().top_left.c * -1.0);
 
         let mut rtn = m_rot * m_scale * m_translate;
 
         if self.reflect_x {
-            let reflect_x = Mat2x3::identity()
+            let reflect_x = Affine::identity()
                 .translate(translate_center * -1.0)
                 .reflect_x()
                 .translate(translate_center);
             rtn = reflect_x * rtn;
         }
         if self.reflect_y {
-            let reflect_y = Mat2x3::identity()
+            let reflect_y = Affine::identity()
                 .translate(translate_center * -1.0)
                 .reflect_y()
                 .translate(translate_center);
@@ -313,7 +313,7 @@ impl Camera {
         rtn
     }
 
-    pub fn get_inverse_transform(&self) -> Mat2x3 {
+    pub fn get_inverse_transform(&self) -> Affine {
         self.get_transform().inverse()
     }
 

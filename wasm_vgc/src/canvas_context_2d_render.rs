@@ -1,4 +1,4 @@
-use common::pures::Mat2x3;
+use common::pures::Affine;
 use common::types::Coord;
 use common::Rgba;
 use vgc::VgcRenderer;
@@ -6,11 +6,11 @@ use web_sys::CanvasRenderingContext2d;
 
 pub struct CanvasContext2DRender<'a> {
     context: &'a CanvasRenderingContext2d,
-    transform: Mat2x3,
+    transform: Affine,
 }
 
 impl<'a> CanvasContext2DRender<'a> {
-    pub fn new(context: &'a CanvasRenderingContext2d, transform: Mat2x3) -> Self {
+    pub fn new(context: &'a CanvasRenderingContext2d, transform: Affine) -> Self {
         Self { context, transform }
     }
 }
@@ -35,7 +35,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         self.context.line_to(corner3.x() as f64, corner3.y() as f64);
         self.context.close_path();
         self.context.fill();
-    
+
         Ok(())
     }
 
@@ -73,7 +73,7 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
         Ok(())
     }
 
-    fn get_transform(&self) -> Result<Mat2x3, String> {
+    fn get_transform(&self) -> Result<Affine, String> {
         Ok(self.transform)
     }
 }

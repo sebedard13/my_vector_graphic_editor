@@ -1,13 +1,13 @@
 use crate::Vgc;
 use common::pures::Vec2;
 use common::Rgba;
-use common::{pures::Mat2x3, types::Coord};
+use common::{pures::Affine, types::Coord};
 pub trait VgcRenderer {
     fn create(&mut self) -> Result<(), String>;
 
     fn fill_background(&mut self, color: &Rgba) -> Result<(), String>;
 
-    fn get_transform(&self) -> Result<Mat2x3, String>;
+    fn get_transform(&self) -> Result<Affine, String>;
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String>;
 
@@ -57,7 +57,7 @@ use tiny_skia::{Paint, PathBuilder, Pixmap};
 #[derive(Default)]
 #[cfg(feature = "tiny-skia_renderer")]
 pub struct TinySkiaRenderer<'a> {
-    transform: Mat2x3,
+    transform: Affine,
     pixmap: Option<Pixmap>,
     paint: Option<Paint<'a>>,
     current_path: Option<PathBuilder>,
@@ -66,7 +66,7 @@ pub struct TinySkiaRenderer<'a> {
 impl<'a> TinySkiaRenderer<'a> {
     pub fn new(width: f32, height: f32) -> Self {
         let mut rtn = Self::default();
-        rtn.transform = Mat2x3::from_translate(Vec2::new(1.0, 1.0))
+        rtn.transform = Affine::from_translate(Vec2::new(1.0, 1.0))
             .scale(Vec2::new(0.5, 0.5))
             .scale(Vec2::new(width, height));
         rtn
@@ -101,7 +101,7 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
         Ok(())
     }
 
-    fn get_transform(&self) -> Result<Mat2x3, String> {
+    fn get_transform(&self) -> Result<Affine, String> {
         Ok(self.transform)
     }
 
