@@ -1,10 +1,10 @@
 
-[tasks.cargo_test]
+[tasks.test_cargo]
 workspace = false
 description = "Test Cargo project"
 script = ["cargo test"]
 
-[tasks.view_test]
+[tasks.test_view]
 workspace = false
 description = "Test view/web"
 script = ["cd view", "ng test"]

@@ -1,5 +1,4 @@
 import { Injectable, Signal, WritableSignal, computed, signal } from "@angular/core";
-import { Observable, Subject, map } from "rxjs";
 import { EventsService } from "../scene/events.service";
 import { ScenesService } from "../scene/scenes.service";
 import { ScreenCoord, Coord } from "wasm-vgc";

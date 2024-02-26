@@ -1,5 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
-import { animationFrames, map, merge, of, withLatestFrom } from "rxjs";
+import { animationFrames } from "rxjs";
 import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scene/scenes.service";

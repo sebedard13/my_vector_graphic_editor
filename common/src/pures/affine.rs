@@ -11,18 +11,17 @@ use super::Vec2;
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-// Matrix is stored in column major order
 // Transformation matrix for 2D space
 pub struct Affine {
-    /// m00 m10 m20
-    /// m01 m11 m21
+    /// m00 m01 m02
+    /// m10 m11 m12
     ///  0   0   1
-    pub m00: f32,
-    pub m01: f32,
-    pub m10: f32,
-    pub m11: f32,
-    pub m20: f32,
-    pub m21: f32,
+    m00: f32,
+    m10: f32,
+    m01: f32,
+    m11: f32,
+    m02: f32,
+    m12: f32,
 }
 
 impl Display for Affine {
@@ -30,51 +29,52 @@ impl Display for Affine {
         write!(
             f,
             "({},{},{})\n({},{},{})",
-            self.m00, self.m10, self.m20, self.m01, self.m11, self.m21
+            self.m00, self.m01, self.m02, 
+            self.m10, self.m11, self.m12
         )
     }
 }
 
 impl Affine {
-    pub fn new(m00: f32, m01: f32, m10: f32, m11: f32, m20: f32, m21: f32) -> Affine {
+    pub fn new(m00: f32, m10: f32, m01: f32, m11: f32, m02: f32, m12: f32) -> Affine {
         Affine {
             m00,
-            m01,
             m10,
+            m01,
             m11,
-            m20,
-            m21,
+            m02,
+            m12,
         }
     }
 
     pub fn identity() -> Affine {
         Affine {
             m00: 1.0,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: 1.0,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 
     pub fn inverse(&self) -> Affine {
-        let inv_det = 1.0 / (self.m00 * self.m11 - self.m01 * self.m10);
+        let inv_det = 1.0 / (self.m00 * self.m11 - self.m10 * self.m01);
 
         let new_m00 = self.m11 * inv_det;
-        let new_m01 = -self.m01 * inv_det;
         let new_m10 = -self.m10 * inv_det;
+        let new_m01 = -self.m01 * inv_det;
         let new_m11 = self.m00 * inv_det;
-        let new_m20 = -(self.m11 * self.m20 - self.m10 * self.m21) * inv_det;
-        let new_m21 = (self.m01 * self.m20 - self.m00 * self.m21) * inv_det;
+        let new_m02 = -(self.m11 * self.m02 - self.m01 * self.m12) * inv_det;
+        let new_m12 = (self.m10 * self.m02 - self.m00 * self.m12) * inv_det;
 
         Affine {
             m00: new_m00,
-            m01: new_m01,
             m10: new_m10,
+            m01: new_m01,
             m11: new_m11,
-            m20: new_m20,
-            m21: new_m21,
+            m02: new_m02,
+            m12: new_m12,
         }
     }
 
@@ -83,73 +83,73 @@ impl Affine {
     }
 
     pub fn get_translation(&self) -> Vec2 {
-        Vec2::new(self.m20, self.m21)
+        Vec2::new(self.m02, self.m12)
     }
 
     pub fn from_rotation(angle: f32) -> Affine {
         let (s, c) = angle.sin_cos();
         Affine {
             m00: c,
-            m01: s,
-            m10: -s,
+            m10: s,
+            m01: -s,
             m11: c,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 
     pub fn from_scale(scale: Vec2) -> Affine {
         Affine {
             m00: scale.x,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: scale.y,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 
     pub fn from_translate(translation: Vec2) -> Affine {
         Affine {
             m00: 1.0,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: 1.0,
-            m20: translation.x,
-            m21: translation.y,
+            m02: translation.x,
+            m12: translation.y,
         }
     }
 
     pub fn from_reflect_origin() -> Affine {
         Affine {
             m00: -1.0,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: -1.0,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 
     pub fn from_reflect_x() -> Affine {
         Affine {
             m00: 1.0,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: -1.0,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 
     pub fn from_reflect_y() -> Affine {
         Affine {
             m00: -1.0,
-            m01: 0.0,
             m10: 0.0,
+            m01: 0.0,
             m11: 1.0,
-            m20: 0.0,
-            m21: 0.0,
+            m02: 0.0,
+            m12: 0.0,
         }
     }
 }
@@ -181,12 +181,12 @@ impl Mul<Affine> for Affine {
 
     fn mul(self, rhs: Affine) -> Affine {
         Affine {
-            m00: self.m00 * rhs.m00 + self.m10 * rhs.m01,
-            m01: self.m01 * rhs.m00 + self.m11 * rhs.m01,
-            m10: self.m00 * rhs.m10 + self.m10 * rhs.m11,
-            m11: self.m01 * rhs.m10 + self.m11 * rhs.m11,
-            m20: self.m00 * rhs.m20 + self.m10 * rhs.m21 + self.m20,
-            m21: self.m01 * rhs.m20 + self.m11 * rhs.m21 + self.m21,
+            m00: self.m00 * rhs.m00 + self.m01 * rhs.m10,
+            m10: self.m10 * rhs.m00 + self.m11 * rhs.m10,
+            m01: self.m00 * rhs.m01 + self.m01 * rhs.m11,
+            m11: self.m10 * rhs.m01 + self.m11 * rhs.m11,
+            m02: self.m00 * rhs.m02 + self.m01 * rhs.m12 + self.m02,
+            m12: self.m10 * rhs.m02 + self.m11 * rhs.m12 + self.m12,
         }
     }
 }
@@ -198,8 +198,8 @@ impl Mul<Vec2> for Affine {
 
     fn mul(self, rhs: Vec2) -> Vec2 {
         Vec2 {
-            x: self.m00 * rhs.x + self.m10 * rhs.y + self.m20,
-            y: self.m01 * rhs.x + self.m11 * rhs.y + self.m21,
+            x: self.m00 * rhs.x + self.m01 * rhs.y + self.m02,
+            y: self.m10 * rhs.x + self.m11 * rhs.y + self.m12,
         }
     }
 }
@@ -212,11 +212,11 @@ impl ApproxEq for Affine {
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
         self.m00.approx_eq(other.m00, margin)
-            && self.m01.approx_eq(other.m01, margin)
             && self.m10.approx_eq(other.m10, margin)
+            && self.m01.approx_eq(other.m01, margin)
             && self.m11.approx_eq(other.m11, margin)
-            && self.m20.approx_eq(other.m20, margin)
-            && self.m21.approx_eq(other.m21, margin)
+            && self.m02.approx_eq(other.m02, margin)
+            && self.m12.approx_eq(other.m12, margin)
     }
 }
 
