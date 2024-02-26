@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::coord::Coord;
+use common::types::{Coord, Rect};
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
-pub use common::Rgba;
+use common::Rgba;
 #[cfg(feature = "tiny-skia")]
 pub use render::TinySkiaRenderer;
 pub use render::VgcRenderer;
@@ -20,18 +20,21 @@ mod serialization;
 
 mod shape;
 
+/// Maximum size of the image, if we want to have detail for each pixel
+/// This is a limit because of f32 precision with 2^-23 for the smallest value
+/// See decision.md for more information
+#[allow(dead_code)]
+static MAX_DETAIL_SIZE: u32 = 52000000;
+
 #[derive(Debug)]
 pub struct Vgc {
-    /// width/height
-    pub ratio: f64,
     pub background: Rgba,
     shapes: Vec<Shape>,
 }
 
 impl Vgc {
-    pub fn new(ratio: f64, background: Rgba) -> Vgc {
+    pub fn new(background: Rgba) -> Vgc {
         Vgc {
-            ratio,
             background,
             shapes: Vec::new(),
         }
@@ -143,6 +146,10 @@ impl Vgc {
     pub fn remove_shape(&mut self, shape_index: usize) {
         self.shapes.remove(shape_index);
     }
+
+    pub fn max_rect(&self) -> Rect {
+        Rect::new(-1.0, -1.0, 1.0, 1.0)
+    }
 }
 
 #[cfg(test)]
@@ -152,36 +159,30 @@ mod tests {
     #[test]
     fn get_closest_coord_on_shape_triangle() {
         let canvas = generate_from_line(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(1.0, 1.0),
         ]]);
 
         let shape = canvas.get_shape(0).unwrap();
         let (_, _, _, coord) = shape.closest_curve(&Coord::new(1.0, 0.0));
-        assert_eq!(coord.x, 0.5);
-        assert_eq!(coord.y, 0.5);
+        assert_eq!(coord.x(), 0.5);
+        assert_eq!(coord.y(), 0.5);
     }
 
     #[test]
     fn genreate_from_push() {
         let canvas = generate_from_push(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord {
-                x: -0.46193975,
-                y: 0.19134173,
-            },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord {
-                x: 0.46193975,
-                y: -0.19134173,
-            },
-            Coord { x: 0.0, y: 0.0 },
+            Coord::new(0.0, 0.0),
+            Coord::new(-0.46193975, 0.19134173),
+            Coord::new(0.0, 1.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(0.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(0.46193975, -0.19134173),
+            Coord::new(0.0, 0.0),
         ]]);
 
         assert_eq!(canvas.debug_string(), "M 0 0 C -0.46193975 0.19134173 0 1 0 1 C 0 1 1 1 1 1 C 1 1 0.46193975 -0.19134173 0 0 Z\n");
@@ -196,7 +197,7 @@ pub fn generate_from_line(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(1.0, color);
+    let mut canvas = Vgc::new(color);
 
     for shape_coords in shapes_coords {
         if !shape_coords.is_empty() {
@@ -234,7 +235,7 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
         a: 255,
     };
 
-    let mut canvas = Vgc::new(1.0, color);
+    let mut canvas = Vgc::new(color);
 
     for shape_coords in shapes_coords {
         if !shape_coords.is_empty() {
@@ -267,7 +268,7 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     canvas
 }
 
-pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
+pub fn create_circle(canvas: &mut Vgc, center: Coord, radius_x: f32, radius_y: f32) {
     //https://spencermortensen.com/articles/bezier-circle/
     let a = 1.000_055_2;
     let b = 0.553_426_9;
@@ -311,9 +312,6 @@ pub fn create_circle(canvas: &mut Vgc, center: Coord, radius: f32) {
 
     for coord_ref in vec {
         let mut coord = coord_ref.borrow_mut();
-        coord.x *= radius;
-        coord.y *= radius * canvas.ratio as f32;
-        coord.x += center.x;
-        coord.y += center.y;
+        (*coord) = (*coord).scale(center.x(), center.y(), radius_x, radius_y);
     }
 }

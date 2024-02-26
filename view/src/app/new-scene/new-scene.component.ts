@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from "@angular/core";
 import { ModalComponent } from "../modal.service";
 import { Observable, Subject } from "rxjs";
-import { ScenesService } from "../scenes.service";
+import { ScenesService } from "../scene/scenes.service";
 
 @Component({
     selector: "app-new-scene",

@@ -7,7 +7,7 @@
                     [class.active]="scene.isCurrent"
                     (click)="scenesService.setCurrentScene(i)"
                 >
-                    {{ scene.canvas.get_name() }}
+                    {{ scene.scene.metadata.name }}
                     <button
                         class="p-1 action close-scene flex center"
                         (click)="scenesService.removeScene(i)"

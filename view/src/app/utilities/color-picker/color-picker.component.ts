@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import { BehaviorSubject, fromEvent } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { SelectionService } from "src/app/selection.service";
+import { SelectionService } from "src/app/scene/selection.service";
 import { Rgba } from "wasm-vgc";
 
 @Component({

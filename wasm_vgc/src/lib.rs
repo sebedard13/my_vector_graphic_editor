@@ -5,41 +5,23 @@ pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
-use js_sys::Date;
-use vgc::{coord::Coord, Vgc};
+use common::{
+    pures::{Affine, Vec2},
+    types::{Coord, ScreenRect},
+};
+use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
 
-pub use vgc::Rgba;
+pub use common;
 
-#[wasm_bindgen]
-#[derive(Clone, Copy, Debug)]
-pub struct Point {
-    pub x: f32,
-    pub y: f32,
-}
-
-#[wasm_bindgen]
-impl Point {
-    #[wasm_bindgen(constructor)]
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-}
-
-// Function to read from index 1 of our buffer
-// And return the value at the index
 #[wasm_bindgen]
 pub struct CanvasContent {
     #[wasm_bindgen(skip)]
     pub vgc_data: Vgc,
-    #[wasm_bindgen(skip)]
-    pub camera: Camera,
-    #[wasm_bindgen(skip)]
-    pub uuid: String,
 
     #[wasm_bindgen(skip)]
-    pub name: String,
+    pub camera: Camera,
 }
 
 #[wasm_bindgen]
@@ -47,10 +29,10 @@ impl CanvasContent {
     #[wasm_bindgen(constructor)]
     pub fn new(width: f32, height: f32) -> CanvasContent {
         let mut vgc_data = vgc::generate_from_line(vec![vec![
-            Coord { x: 0.0, y: 0.0 },
-            Coord { x: 0.0, y: 1.0 },
-            Coord { x: 1.0, y: 1.0 },
-            Coord { x: 1.0, y: 0.0 },
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, -1.0),
         ]]);
 
         let shape = vgc_data.get_shape_mut(0).expect("Valid");
@@ -58,61 +40,21 @@ impl CanvasContent {
         shape.color.g = 255;
         shape.color.b = 255;
 
-        vgc_data.ratio = (width / height) as f64;
-        Self {
-            camera: Camera::new(vgc_data.ratio as f32),
-            vgc_data,
-            uuid: Date::now().to_string(),
-            name: "Untitled".to_string(),
-        }
+        let camera = Camera::new(vgc_data.max_rect().center(), width, height);
+
+        Self { camera, vgc_data }
+    }
+
+    pub fn get_render_rect(&self) -> ScreenRect {
+        let size = self.camera.get_base_scale();
+
+        let sc = ScreenRect::new(0.0, 0.0, size.c.x, size.c.y);
+        sc
     }
 
     #[wasm_bindgen]
     pub fn default_call() -> CanvasContent {
         CanvasContent::default()
-    }
-
-    pub fn set_pixel_region(&mut self, width: f32, height: f32) {
-        self.camera.pixel_region = (0.0, 0.0, width, height);
-    }
-
-    pub fn get_project_mouse(&self, x: f32, y: f32) -> Point {
-        let (x, y) = self.camera.project((x, y));
-        Point { x, y }
-    }
-
-    pub fn get_zoom(&self) -> f32 {
-        self.camera.scaling
-    }
-
-    ///  Zooms the camera in or out by the given amount, centered on the given point.
-    ///
-    ///  # Arguments
-    ///  * `movement` - positive for zoom in, negative for zoom out. Only 1 or -1 are supported.
-    ///  * `x` - x coordinate of the center of the zoom
-    ///  * `y` - y coordinate of the center of the zoom
-    pub fn zoom(&mut self, movement: f32, x: f32, y: f32) {
-        self.camera.handle_zoom(movement, (x, y));
-    }
-
-    pub fn pan_camera(&mut self, x: f32, y: f32) {
-        self.camera.handle_pan((x, y));
-    }
-
-    pub fn get_uuid(&self) -> String {
-        self.uuid.clone()
-    }
-
-    pub fn get_name(&self) -> String {
-        self.name.clone()
-    }
-
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
-    pub fn get_ratio(&self) -> f64 {
-        self.vgc_data.ratio
     }
 }
 
@@ -120,14 +62,14 @@ impl Default for CanvasContent {
     fn default() -> Self {
         let mut vgc_data = vgc::generate_from_line(vec![
             vec![
-                Coord { x: 0.0, y: 0.1 },
-                Coord { x: 0.0, y: 1.0 },
-                Coord { x: 0.9, y: 1.0 },
+                Coord::new(-1.0, -0.9),
+                Coord::new(-1.0, 1.0),
+                Coord::new(0.9, 1.0),
             ],
             vec![
-                Coord { x: 1.0, y: 0.9 },
-                Coord { x: 0.1, y: 0.0 },
-                Coord { x: 1.0, y: 0.0 },
+                Coord::new(1.0, 0.9),
+                Coord::new(-0.9, -1.0),
+                Coord::new(1.0, -1.0),
             ],
         ]);
 
@@ -135,13 +77,8 @@ impl Default for CanvasContent {
         shape.color.r = 128;
         shape.color.g = 0;
 
-        vgc_data.ratio = 1.5;
-        Self {
-            camera: Camera::new(vgc_data.ratio as f32),
-            vgc_data,
-            uuid: Date::now().to_string(),
-            name: "Untitled".to_string(),
-        }
+        let camera = Camera::new(vgc_data.max_rect().center(), 750.0, 500.0);
+        Self { camera, vgc_data }
     }
 }
 
@@ -154,18 +91,15 @@ pub fn render(
 
     let transform = canvas_content.camera.get_transform();
 
-    let mut ctx_2d_renderer = CanvasContext2DRender::new(
-        ctx,
-        (transform.0 as f64, transform.1 as f64),
-        transform.2 as f64,
-        transform.3 as f64,
-    );
+    let mut ctx_2d_renderer = CanvasContext2DRender::new(ctx, transform);
+
+    let pixel_region = canvas_content.camera.get_pixel_region();
 
     ctx.clear_rect(
-        canvas_content.camera.pixel_region.0 as f64,
-        canvas_content.camera.pixel_region.1 as f64,
-        canvas_content.camera.pixel_region.2 as f64,
-        canvas_content.camera.pixel_region.3 as f64,
+        pixel_region.top_left.c.x as f64,
+        pixel_region.top_left.c.y as f64,
+        pixel_region.width() as f64,
+        pixel_region.height() as f64,
     );
     let result = vgc.render(&mut ctx_2d_renderer);
     match result {
@@ -179,19 +113,24 @@ pub fn render(
 }
 
 #[wasm_bindgen]
-pub fn render_full(
+pub fn render_cover(
     ctx: &CanvasRenderingContext2d,
     canvas_content: &CanvasContent,
-    width: f64,
-    height: f64,
+    width: f32,
+    height: f32,
 ) -> Result<(), JsValue> {
     let vgc = &canvas_content.vgc_data;
 
+    let max_rect = vgc.max_rect();
+
+    let scale_x = width / max_rect.width();
+    let scale_y = height / max_rect.height();
+
     let mut ctx_2d_renderer = CanvasContext2DRender::new(
         ctx,
-        (0.0, 0.0),
-        width,
-        height,
+        Affine::identity()
+            .translate(max_rect.top_left.c * -1.0)
+            .scale(Vec2::new(scale_x, scale_y)),
     );
 
     let result = vgc.render(&mut ctx_2d_renderer);

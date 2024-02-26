@@ -1,14 +1,10 @@
-use crate::{
-    camera::Camera,
-    user_selection::{point_in_radius, Selected},
-    CanvasContent, Point,
-};
-use js_sys::{Date, Uint8Array};
+use crate::{camera::Camera, user_selection::Selected, CanvasContent};
+use common::types::{Coord, ScreenLength2d};
+use common::Rgba;
+use common::{math::point_in_radius, types::ScreenCoord};
+use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
-use vgc::{
-    coord::{Coord, RefCoordType},
-    Rgba, Vgc,
-};
+use vgc::{coord::RefCoordType, Vgc};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]
@@ -21,14 +17,21 @@ pub fn set_color_of(selected: &Selected, canvas_content: &mut CanvasContent, col
 }
 
 #[wasm_bindgen]
-pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
-    let (x, y) = canvas_content.camera.fixed_2d_length((x as f32, y as f32));
+pub fn move_coords_of(
+    selected: &Selected,
+    canvas_content: &mut CanvasContent,
+    movement: ScreenLength2d,
+) {
+    let movement = canvas_content
+        .camera
+        .transform_to_length2d_with_rotation(movement);
 
     for shape in &selected.shapes {
         for coord in &shape.coords {
             let mut coord = coord.borrow_mut();
-            coord.x += x;
-            coord.y += y;
+            let res_vec2 = coord.c + movement.c;
+            coord.set_x(res_vec2.x);
+            coord.set_y(res_vec2.y);
         }
     }
 }
@@ -37,22 +40,22 @@ pub fn move_coords_of(selected: &Selected, canvas_content: &mut CanvasContent, x
 pub fn add_or_remove_coord(
     selected: &Selected,
     canvas_content: &mut CanvasContent,
-    x: f64,
-    y: f64,
+    mouse_position: ScreenCoord,
 ) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
-    let pos = camera.project((x, y));
+    let pos = camera.project(mouse_position);
+
     // if click is on a point, remove it
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x, coord.y),
-                &Point::new(pos.0, pos.1),
-                camera.fixed_length(12.0),
+                &coord.c,
+                &pos.c,
+                &camera
+                    .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                    .c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -75,23 +78,27 @@ pub fn add_or_remove_coord(
     let mut min_distance = std::f32::MAX;
     let mut min_shape_index = 0;
     let mut min_curve_index = 0;
+    let mut min_coord = Coord::new(100.0, 100.0);
     let mut min_t = 0.0;
 
     for shape_selected in &selected.shapes {
         let shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
 
-        let (curve_index, t, distance, _) = shape.closest_curve(&Coord::new(pos.0, pos.1));
+        let (curve_index, t, distance, coord) = shape.closest_curve(&pos);
 
         if distance < min_distance {
             min_distance = distance;
             min_shape_index = shape_selected.shape_index;
             min_curve_index = curve_index;
+            min_coord = coord;
             min_t = t;
         }
     }
 
-    let fixed_length = camera.fixed_length(10.0);
-    if min_distance <= fixed_length {
+    let fixed_length = camera
+        .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
+        .c;
+    if point_in_radius(&pos.c, &min_coord.c, &fixed_length) {
         let shape = vgc_data
             .get_shape_mut(min_shape_index)
             .expect("Shape is valid because it was selected");
@@ -102,20 +109,24 @@ pub fn add_or_remove_coord(
 }
 
 #[wasm_bindgen]
-pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+pub fn toggle_handle(
+    _: &Selected,
+    canvas_content: &mut CanvasContent,
+    mouse_position: ScreenCoord,
+) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
-    let pos = camera.project((x, y));
+    let pos = camera.project(mouse_position);
 
     let mut to_do: Vec<(usize, usize)> = Vec::new();
     vgc_data.visit(&mut |shape_index, coord_type| {
         if let RefCoordType::P1(curve_index, coord) = coord_type {
             if point_in_radius(
-                &Point::new(coord.x, coord.y),
-                &Point::new(pos.0, pos.1),
-                camera.fixed_length(12.0),
+                &coord.c,
+                &pos.c,
+                &camera
+                    .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                    .c,
             ) {
                 to_do.push((shape_index, curve_index));
             }
@@ -131,33 +142,57 @@ pub fn toggle_handle(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y
 }
 
 #[wasm_bindgen]
-pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, x: f64, y: f64) {
+pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
-    let x = x as f32;
-    let y = y as f32;
 
-    if let Some(pos) = camera.project_in_canvas((x, y)) {
-        // if click create a new shape on point and ready to new point
-        vgc::create_circle(vgc_data, Coord::new(pos.0, pos.1), 0.1);
-    }
+    let radius = camera.transform_to_length2d_no_scale(ScreenLength2d::new(50.0, 50.0));
+
+    let pos = camera.project(mouse_position);
+    // if click create a new shape on point and ready to new point
+    vgc::create_circle(vgc_data, pos, radius.c.x, radius.c.y);
 }
 
 #[wasm_bindgen]
 pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
-    let vgc_data =
-        from_bytes::<Vgc>(array.to_vec().as_slice()).expect("Deserialization should be valid");
-    let camera = Camera::new(vgc_data.ratio as f32);
-    return CanvasContent {
-        vgc_data,
-        camera,
-        uuid: Date::now().to_string(),
-        name: "Untitled".to_string(),
-    };
+    let vec = array.to_vec();
+    let main_slice = vec.as_slice();
+    let first_4_bytes = main_slice.get(0..4).unwrap();
+    let length = u32::from_le_bytes([
+        first_4_bytes[0],
+        first_4_bytes[1],
+        first_4_bytes[2],
+        first_4_bytes[3],
+    ]) as usize;
+
+    let slice = main_slice.get(4..(4 + length)).unwrap();
+
+    let vgc_data = from_bytes::<Vgc>(slice).expect("Deserialization should be valid");
+
+    let camera_slice = main_slice.get((4 + length)..(4 + length + 26)).unwrap();
+
+    let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN, f32::NAN);
+    camera.deserialize(camera_slice);
+
+    return CanvasContent { vgc_data, camera };
 }
 
 #[wasm_bindgen]
 pub fn save_to_arraybuffer(canvas_content: &CanvasContent) -> Vec<u8> {
     let vec = to_allocvec::<Vgc>(&canvas_content.vgc_data).expect("Serialization should be valid");
-    return vec;
+
+    let length = (vec.len() as u32).to_le_bytes();
+
+    let mut result = Vec::new();
+
+    result.push(length[0]);
+    result.push(length[1]);
+    result.push(length[2]);
+    result.push(length[3]);
+    result.extend(vec);
+
+    let camera_slice = canvas_content.camera.serialize();
+    result.extend(camera_slice);
+
+    return result;
 }

@@ -3,6 +3,7 @@ extend = [
     { path = "makefile/clean.toml" },
     { path = "makefile/serve.toml" },
     { path = "makefile/build.toml" },
+    { path = "makefile/test.toml" },
 ]
 
 [tasks.build-web]
@@ -65,3 +66,8 @@ run_task = { name = [
     "wasm_clean",
     "cargo_clean",
 ], parallel = true }
+
+[tasks.test-all]
+workspace = false
+description = "Run all tests"
+run_task = { name = ["test_cargo", "test_view"], parallel = false }

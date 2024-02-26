@@ -1,27 +1,13 @@
 use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
-use vgc::{coord::Coord, Rgba};
+use common::types::{Coord, ScreenCoord, ScreenLength2d};
+use common::Rgba;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
 
-use crate::{CanvasContent, Point};
+use common::math::point_in_radius;
 
-/// Return true if the cursor is in the radius of the center
-///```rust
-///
-/// let cursor = Cursor::Available(Point::new(10.0, 10.0));
-/// let center = Point::new(0.0, 0.0);
-/// let radius = 5.0;
-/// assert_eq!(point_in_radius(cursor, center, radius), false);
-/// let cursor = Cursor::Available(Point::new(-3.0, 0.0));
-/// assert_eq!(point_in_radius(cursor, center, radius), true);
-///```
-pub fn point_in_radius(point: &Point, center: &Point, radius: f32) -> bool {
-    let x = point.x - center.x;
-    let y = point.y - center.y;
-    let distance = x * x + y * y;
-    distance < (radius * radius)
-}
+use crate::CanvasContent;
 
 #[wasm_bindgen]
 #[derive(Debug, Default)]
@@ -121,7 +107,7 @@ impl Selected {
         colors
     }
 
-    pub fn change_hover(&mut self, canvas_context: &CanvasContent, cursor_position: Point) {
+    pub fn change_hover(&mut self, canvas_context: &CanvasContent, cursor_position: Coord) {
         'shape_loop: for shape_selected in &mut self.shapes {
             let shape = canvas_context
                 .vgc_data
@@ -132,9 +118,12 @@ impl Selected {
                 let coord = ref_coord_type.borrow();
 
                 if point_in_radius(
-                    &cursor_position,
-                    &Point::new(coord.x, coord.y),
-                    canvas_context.camera.fixed_length(12.0),
+                    &cursor_position.c,
+                    &coord.c,
+                    &canvas_context
+                        .camera
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                        .c,
                 ) {
                     shape_selected.hover_coord = Some(ref_coord_type.clone());
                     continue 'shape_loop;
@@ -144,13 +133,11 @@ impl Selected {
         }
     }
 
-    pub fn change_selection(&mut self, canvas_context: &CanvasContent, start_press: Point) {
+    pub fn change_selection(&mut self, canvas_context: &CanvasContent, start_press: Coord) {
         let shapes = &mut self.shapes;
         if shapes.is_empty() {
             //Add shape
-            let closest_shapes = canvas_context
-                .vgc_data
-                .shapes_closest(&Coord::new(start_press.x, start_press.y));
+            let closest_shapes = canvas_context.vgc_data.shapes_closest(&start_press);
 
             let first = closest_shapes.first();
             if let Some((shape_index, ..)) = first {
@@ -186,9 +173,12 @@ impl Selected {
                 for ref_coord_type in coords {
                     let coord = ref_coord_type.borrow();
                     if point_in_radius(
-                        &start_press,
-                        &Point::new(coord.x, coord.y),
-                        canvas_context.camera.fixed_length(12.0),
+                        &start_press.c,
+                        &coord.c,
+                        &canvas_context
+                            .camera
+                            .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                            .c,
                     ) {
                         shape_selected.coords.push(ref_coord_type.clone());
                         return;
@@ -198,7 +188,7 @@ impl Selected {
         }
     }
 
-    pub fn add_selection(&mut self, canvas_context: &CanvasContent, start_press: Point) {
+    pub fn add_selection(&mut self, canvas_context: &CanvasContent, start_press: Coord) {
         //Coord
         for shape_selected in &mut self.shapes {
             let shape = canvas_context
@@ -209,9 +199,12 @@ impl Selected {
             for ref_coord_type in coords {
                 let coord = ref_coord_type.borrow();
                 if point_in_radius(
-                    &start_press,
-                    &Point::new(coord.x, coord.y),
-                    canvas_context.camera.fixed_length(12.0),
+                    &start_press.c,
+                    &coord.c,
+                    &canvas_context
+                        .camera
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
+                        .c,
                 ) {
                     let pos = shape_selected
                         .coords
@@ -230,9 +223,7 @@ impl Selected {
             }
         }
 
-        let shapes = canvas_context
-            .vgc_data
-            .shapes_closest(&Coord::new(start_press.x, start_press.y));
+        let shapes = canvas_context.vgc_data.shapes_closest(&start_press);
 
         let first = shapes.first();
         if let Some((shape_index, ..)) = first {
@@ -300,18 +291,18 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
         //Draw line between cp and p
         shape.visit_full_curves(|_, p0, cp0, cp1, p1| {
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((p0.x, p0.y));
+            let from = canvas_context.camera.unproject(p0.clone());
 
-            ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((cp0.x, cp0.y));
-            ctx.line_to(to.0 as f64, to.1 as f64);
+            ctx.move_to(from.c.x as f64, from.c.y as f64);
+            let to = canvas_context.camera.unproject(cp0.clone());
+            ctx.line_to(to.c.x as f64, to.c.y as f64);
             ctx.stroke();
 
             ctx.begin_path();
-            let from = canvas_context.camera.unproject((cp1.x, cp1.y));
-            ctx.move_to(from.0 as f64, from.1 as f64);
-            let to = canvas_context.camera.unproject((p1.x, p1.y));
-            ctx.line_to(to.0 as f64, to.1 as f64);
+            let from = canvas_context.camera.unproject(cp1.clone());
+            ctx.move_to(from.c.x as f64, from.c.y as f64);
+            let to = canvas_context.camera.unproject(p1.clone());
+            ctx.line_to(to.c.x as f64, to.c.y as f64);
             ctx.stroke();
         });
 
@@ -324,14 +315,13 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
                 CoordState::Selected => Rgba::new(0x3A, 0xD1, 0xEF, 255),
                 CoordState::None => Rgba::new(0xA1, 0xE9, 0xF7, 255),
             };
-            let center = Point::new(coord.x, coord.y as f32);
-            let center = canvas_context.camera.unproject((center.x, center.y));
+            let center = canvas_context.camera.unproject(coord.clone());
 
             ctx.begin_path();
             ctx.set_fill_style(&color.to_css_string().into());
             ctx.ellipse(
-                center.0.into(),
-                center.1.into(),
+                center.c.x as f64,
+                center.c.y as f64,
                 5.0,
                 5.0,
                 PI / 4.0,
@@ -344,23 +334,21 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
 
         ctx.begin_path();
         let start_coord = shape.start.borrow();
-        let start_coord = canvas_context
-            .camera
-            .unproject((start_coord.x, start_coord.y));
-        ctx.move_to(start_coord.0.into(), start_coord.1.into());
+        let start_coord = canvas_context.camera.unproject(start_coord.clone());
+        ctx.move_to(start_coord.c.x.into(), start_coord.c.y.into());
 
         shape.visit_full_curves(move |_, _, cp0, cp1, p1| {
-            let cp0 = canvas_context.camera.unproject((cp0.x, cp0.y));
-            let cp1 = canvas_context.camera.unproject((cp1.x, cp1.y));
-            let p1 = canvas_context.camera.unproject((p1.x, p1.y));
+            let cp0 = canvas_context.camera.unproject(cp0.clone());
+            let cp1 = canvas_context.camera.unproject(cp1.clone());
+            let p1 = canvas_context.camera.unproject(p1.clone());
 
             ctx.bezier_curve_to(
-                cp0.0.into(),
-                cp0.1.into(),
-                cp1.0.into(),
-                cp1.1.into(),
-                p1.0.into(),
-                p1.1.into(),
+                cp0.c.x.into(),
+                cp0.c.y.into(),
+                cp1.c.x.into(),
+                cp1.c.y.into(),
+                p1.c.x.into(),
+                p1.c.y.into(),
             );
         });
 
@@ -375,18 +363,19 @@ pub fn draw_closest_pt(
     selected: &Selected,
     canvas_context: &CanvasContent,
     ctx: &CanvasRenderingContext2d,
-    mouse_pos: Point,
+    mouse_pos: ScreenCoord,
 ) {
     let mut min_distance = std::f32::MAX;
     let mut min_coord = Coord::new(0.0, 0.0);
-    let pos = canvas_context.camera.project((mouse_pos.x, mouse_pos.y));
+    let pos = canvas_context.camera.project(mouse_pos.clone());
+
     for shape_selected in &selected.shapes {
         let shape = canvas_context
             .vgc_data
             .get_shape(shape_selected.shape_index)
             .unwrap();
 
-        let (_, _, distance, coord) = shape.closest_curve(&Coord::new(pos.0, pos.1));
+        let (_, _, distance, coord) = shape.closest_curve(&pos);
 
         if distance < min_distance {
             min_distance = distance;
@@ -394,20 +383,26 @@ pub fn draw_closest_pt(
         }
     }
 
-    if min_distance > canvas_context.camera.fixed_length(10.0) {
+    if !point_in_radius(
+        &pos.c,
+        &min_coord.c,
+        &canvas_context
+            .camera
+            .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
+            .c,
+    ) {
         return;
     }
 
     let color = Rgba::new(0x0E, 0x90, 0xAA, 255);
-    let center = Point::new(min_coord.x, min_coord.y);
 
-    let center = canvas_context.camera.unproject((center.x, center.y));
+    let center = canvas_context.camera.unproject(min_coord);
 
     ctx.begin_path();
     ctx.set_fill_style(&color.to_css_string().into());
     ctx.ellipse(
-        center.0.into(),
-        center.1.into(),
+        center.c.x as f64,
+        center.c.y as f64,
         3.0,
         3.0,
         PI / 4.0,

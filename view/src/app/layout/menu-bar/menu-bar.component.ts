@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component } from "@angular/core";
-import { ScenesService } from "../scenes.service";
-import { ModalService } from "../modal.service";
-import { NewSceneComponent } from "../new-scene/new-scene.component";
-import { RenderService } from "../render.service";
+import { ScenesService } from "../../scene/scenes.service";
+import { ModalService } from "../../modal.service";
+import { NewSceneComponent } from "../../new-scene/new-scene.component";
+import { RenderService } from "../../scene/render.service";
 
 @Component({
     selector: "app-menu-bar",

@@ -1,31 +1,65 @@
-import { Injectable } from "@angular/core";
-import { Observable, Subject, map } from "rxjs";
-import { EventsService } from "../events.service";
-import { ScenesService } from "../scenes.service";
+import { Injectable, Signal, WritableSignal, computed, signal } from "@angular/core";
+import { EventsService } from "../scene/events.service";
+import { ScenesService } from "../scene/scenes.service";
+import { ScreenCoord, Coord } from "wasm-vgc";
+
+type Point = { x: number; y: number };
 
 @Injectable({
     providedIn: "root",
 })
 export class MouseInfoService {
-    private mousePos = new Subject<{ x: number; y: number }>();
+    private static INVALID_COORD = { x: Infinity, y: Infinity };
 
-    public normalizedMousePos$: Observable<{ x: number; y: number }>;
-    public mousePos$ = this.mousePos.asObservable();
+    public mouseInCanvas = signal(false);
+
+    public mousePosSignal: WritableSignal<Point> = signal({ x: 0, y: 0 });
+    public mouseCanvasPosSignal: Signal<Point>;
+    public mouseCanvasScreenPosSignal: Signal<Point>;
 
     constructor(eventService: EventsService, scenesService: ScenesService) {
-        eventService.mouseMove$.subscribe((event) => {
-            this.mousePos.next({ x: event.offsetX, y: event.offsetY });
+        this.mouseCanvasPosSignal = computed(() => {
+            const scene = scenesService.currentScene();
+            if (!scene) {
+                return MouseInfoService.INVALID_COORD;
+            }
+
+            const mousePos = this.mousePosSignal();
+
+            const coord = scene.canvasContent.camera_project(
+                new ScreenCoord(mousePos.x, mousePos.y),
+            );
+            const rtn = { x: coord.x(), y: coord.y() };
+            coord.free();
+            return rtn;
         });
 
-        this.normalizedMousePos$ = this.mousePos$.pipe(
-            map((coords) => {
-                const scene = scenesService.currentScene();
-                if (!scene) {
-                    return { x: Infinity, y: Infinity };
-                }
+        this.mouseCanvasScreenPosSignal = computed(() => {
+            const scene = scenesService.currentScene();
+            if (!scene) {
+                return MouseInfoService.INVALID_COORD;
+            }
 
-                return scene.get_project_mouse(coords.x, coords.y);
-            }),
-        );
+            const mousePos = this.mouseCanvasPosSignal();
+            const screenCoord = scene.canvasContent.camera_unproject_to_canvas(
+                new Coord(mousePos.x, mousePos.y),
+            );
+            const rtn = { x: screenCoord.x(), y: screenCoord.y() };
+            screenCoord.free();
+            return rtn;
+        });
+
+        eventService.mouseMove$.subscribe((event) => {
+            this.mousePosSignal.set({ x: event.offsetX, y: event.offsetY });
+        });
+
+        eventService.mouseEnter$.subscribe((event) => {
+            this.mousePosSignal.set({ x: event.offsetX, y: event.offsetY });
+            this.mouseInCanvas.set(true);
+        });
+
+        eventService.mouseLeave$.subscribe((_) => {
+            this.mouseInCanvas.set(false);
+        });
     }
 }

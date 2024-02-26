@@ -1,10 +1,10 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
-import { animationFrames, map, merge, of, withLatestFrom } from "rxjs";
-import { EventsService } from "src/app/events.service";
+import { animationFrames } from "rxjs";
+import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
-import { ScenesService } from "src/app/scenes.service";
-import { SelectionService } from "src/app/selection.service";
-import { CanvasContent, Point, draw, draw_closest_pt, render } from "wasm-vgc";
+import { ScenesService } from "src/app/scene/scenes.service";
+import { SelectionService } from "src/app/scene/selection.service";
+import { CanvasContent, ScreenCoord, draw, draw_closest_pt, render } from "wasm-vgc";
 
 @Component({
     selector: "app-canvas",
@@ -31,7 +31,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.scenesService.currentSceneChange$.subscribe(() => {
             this.scenesService.currentSceneNow((scene) => {
-                scene.set_pixel_region(
+                scene.canvasContent.camera_set_pixel_region(
                     this.canvas.nativeElement.width,
                     this.canvas.nativeElement.height,
                 );
@@ -49,7 +49,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
 
                 this.scenesService.currentSceneNow((scene) => {
-                    scene.set_pixel_region(
+                    scene.canvasContent.camera_set_pixel_region(
                         this.canvas.nativeElement.width,
                         this.canvas.nativeElement.height,
                     );
@@ -59,21 +59,16 @@ export class CanvasComponent implements AfterViewInit {
 
         this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
 
-        animationFrames()
-            .pipe(
-                withLatestFrom(
-                    merge(
-                        of(null),
-                        this.mouseInfo.mousePos$,
-                        this.eventService.mouseLeave$.pipe(map(() => null)),
-                    ),
-                ),
-            )
-            .subscribe(([_, mouseInfo]) => {
-                this.scenesService.currentSceneNow((canvasContent) => {
-                    this.render(canvasContent, mouseInfo);
-                });
+        animationFrames().subscribe((_) => {
+            let mouseInfo: { x: number; y: number } | null = null;
+            if (this.mouseInfo.mouseInCanvas()) {
+                mouseInfo = this.mouseInfo.mouseCanvasPosSignal();
+            }
+
+            this.scenesService.currentSceneNow((scene) => {
+                this.render(scene.canvasContent, mouseInfo);
             });
+        });
     }
 
     public render(canvasContent: CanvasContent, mouseCoords: { x: number; y: number } | null) {
@@ -85,7 +80,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.selectionService.selection,
                 canvasContent,
                 this.ctx,
-                new Point(mouseCoords.x, mouseCoords.y),
+                new ScreenCoord(mouseCoords.x, mouseCoords.y),
             );
         }
 

@@ -67,8 +67,6 @@ export class NumberInputComponent {
 
         return value;
     }
-
-   
 }
 
 function parse(str: string): number {
