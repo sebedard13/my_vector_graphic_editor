@@ -1,10 +1,10 @@
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::forward_ref_binop;
+use crate::{forward_ref_binop, forward_ref_unop};
 
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Copy, Default)]
@@ -47,6 +47,20 @@ impl Vec2 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         dx * dx + dy * dy
+    }
+
+    pub fn min(a: &Vec2, b: &Vec2) -> Vec2 {
+        Vec2 {
+            x: a.x.min(b.x),
+            y: a.y.min(b.y),
+        }
+    }
+
+    pub fn max(a: &Vec2, b: &Vec2) -> Vec2 {
+        Vec2 {
+            x: a.x.max(b.x),
+            y: a.y.max(b.y),
+        }
     }
 }
 
@@ -146,6 +160,19 @@ impl Div<Vec2> for Vec2 {
 }
 
 forward_ref_binop!(impl Div, div for Vec2, Vec2);
+
+impl Neg for Vec2 {
+    type Output = Vec2;
+
+    fn neg(self) -> Vec2 {
+        Vec2 {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
+forward_ref_unop!(impl Neg, neg for Vec2);
 
 impl ApproxEq for &Vec2 {
     type Margin = F32Margin;

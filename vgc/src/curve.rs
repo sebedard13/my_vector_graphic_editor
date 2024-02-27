@@ -8,7 +8,7 @@ use common::{pures::Vec2, types::Coord};
 /// - cp1 is the control point before the current point
 /// - p1 is the current point
 ///
-/// The curve is drawn from the previous curve point [i-1].p1, with [i].cp1 and [i].cph2 as control points and [i].cp1 for the final points.
+/// The curve is drawn from the previous curve point [i-1].p1, with [i].cp0 and [i].cp1 as control points and [i].p1 for the final points.
 #[derive(Debug)]
 pub struct Curve {
     pub cp0: Rc<RefCell<Coord>>,
@@ -107,7 +107,7 @@ pub fn t_closest(
 }
 
 /// Evaluate the point at t of curve defined by p0, cp0, cp1, p1
-fn cubic_bezier(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> Vec2 {
+pub fn cubic_bezier(t: f32, p0: &Vec2, cp0: &Vec2, cp1: &Vec2, p1: &Vec2) -> Vec2 {
     (1.0 - t) * (1.0 - t) * (1.0 - t) * p0
         + 3.0 * (1.0 - t) * (1.0 - t) * t * cp0
         + 3.0 * (1.0 - t) * t * t * cp1
