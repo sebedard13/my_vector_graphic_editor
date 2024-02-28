@@ -107,21 +107,33 @@ pub fn intersection(
     let c1_rect = bounding_box(c1_p0, c1_cp0, c1_cp1, c1_p1);
     let c2_rect = bounding_box(c2_p0, c2_cp0, c2_cp1, c2_p1);
 
-    if (!c1_rect.intersect(&c2_rect)) {
+    if !c1_rect.intersect(&c2_rect) {
         return Vec::new();
+    }
+
+
+    let max = &Rect::max(&c1_rect, &c2_rect);
+    let i2 =1;
+    if max.approx_diagonal() < f32::EPSILON*f32::EPSILON {
+        let rtn = IntersectionPoint {
+            coord: max.center(),
+            t1: 0.5,
+            t2: 0.5,
+        };
+        return vec![rtn];
     }
 
     let (c1_1_cp0, c1_1_cp1, c1_1_p1, c1_2_cp0, c1_2_cp1) =
         add_smooth_result(c1_p0, c1_cp0, c1_cp1, c1_p1, 0.5);
     let c1_1_p0 = c1_p0;
-    let c1_2_p0 = c1_1_p0;
+    let c1_2_p0 = c1_1_p1;
     let c1_2_p1 = c1_p1;
 
 
     let (c2_1_cp0, c2_1_cp1, c2_1_p1, c2_2_cp0, c2_2_cp1) =
-        add_smooth_result(c1_p0, c1_cp0, c1_cp1, c1_p1, 0.5);
+        add_smooth_result(c2_p0, c2_cp0, c2_cp1, c2_p1, 0.5);
     let c2_1_p0 = c2_p0;
-    let c2_2_p0 = c2_1_p0;
+    let c2_2_p0 = c2_1_p1;
     let c2_2_p1 = c2_p1;
     
     let res_c1_1_c2_1 = intersection(&c1_1_p0, &c1_1_cp0, &c1_1_cp1, &c1_1_p1, &c2_1_p0, &c2_1_cp0, &c2_1_cp1, &c2_1_p1);
@@ -129,8 +141,41 @@ pub fn intersection(
     let res_c1_2_c2_1 = intersection(&c1_2_p0, &c1_2_cp0, &c1_2_cp1, &c1_2_p1, &c2_1_p0, &c2_1_cp0, &c2_1_cp1, &c2_1_p1);
     let res_c1_2_c2_2 = intersection(&c1_2_p0, &c1_2_cp0, &c1_2_cp1, &c1_2_p1, &c2_2_p0, &c2_2_cp0, &c2_2_cp1, &c2_2_p1);
 
+    let mut rtn = Vec::new();
 
-    return Vec::new();
+    for mut res in res_c1_1_c2_1 {
+        res.t1 /= 2.0;
+        res.t2 /= 2.0;
+
+        rtn.push(res);
+    }
+
+    for mut res in res_c1_1_c2_2 {
+        res.t1 /= 2.0;
+        res.t2 /= 2.0;
+        res.t2 += 0.5;
+
+        rtn.push(res);
+    }
+
+    for mut res in res_c1_2_c2_1 {
+        res.t1 /= 2.0;
+        res.t1 += 0.5;
+        res.t2 /= 2.0;
+
+        rtn.push(res);
+    }
+
+    for mut res in res_c1_2_c2_2 {
+        res.t1 /= 2.0;
+        res.t1 += 0.5;
+        res.t2 /= 2.0;
+        res.t2 += 0.5;
+
+        rtn.push(res);
+    }
+
+    return rtn;
 }
 
 #[cfg(test)]
@@ -170,5 +215,25 @@ mod tests {
         approx_eq!(f32, vec[3], 0.437850957522);
         approx_eq!(f32, vec[4], 0.593406593407);
         approx_eq!(f32, vec[5], 1.0);
+    }
+
+    #[test]
+    fn when_two_perpendicular_lines_then_intersection() {
+        let c1_p0 = Coord::new(0.0, 0.0);
+        let c1_cp0 = Coord::new(0.0, 0.0);
+        let c1_cp1 = Coord::new(0.0, 1.0);
+        let c1_p1 = Coord::new(0.0, 1.0);
+
+        let c2_p0 = Coord::new(-1.0, 0.5);
+        let c2_cp0 = Coord::new(-1.0, 0.5);
+        let c2_cp1 = Coord::new(1.0, 0.5);
+        let c2_p1 = Coord::new(1.0, 0.5);
+
+        let res = intersection(&c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1);
+
+        assert_eq!(res.len(), 1);
+        approx_eq!(Coord, res[0].coord, Coord::new(0.0, 0.5));
+        approx_eq!(f32, res[0].t1, 0.5);
+        approx_eq!(f32, res[0].t2, 0.5);
     }
 }

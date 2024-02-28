@@ -81,6 +81,19 @@ impl Rect {
             && self.top_left.c.y < other.bottom_right.c.y
             && self.bottom_right.c.y > other.top_left.c.y
     }
+
+    pub fn max(a: &Rect, b: &Rect) -> Rect {
+        Rect {
+            top_left: Coord::min(&a.top_left, &b.top_left),
+            bottom_right: Coord::max(&a.bottom_right, &b.bottom_right),
+        }
+    }
+
+    pub fn approx_diagonal(&self) -> f32 {
+        let dx = self.width();
+        let dy = self.height();
+        dx * dx + dy * dy
+    }
 }
 
 /**
