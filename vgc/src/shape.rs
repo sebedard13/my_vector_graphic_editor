@@ -215,18 +215,12 @@ impl Shape {
         let (p0, cp0i, cp2i, p2) = self.get_coords_of_curve(curve_index);
 
         let (cp0, cp1l, p1, cp1r, cp2) = curve::add_smooth_result(
-            &p0.borrow().c,
-            &cp0i.borrow().c,
-            &cp2i.borrow().c,
-            &p2.borrow().c,
+            &p0.borrow(),
+            &cp0i.borrow(),
+            &cp2i.borrow(),
+            &p2.borrow(),
             t,
         );
-
-        let cp0 = Coord { c: cp0 };
-        let cp1l = Coord { c: cp1l };
-        let p1 = Coord { c: p1 };
-        let cp1r = Coord { c: cp1r };
-        let cp2 = Coord { c: cp2 };
 
         self.insert_coord_at(curve_index, p1);
 

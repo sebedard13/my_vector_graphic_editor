@@ -1,54 +1,10 @@
-use crate::pures::{Affine, Vec2};
+use crate::pures::Vec2;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-/**
- * A coordinate in the 2D space of the canvas
- * Mostly 0.0 to 1.0, for a square canvas
- */
-#[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy, Default)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-pub struct Coord {
-    pub c: Vec2,
-}
+mod coord;
+pub use coord::Coord as Coord;
 
-#[wasm_bindgen]
-impl Coord {
-    #[wasm_bindgen(constructor)]
-    pub fn new(x: f32, y: f32) -> Coord {
-        Coord { c: Vec2::new(x, y) }
-    }
-
-    pub fn x(&self) -> f32 {
-        self.c.x
-    }
-
-    pub fn y(&self) -> f32 {
-        self.c.y
-    }
-
-    pub fn set_x(&mut self, x: f32) {
-        self.c.x = x;
-    }
-
-    pub fn set_y(&mut self, y: f32) {
-        self.c.y = y;
-    }
-
-    pub fn scale(&self, x: f32, y: f32, scale_x: f32, scale_y: f32) -> Coord {
-        let x = self.c.x * scale_x + x;
-        let y = self.c.y * scale_y + y;
-
-        Coord::new(x, y)
-    }
-
-    pub fn transform(&self, m: &Affine) -> Coord {
-        let c = m * self.c;
-
-        Coord { c }
-    }
-}
 
 /**
  * A screen coordinate in pixels
@@ -117,6 +73,13 @@ impl Rect {
             (self.top_left.c.x + self.bottom_right.c.x) / 2.0,
             (self.top_left.c.y + self.bottom_right.c.y) / 2.0,
         )
+    }
+
+    pub fn intersect(&self, other: &Rect) -> bool {
+        self.top_left.c.x < other.bottom_right.c.x
+            && self.bottom_right.c.x > other.top_left.c.x
+            && self.top_left.c.y < other.bottom_right.c.y
+            && self.bottom_right.c.y > other.top_left.c.y
     }
 }
 
