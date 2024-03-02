@@ -250,7 +250,7 @@ mod test {
     use std::f32::consts::PI;
     use std::time::Instant;
 
-    use float_cmp::approx_eq;
+    use float_cmp::assert_approx_eq;
 
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
     use common::{pures::Vec2, types::Coord};
@@ -322,61 +322,61 @@ mod test {
 
     #[test]
     fn test_add_smooth_result() {
-        let p0 = Coord::new(1.0, 0.0 );
-        let cp0 = Coord::new(1.0, 0.5 );
-        let cp1 = Coord::new(0.0, 0.1 );
-        let p1 = Coord::new(0.0, 0.0 );
+        let p0 = Coord::new(1.0, 0.0);
+        let cp0 = Coord::new(1.0, 0.5);
+        let cp1 = Coord::new(0.0, 0.1);
+        let p1 = Coord::new(0.0, 0.0);
 
         let (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn) =
             add_smooth_result(&p0, &cp0, &cp1, &p1, 0.5);
 
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.0, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.125, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.25, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.25, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.5, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.375, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.75, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(1.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
 
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.625, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.25, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.5, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(0.875, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(0.75, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
-        approx_eq!(
+        assert_approx_eq!(
             &Coord,
             &cubic_bezier(1.0, &p0, &cp0, &cp1, &p1),
             &cubic_bezier(1.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)

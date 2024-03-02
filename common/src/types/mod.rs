@@ -3,8 +3,7 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::wasm_bindgen;
 
 mod coord;
-pub use coord::Coord as Coord;
-
+pub use coord::Coord;
 
 /**
  * A screen coordinate in pixels
@@ -76,10 +75,10 @@ impl Rect {
     }
 
     pub fn intersect(&self, other: &Rect) -> bool {
-        self.top_left.c.x < other.bottom_right.c.x
-            && self.bottom_right.c.x > other.top_left.c.x
-            && self.top_left.c.y < other.bottom_right.c.y
-            && self.bottom_right.c.y > other.top_left.c.y
+        self.top_left.c.x <= other.bottom_right.c.x
+            && self.bottom_right.c.x >= other.top_left.c.x
+            && self.top_left.c.y <= other.bottom_right.c.y
+            && self.bottom_right.c.y >= other.top_left.c.y
     }
 
     pub fn max(a: &Rect, b: &Rect) -> Rect {
