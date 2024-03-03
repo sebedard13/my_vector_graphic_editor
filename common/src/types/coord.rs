@@ -11,7 +11,7 @@ use crate::{forward_ref_binop, forward_ref_unop};
  * Mostly 0.0 to 1.0, for a square canvas
  */
 #[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy, Default)]
+#[derive(Clone, Debug, Copy, Default)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Coord {
     pub c: Vec2,
@@ -63,6 +63,13 @@ impl Coord {
         Coord {
             c: Vec2::max(&a.c, &b.c),
         }
+    }
+}
+
+impl PartialEq for Coord {
+    fn eq(&self, other: &Coord) -> bool {
+        f32::abs(self.c.x - other.c.x) <= f32::EPSILON
+            && f32::abs(self.c.y - other.c.y) <= f32::EPSILON
     }
 }
 
