@@ -150,9 +150,10 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
         }
 
         let max = Rect::max(&c1_rect, &c2_rect);
-        if max.approx_diagonal() < f32::EPSILON * f32::EPSILON * 1.0 || cu.level > 30 {
+
+        if max.approx_diagonal() < f32::EPSILON * f32::EPSILON * 1.0 || cu.level > 35 {
             let rtn = IntersectionPoint {
-                coord: max.center(),
+                coord: cubic_bezier(cu.t1, &cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1),
                 t1: cu.t1,
                 t2: cu.t2,
             };
@@ -165,7 +166,7 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
                 }
             }
 
-            if (!is_present) {
+            if !is_present {
                 res.push(rtn);
                 // if cu.level > 30 {
                 //     println!("Max level reached with rect {:#?}, approx diagonal: {}, width {}, height {}", max, max.approx_diagonal(), max.width(), max.height());
@@ -189,7 +190,7 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
         let c2_2_p1 = cu.c2_p1;
 
         let level = cu.level + 1;
-        let t_change = 0.5 / (2.0f32).powi(level);
+        let t_change = 1.0 / (2.0f32).powi(level);
 
         let res_c1_1_c2_1 = IntersectionToDo {
             c1_p0: c1_1_p0,
@@ -275,6 +276,7 @@ mod tests {
     use common::pures::{Affine, Vec2};
     use float_cmp::assert_approx_eq;
 
+    use super::super::curve::cubic_bezier;
     use super::*;
 
     #[test]
@@ -330,6 +332,17 @@ mod tests {
         assert_approx_eq!(Coord, res[0].coord, Coord::new(0.0, 0.0));
         assert_approx_eq!(f32, res[0].t1, 0.5);
         assert_approx_eq!(f32, res[0].t2, 0.5);
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[0].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[0].coord
+        );
     }
 
     #[test]
@@ -354,6 +367,28 @@ mod tests {
 
         assert_eq!(res.len(), 2);
         assert!(res[0].t1 != res[1].t1);
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[0].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[0].coord
+        );
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[1].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[1].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[1].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[1].coord
+        );
     }
 
     #[test]
@@ -378,5 +413,38 @@ mod tests {
 
         assert_eq!(res.len(), 3);
         assert!(res[0].t1 != res[1].t1 && res[0].t1 != res[2].t1);
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[0].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[0].coord
+        );
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[1].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[1].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[1].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[1].coord
+        );
+
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[2].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
+            res[2].coord
+        );
+        assert_approx_eq!(
+            Coord,
+            cubic_bezier(res[2].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
+            res[2].coord
+        );
     }
 }

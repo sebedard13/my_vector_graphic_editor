@@ -322,9 +322,9 @@ mod test {
 
     #[test]
     fn test_add_smooth_result() {
-        let p0 = Coord::new(1.0, 0.0);
-        let cp0 = Coord::new(1.0, 0.5);
-        let cp1 = Coord::new(0.0, 0.1);
+        let p0 = Coord::new(1.0, 1.0);
+        let cp0 = Coord::new(4.0, 0.5);
+        let cp1 = Coord::new(0.1, 0.1);
         let p1 = Coord::new(0.0, 0.0);
 
         let (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn) =

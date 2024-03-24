@@ -1,6 +1,6 @@
 use crate::coord::{CoordPtr, CoordType};
-use crate::curve::Curve;
 use crate::curve::{self, add_smooth_result};
+use crate::curve::Curve;
 use crate::curve2::intersection;
 use common::types::Coord;
 use common::Rgba;
@@ -296,8 +296,10 @@ impl Shape {
         let mut is_a_main = true;
         while !closed {
             let (m_p0, m_cp0, m_cp1, m_p1) = if is_a_main {
+                i_main = i_main % self.curves.len();
                 self.get_coords_of_curve(i_main)
             } else {
+                i_main = i_main % other.curves.len();
                 other.get_coords_of_curve(i_main)
             };
 
@@ -336,12 +338,12 @@ impl Shape {
                         &m_p1.borrow(),
                         point.t1,
                     );
-                    let shared_coord = Rc::new(RefCell::new(new_p1));
 
+                    println!("new_p1: {:?}", new_p1);
                     merged.curves.push(Curve::new(
                         Rc::new(RefCell::new(new_cp0)),
                         Rc::new(RefCell::new(new_cp1)),
-                        shared_coord,
+                        Rc::new(RefCell::new(point.coord)),
                     ));
 
                     let (_, _, _, new_cp0, new_cp1) = add_smooth_result(
@@ -364,13 +366,12 @@ impl Shape {
                 }
             }
 
-            if (has_done) {
+            if has_done {
                 continue;
             }
 
             merged.curves.push(Curve::new(m_cp0, m_cp1, m_p1));
             i_main += 1;
-
 
             if *merged.start.borrow() == *merged.curves.last().unwrap().p1.borrow() {
                 closed = true;
@@ -465,7 +466,8 @@ mod test {
 
         let merged = s1.merge(&s2).expect("Should merge");
 
-        assert_eq!(*(merged.curves[1].p1.borrow()), Coord::new(0.2, 0.2));
-        assert_eq!(merged.curves.len(), 8);
+        assert_eq!(*(merged.curves[1].p1.borrow()), Coord::new(0.2, 0.20001104));
+        assert_eq!(merged.curves.len(), 8);          
+        assert_eq!(merged.to_path(),"M 0 0.20001104 C 0.03648475 0.19992407 0.07062003 0.19018893 0.09999999 0.17321143 C 0.12937993 0.19018891 0.16351523 0.19992408 0.2 0.20001104 C 0.3106854 0.19974719 0.3997472 0.110685386 0.40001106 0 C 0.3997472 -0.110685386 0.3106854 -0.19974719 0.2 -0.20001104 C 0.16351524 -0.19992407 0.12937997 -0.19018893 0.10000002 -0.17321143 C 0.07062003 -0.19018894 0.03648475 -0.19992407 0 -0.20001104 C -0.110685386 -0.19974719 -0.19974719 -0.110685386 -0.20001104 0 C -0.19974719 0.110685386 -0.110685386 0.19974719 0 0.20001104 Z");
     }
 }
