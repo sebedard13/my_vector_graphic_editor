@@ -133,4 +133,40 @@ mod test {
         assert_eq!(merged.curves.len(), 8);
         assert_eq!(merged.to_path(),"M 0 0.20001104 C 0.03648475 0.19992407 0.07062003 0.19018893 0.1 0.17321144 C 0.12937993 0.19018891 0.16351523 0.19992408 0.2 0.20001104 C 0.3106854 0.19974719 0.3997472 0.110685386 0.40001106 0 C 0.3997472 -0.110685386 0.3106854 -0.19974719 0.2 -0.20001104 C 0.16351524 -0.19992407 0.12937997 -0.19018893 0.10000001 -0.17321144 C 0.07062003 -0.19018894 0.03648475 -0.19992407 0 -0.20001104 C -0.110685386 -0.19974719 -0.19974719 -0.110685386 -0.20001104 0 C -0.19974719 0.110685386 -0.110685386 0.19974719 0 0.20001104 Z");
     }
+
+    #[test]
+    fn when_merge_ovals_with_no_valid_p() {
+        let vgc = crate::generate_from_push(vec![
+            vec![
+                Coord::new(0.0, 0.3),
+
+                Coord::new(0.8, 0.3),
+                Coord::new(0.8, -0.3),
+                Coord::new(0.0, -0.3),
+
+                Coord::new(-0.8, -0.3),
+                Coord::new(-0.8, 0.3),
+                Coord::new(0.0, 0.3),
+            ],
+            vec![
+                Coord::new(0.3, 0.0),
+
+                Coord::new(0.3, 0.8),
+                Coord::new(-0.3, 0.8),
+                Coord::new(-0.3, 0.0),
+
+                Coord::new(-0.3, -0.8),
+                Coord::new(0.3, -0.8),
+                Coord::new(0.3, 0.0),
+            ],
+        ]);
+
+        let s1 = vgc.get_shape(0).expect("Shape should exist");
+        let s2 = vgc.get_shape(1).expect("Shape should exist");
+
+        let merged = union(&s1, &s2).expect("Should merge");
+
+        assert_eq!(merged.curves.len(), 4);
+        println!("{}", merged.to_path());
+    }
 }
