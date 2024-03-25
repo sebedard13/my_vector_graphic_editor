@@ -20,6 +20,7 @@ pub mod render;
 mod serialization;
 
 mod shape;
+mod shape_boolean;
 
 /// Maximum size of the image, if we want to have detail for each pixel
 /// This is a limit because of f32 precision with 2^-23 for the smallest value
