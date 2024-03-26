@@ -227,7 +227,7 @@ pub fn tangent_cornor_pts(
 }
 
 ///For a curve defined by p0, cp0, cp1, p1, let's imagine we want to add a point at t without changing the actual curve.
-/// Return the handle and points to create a smooth curve at t so (cp0, cp1l, p1, cp1r, cp2, p2)
+/// Return the handle and points to create a smooth curve at t so (cp0, cp1l, p1, cp1r, cp2)
 pub fn add_smooth_result(
     p0: &Coord,
     cp0: &Coord,
