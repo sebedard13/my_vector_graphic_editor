@@ -9,10 +9,10 @@ Symmetric Difference : A XOR B
 
 use std::{cell::RefCell, rc::Rc};
 
+use common::pures::Vec2;
+
 use crate::{
-    curve::{add_smooth_result, Curve},
-    curve2::intersection,
-    shape::Shape,
+    coord::CoordPtr, curve::{add_smooth_result, Curve}, curve2::intersection, shape::Shape
 };
 
 pub fn union(a: &Shape, b: &Shape) -> Option<Shape> {
@@ -109,6 +109,31 @@ pub fn union(a: &Shape, b: &Shape) -> Option<Shape> {
     }
 
     Some(merged)
+}
+
+#[derive(Default)]
+struct GreinerShape{
+    pub coords: Vec<GreinerCoord>
+}
+
+#[derive(Default)]
+struct GreinerCoord{
+    pub coord: Vec2,
+    pub intersect: bool,
+    pub is_entry: bool, // Or exit
+    pub other_shape_index: usize,
+    pub coord_ptr: Option<CoordPtr>,
+
+}
+
+fn find_all_intersecion(a:&Shape, b:&Shape) -> (GreinerShape, GreinerShape){
+    let a_greiner = GreinerShape::default();
+    let b_greiner = GreinerShape::default();
+
+
+    a.visit_full_curves()
+
+    (a_greiner, b_greiner)
 }
 
 #[cfg(test)]
