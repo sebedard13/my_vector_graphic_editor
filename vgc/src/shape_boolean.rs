@@ -7,14 +7,17 @@ Difference : A NOR B
 Symmetric Difference : A XOR B
 */
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    rc::{Rc, Weak},
+};
 
 use common::{pures::Vec2, types::Coord};
 
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, Curve},
-    curve2::intersection,
+    curve2::{intersection, IntersectionPoint},
     shape::Shape,
 };
 
@@ -116,176 +119,273 @@ pub fn union(a: &Shape, b: &Shape) -> Option<Shape> {
 
 // When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
 // GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
-#[derive(Default)]
 struct GreinerShape {
-    pub coords: Vec<GreinerCoord>,
+    pub start: Rc<RefCell<CoordOfIntersection>>,
 }
 
 impl GreinerShape {
-    pub fn insert_intersection(
-        &mut self,
-        shape_index: usize,
-        cp0: Coord,
-        cp1l: Coord,
-        p1: Coord,
-        cp1r: Coord,
-        cp2: Coord,
-        other_shape_index: usize,
-    ) {
-        self.coords[shape_index + 1].coord = cp0;
-        self.coords[shape_index + 1].coord_ptr = None;
+    pub fn new(start: Rc<RefCell<CoordOfIntersection>>) -> Self {
+        Self { start }
+    }
 
-        self.coords[shape_index + 2].coord = cp1l;
-        self.coords[shape_index + 2].coord_ptr = None;
+    pub fn len(&self) -> usize {
+        let mut current = self.start.clone();
+        let mut count = 1;
+        while current.borrow().next.is_some() {
+            {
+                let borrow_current = current.borrow();
+                let next = borrow_current.next.as_ref().unwrap();
+                if Rc::ptr_eq(&next, &self.start) {
+                    break;
+                }
+            }
 
-        self.coords.insert(
-            shape_index + 3,
-            GreinerCoord::new_intersect(p1, other_shape_index + 3),
-        );
-        self.coords
-            .insert(shape_index + 4, GreinerCoord::new2(cp1r));
-        self.coords.insert(shape_index + 5, GreinerCoord::new2(cp2));
-        let a = 2;
+            let clone = current.borrow().next.clone().unwrap();
+            current = clone;
+            count += 1;
+        }
+        count
     }
 }
 
-#[derive(Default)]
-struct GreinerCoord {
-    pub coord: Coord,
+impl Drop for GreinerShape {
+    fn drop(&mut self) {
+        self.start.borrow_mut().prev = None;
+        self.start.borrow_mut().next = None;
+    }
+}
+
+struct CoordOfIntersection {
+    pub curve_index: usize,
+    pub t: f32,
+    pub neighbor: Option<Weak<RefCell<CoordOfIntersection>>>,
+    pub next: Option<Rc<RefCell<CoordOfIntersection>>>,
+    pub prev: Option<Weak<RefCell<CoordOfIntersection>>>,
+    pub entry: bool,
     pub intersect: bool,
-    pub is_entry: bool, // Or exit
-    pub other_shape_index: Option<usize>,
-    pub coord_ptr: Option<CoordPtr>,
+    pub coord: Coord,
+    pub rel_coord: Option<CoordPtr>,
 }
 
-impl GreinerCoord {
-    pub fn new(coord_ptr: &CoordPtr) -> Self {
-        let coord = *coord_ptr.borrow();
+struct CoordNode {
+    pub coord: Coord,
+    pub next: Option<Rc<CoordNode>>,
+    pub prev: Option<Weak<CoordNode>>,
+}
+
+impl CoordOfIntersection {
+    pub fn from_existing(rel_coord: &CoordPtr) -> Self {
         Self {
-            coord,
+            curve_index: 0, //we don't need this
+            t: 0.0,         //we don't need this
+            neighbor: None,
+            next: None,
+            prev: None,
+            entry: false,
             intersect: false,
-            is_entry: false,
-            other_shape_index: None,
-            coord_ptr: Some(coord_ptr.clone()),
+            coord: rel_coord.borrow().clone(),
+            rel_coord: Some(rel_coord.clone()),
         }
     }
 
-    pub fn new2(coord: Coord) -> Self {
+    pub fn from_intersection(coord: Coord, t: f32, curve_index: usize) -> Self {
         Self {
-            coord,
-            intersect: false,
-            is_entry: false,
-            other_shape_index: None,
-            coord_ptr: None,
-        }
-    }
-
-    pub fn new_intersect(coord: Coord, other_shape_index: usize) -> Self {
-        Self {
-            coord,
+            curve_index,
+            t,
+            neighbor: None,
+            next: None,
+            prev: None,
+            entry: false,
             intersect: true,
-            is_entry: false,
-            other_shape_index: Some(other_shape_index),
-            coord_ptr: None,
+            coord: coord,
+            rel_coord: None,
+        }
+    }
+
+    pub fn from_new(coord: Coord) -> Self {
+        Self {
+            curve_index: 0, //we don't need this
+            t: 0.0,         //we don't need this
+            neighbor: None,
+            next: None,
+            prev: None,
+            entry: false,
+            intersect: false,
+            coord: coord,
+            rel_coord: None,
         }
     }
 }
 
 #[allow(dead_code)]
 fn find_all_intersecion(a: &Shape, b: &Shape) -> (GreinerShape, GreinerShape) {
-    let mut a_greiner = GreinerShape::default();
+    let mut intersection_a: Vec<Rc<RefCell<CoordOfIntersection>>> =
+        Vec::with_capacity(a.curves.len());
+    let mut intersection_b: Vec<Rc<RefCell<CoordOfIntersection>>> =
+        Vec::with_capacity(b.curves.len());
 
-    a_greiner.coords.push(GreinerCoord::new(&a.start));
     for i in 0..a.curves.len() {
-        let (_, a_cp0, a_cp1, a_p1) = a.get_coords_of_curve(i);
-        a_greiner.coords.push(GreinerCoord::new(&a_cp0));
-        a_greiner.coords.push(GreinerCoord::new(&a_cp1));
-        a_greiner.coords.push(GreinerCoord::new(&a_p1));
-    }
+        let (a_p0, a_cp0, a_cp1, a_p1) = a.get_coords_of_curve(i);
 
-    let mut b_greiner = GreinerShape::default();
-
-    b_greiner.coords.push(GreinerCoord::new(&b.start));
-    for i in 0..b.curves.len() {
-        let (_, b_cp0, b_cp1, b_p1) = b.get_coords_of_curve(i);
-        b_greiner.coords.push(GreinerCoord::new(&b_cp0));
-        b_greiner.coords.push(GreinerCoord::new(&b_cp1));
-        b_greiner.coords.push(GreinerCoord::new(&b_p1));
-    }
-
-    for mut i in (0..a_greiner.coords.len() - 1).step_by(3) {
-        let a_p0 = a_greiner.coords[i].coord.clone();
-        let a_cp0 = &a_greiner.coords[i + 1].coord.clone();
-        let a_cp1 = &a_greiner.coords[i + 2].coord.clone();
-        let a_p1 = &a_greiner.coords[i + 3].coord.clone();
-
-        for mut j in (0..a_greiner.coords.len() - 1).step_by(3) {
-            let b_p0 = &b_greiner.coords[j];
-            let b_cp0 = &b_greiner.coords[j + 1];
-            let b_cp1 = &b_greiner.coords[j + 2];
-            let b_p1 = &b_greiner.coords[j + 3];
+        for j in 0..b.curves.len() {
+            let (b_p0, b_cp0, b_cp1, b_p1) = b.get_coords_of_curve(j);
 
             let intersection_points = intersection(
-                &a_p0,
-                &a_cp0,
-                &a_cp1,
-                &a_p1,
-                &b_p0.coord,
-                &b_cp0.coord,
-                &b_cp1.coord,
-                &b_p1.coord,
+                &a_p0.borrow(),
+                &a_cp0.borrow(),
+                &a_cp1.borrow(),
+                &a_p1.borrow(),
+                &b_p0.borrow(),
+                &b_cp0.borrow(),
+                &b_cp1.borrow(),
+                &b_p1.borrow(),
             );
 
-            match intersection_points.len() {
-                0 => {
-                    // No intersection
-                    continue;
-                }
-                1 => {
-                    let eps = 2.0 * f32::EPSILON;
-                    if (intersection_points[0].t1 <= eps || intersection_points[0].t1 >= 1.0)
-                        || (intersection_points[0].t2 <= eps || intersection_points[0].t2 >= 1.0)
-                    {
-                        // Intersection at the start or end of the curve
-                        continue;
-                    } 
-                    let (a_new_cp0, a_new_cp11, a_new_p1, a_new_cp1r, a_new_cp2) =
-                        add_smooth_result(
-                            &a_p0,
-                            &a_cp0,
-                            &a_cp1,
-                            &a_p1,
-                            intersection_points[0].t1,
-                        );
+            for point in intersection_points {
+                let point_a = Rc::new(RefCell::new(CoordOfIntersection::from_intersection(
+                    point.coord,
+                    point.t1,
+                    i,
+                )));
 
-                    let (b_new_cp0, b_new_cp11, b_new_p1, b_new_cp1r, b_new_cp2) =
-                        add_smooth_result(
-                            &b_p0.coord,
-                            &b_cp0.coord,
-                            &b_cp1.coord,
-                            &b_p1.coord,
-                            intersection_points[0].t2,
-                        );
-                    b_greiner.insert_intersection(
-                        j, b_new_cp0, b_new_cp11, b_new_p1, b_new_cp1r, b_new_cp2, i,
-                    );
+                let point_b = Rc::new(RefCell::new(CoordOfIntersection::from_intersection(
+                    point.coord,
+                    point.t2,
+                    j,
+                )));
 
-                    a_greiner.insert_intersection(
-                        i, a_new_cp0, a_new_cp11, a_new_p1, a_new_cp1r, a_new_cp2, j,
-                    );
-                }
-                _ => {
-                    todo!("Handle multiple intersection points")
-                }
+                point_a.borrow_mut().neighbor = Some(Rc::downgrade(&point_b));
+                point_b.borrow_mut().neighbor = Some(Rc::downgrade(&point_a));
+
+                intersection_a.push(point_a);
+                intersection_b.push(point_b);
             }
         }
     }
+    let sort_fn = |a: &Rc<RefCell<CoordOfIntersection>>, b: &Rc<RefCell<CoordOfIntersection>>| {
+        let ord_curve = a.borrow().curve_index.cmp(&b.borrow().curve_index);
+        if ord_curve == std::cmp::Ordering::Equal {
+            a.borrow()
+                .t
+                .partial_cmp(&b.borrow().t)
+                .expect("Should be a number")
+        } else {
+            ord_curve
+        }
+    };
 
-    //Remove the last point wich is a duplicate of the first
-    a_greiner.coords.pop();
-    b_greiner.coords.pop();
+    intersection_a.sort_by(sort_fn);
 
-    (a_greiner, b_greiner)
+    let start_a = create_all_shape(a, intersection_a);
+
+    intersection_b.sort_by(sort_fn);
+
+    let start_b = create_all_shape(b, intersection_b);
+    (GreinerShape::new(start_a), GreinerShape::new(start_b))
+}
+
+fn create_all_shape(
+    a: &Shape,
+    intersection_a: Vec<Rc<RefCell<CoordOfIntersection>>>,
+) -> Rc<RefCell<CoordOfIntersection>> {
+    let start_a = Rc::new(RefCell::new(CoordOfIntersection::from_existing(&a.start)));
+    let mut current = start_a.clone();
+    let mut iter = intersection_a.iter();
+    let mut current_intersection = iter.next();
+
+    for curve_index in 0..a.curves.len() {
+        let (a_p0, a_cp0, a_cp1, a_p1) = a.get_coords_of_curve(curve_index);
+        let coord = *a_p0.borrow();
+        let mut current_p0 = (coord, Some(a_p0));
+        let coord = *a_cp0.borrow();
+        let mut current_cp0 = (coord, Some(a_cp0));
+        let coord = *a_cp1.borrow();
+        let mut current_cp1 = (coord, Some(a_cp1));
+        let coord = *a_p1.borrow();
+        let current_p1 = (coord, a_p1);
+
+        let mut last_t = 0.0;
+        while current_intersection.is_some()
+            && current_intersection.unwrap().borrow().curve_index == curve_index
+        {
+            let intersection = current_intersection.unwrap();
+
+            let t = (intersection.borrow().t - last_t)/(1.0 - last_t);
+
+            let (new_cp0, new_cp1l, new_p1, new_cp1r, new_cp2) = add_smooth_result(
+                &current_p0.0,
+                &current_cp0.0,
+                &current_cp1.0,
+                &current_p1.0,
+                t,
+            );
+
+            last_t = intersection.borrow().t;
+
+            let cp0 = Rc::new(RefCell::new(CoordOfIntersection::from_new(new_cp0)));
+            current.borrow_mut().next = Some(cp0.clone());
+            cp0.borrow_mut().prev = Some(Rc::downgrade(&current));
+            current = cp0;
+
+            let cp1l = Rc::new(RefCell::new(CoordOfIntersection::from_new(new_cp1l)));
+            current.borrow_mut().next = Some(cp1l.clone());
+            cp1l.borrow_mut().prev = Some(Rc::downgrade(&current));
+            current = cp1l;
+
+            current.borrow_mut().next = Some(intersection.clone());
+            intersection.borrow_mut().prev = Some(Rc::downgrade(&current));
+            current = intersection.clone();
+
+            current_p0 = (new_p1, None);
+            current_cp0 = (new_cp1r, None);
+            current_cp1 = (new_cp2, None);
+
+            current_intersection = iter.next();
+        }
+
+        match current_cp0.1 {
+            Some(cp0) => {
+                let cp0 = Rc::new(RefCell::new(CoordOfIntersection::from_existing(&cp0)));
+                current.borrow_mut().next = Some(cp0.clone());
+                cp0.borrow_mut().prev = Some(Rc::downgrade(&current));
+                current = cp0;
+            }
+            None => {
+                let cp0 = Rc::new(RefCell::new(CoordOfIntersection::from_new(current_cp0.0)));
+                current.borrow_mut().next = Some(cp0.clone());
+                cp0.borrow_mut().prev = Some(Rc::downgrade(&current));
+                current = cp0;
+            }
+        }
+
+        match current_cp1.1 {
+            Some(cp1) => {
+                let cp1 = Rc::new(RefCell::new(CoordOfIntersection::from_existing(&cp1)));
+                current.borrow_mut().next = Some(cp1.clone());
+                cp1.borrow_mut().prev = Some(Rc::downgrade(&current));
+                current = cp1;
+            }
+            None => {
+                let cp1 = Rc::new(RefCell::new(CoordOfIntersection::from_new(current_cp1.0)));
+                current.borrow_mut().next = Some(cp1.clone());
+                cp1.borrow_mut().prev = Some(Rc::downgrade(&current));
+                current = cp1;
+            }
+        }
+
+        let p1 = Rc::new(RefCell::new(CoordOfIntersection::from_existing(
+            &current_p1.1,
+        )));
+        current.borrow_mut().next = Some(p1.clone());
+        p1.borrow_mut().prev = Some(Rc::downgrade(&current));
+        current = p1;
+    }
+
+    let last_cp = current.borrow().prev.as_ref().unwrap().upgrade().unwrap();
+    last_cp.borrow_mut().next = Some(start_a.clone());
+    start_a.borrow_mut().prev = Some(Rc::downgrade(&last_cp));
+
+    start_a
 }
 
 #[cfg(test)]
@@ -327,8 +427,8 @@ mod test {
 
         let (a, b) = find_all_intersecion(s1, s2);
 
-        assert_eq!(a.coords.len(), 18);
-        assert_eq!(b.coords.len(), 18);
+        assert_eq!(a.len(), 18);
+        assert_eq!(b.len(), 18);
     }
 
     #[test]
@@ -361,5 +461,38 @@ mod test {
 
         assert_eq!(merged.curves.len(), 4);
         println!("{}", merged.to_path());
+    }
+
+    #[test]
+    fn when_merge_ovals_with_no_valid_p2() {
+        let vgc = crate::generate_from_push(vec![
+            vec![
+                Coord::new(0.0, 0.3),
+                Coord::new(0.8, 0.3),
+                Coord::new(0.8, -0.3),
+                Coord::new(0.0, -0.3),
+                Coord::new(-0.8, -0.3),
+                Coord::new(-0.8, 0.3),
+                Coord::new(0.0, 0.3),
+            ],
+            vec![
+                Coord::new(0.3, 0.0),
+                Coord::new(0.3, 0.8),
+                Coord::new(-0.3, 0.8),
+                Coord::new(-0.3, 0.0),
+                Coord::new(-0.3, -0.8),
+                Coord::new(0.3, -0.8),
+                Coord::new(0.3, 0.0),
+            ],
+        ]);
+
+        let s1 = vgc.get_shape(0).expect("Shape should exist");
+        let s2 = vgc.get_shape(1).expect("Shape should exist");
+
+        
+        let (a, b) = find_all_intersecion(s1, s2);
+
+        assert_eq!(a.len(), 18);
+        assert_eq!(b.len(), 18);
     }
 }

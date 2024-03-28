@@ -384,6 +384,25 @@ mod test {
     }
 
     #[test]
+    fn two_smooth_result_on_same_curve() {
+        let p0 = Coord::new(1.0, 1.0);
+        let cp0 = Coord::new(4.0, 0.5);
+        let cp1 = Coord::new(0.1, 0.1);
+        let p1 = Coord::new(0.0, 0.0);
+
+        let i1 = 0.25;
+        let i2 = 0.75;
+
+        let (_, _, p1_rtn, cp1r_rtn, cp2_rtn) =
+            add_smooth_result(&p0, &cp0, &cp1, &p1, 0.25);
+
+        let (_, _, p1_rtn2, _, _) =
+            add_smooth_result(&p1_rtn, &cp1r_rtn, &cp2_rtn, &p1, (i2 - i1) / (1.0 - i1));
+
+        assert_approx_eq!(&Coord, &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1), &p1_rtn2);
+    }
+
+    #[test]
     fn bench_approx_distance_to_curve_and_t_closest_cornor() {
         let coord = Coord::new(0.0, 0.0);
         let p0 = Coord::new(0.0, 1.0);
