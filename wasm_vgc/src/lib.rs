@@ -56,6 +56,10 @@ impl CanvasContent {
     pub fn default_call() -> CanvasContent {
         CanvasContent::default()
     }
+
+    pub fn debug_string(&self) -> String {
+        self.vgc_data.debug_string()
+    }
 }
 
 impl Default for CanvasContent {

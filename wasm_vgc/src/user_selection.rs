@@ -135,12 +135,13 @@ impl Selected {
 
     pub fn change_selection(&mut self, canvas_context: &CanvasContent, start_press: Coord) {
         let shapes = &mut self.shapes;
+
         if shapes.is_empty() {
             //Add shape
-            let closest_shapes = canvas_context.vgc_data.shapes_closest(&start_press);
+            let closest_shapes = canvas_context.vgc_data.shapes_contains(&start_press);
 
             let first = closest_shapes.first();
-            if let Some((shape_index, ..)) = first {
+            if let Some(shape_index) = first {
                 let pos = shapes
                     .iter()
                     .position(|shape_selected| shape_selected.shape_index == *shape_index);
@@ -223,10 +224,10 @@ impl Selected {
             }
         }
 
-        let shapes = canvas_context.vgc_data.shapes_closest(&start_press);
+        let shapes = canvas_context.vgc_data.shapes_contains(&start_press);
 
         let first = shapes.first();
-        if let Some((shape_index, ..)) = first {
+        if let Some(shape_index) = first {
             let shapes = &mut self.shapes;
             let pos = shapes
                 .iter()

@@ -285,7 +285,7 @@ impl Shape {
 
     /// Return true if the coord is inside the shape
     /// Use the even-odd rule
-    pub fn is_inside(&self, coord: &Coord) -> bool {
+    pub fn contains(&self, coord: &Coord) -> bool {
         let mut count = 0;
         let mut prev_coord = self.start.borrow();
         for curve in &self.curves {
@@ -297,7 +297,7 @@ impl Shape {
                 curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());
             for t in t_intersections {
                 let x = cubic_bezier(t, &prev_coord, &cp0, &cp1, &p1).x();
-                if x < coord.x() {
+                if x > coord.x() {
                     count += 1;
                 }
             }
@@ -380,7 +380,7 @@ mod test {
     }
 
     #[test]
-    fn given_wikipedia_shape_then_multiple_is_inside_then_valid() {
+    fn given_wikipedia_shape_when_multiple_contains_then_valid() {
         let vgc = generate_from_push(vec![vec![
             Coord::new(21.0, 0.0),
             Coord::new(21.0, 0.0),
@@ -422,17 +422,92 @@ mod test {
 
         let shape = vgc.get_shape(0).expect("Shape should exist");
 
-        assert_eq!(shape.is_inside(&Coord::new(17.0, 4.0)), false);
-        assert_eq!(shape.is_inside(&Coord::new(13.5, 38.0)), false);
-        assert_eq!(shape.is_inside(&Coord::new(18.0, 39.0)), false);
-        assert_eq!(shape.is_inside(&Coord::new(24.0, 24.0)), false);
-        assert_eq!(shape.is_inside(&Coord::new(30.0, 34.0)), false);
+        assert_eq!(shape.contains(&Coord::new(17.0, 4.0)), false);
+        assert_eq!(shape.contains(&Coord::new(13.5, 38.0)), false);
+        assert_eq!(shape.contains(&Coord::new(18.0, 39.0)), false);
+        assert_eq!(shape.contains(&Coord::new(24.0, 24.0)), false);
+        assert_eq!(shape.contains(&Coord::new(30.0, 34.0)), false);
 
-        assert_eq!(shape.is_inside(&Coord::new(24.0, 4.0)), true);
-        assert_eq!(shape.is_inside(&Coord::new(23.0, 27.0)), true);
-        assert_eq!(shape.is_inside(&Coord::new(23.0, 27.0)), true);
-        assert_eq!(shape.is_inside(&Coord::new(13.0, 44.0)), true);
-        assert_eq!(shape.is_inside(&Coord::new(36.0, 39.0)), true);
-        assert_eq!(shape.is_inside(&Coord::new(30.0, 21.0)), true);
+        assert_eq!(shape.contains(&Coord::new(24.0, 4.0)), true);
+        assert_eq!(shape.contains(&Coord::new(23.0, 27.0)), true);
+        assert_eq!(shape.contains(&Coord::new(23.0, 27.0)), true);
+        assert_eq!(shape.contains(&Coord::new(13.0, 44.0)), true);
+        assert_eq!(shape.contains(&Coord::new(36.0, 39.0)), true);
+        assert_eq!(shape.contains(&Coord::new(30.0, 21.0)), true);
+    }
+
+    #[test]
+    fn given_shape_bug_when_contains_then_invalid() {
+        //M 1 0.9 C 0.15975106 1.3432624 -0.08887887 0.8027676 -0.503 0.17566639 C -0.9171212 -0.4514348 -1.2649753 -0.37655655 -0.5400001 -0.63600004 C 0.1849752 -0.89544356 0.2867868 -1.6275563 1 -1 C 1.7132132 -0.37244368 1.840249 0.45673746 1 0.9 Z
+        let vgc = generate_from_push(vec![vec![
+            Coord::new(1.0, 0.9),
+            //
+            Coord::new(0.15975106, 1.3432624),
+            Coord::new(-0.08887887, 0.8027676),
+            Coord::new(-0.503, 0.17566639),
+            //
+            Coord::new(-0.9171212, -0.4514348),
+            Coord::new(-1.2649753, -0.37655655),
+            Coord::new(-0.5400001, -0.63600004),
+            //
+            Coord::new(0.1849752, -0.89544356),
+            Coord::new(0.2867868, -1.6275563),
+            Coord::new(1.0, -1.0),
+            //
+            Coord::new(1.7132132, -0.37244368),
+            Coord::new(1.840249, 0.45673746),
+            Coord::new(1.0, 0.9),
+        ]]);
+
+        let shape = vgc.get_shape(0).expect("Shape should exist");
+
+        assert_eq!(shape.contains(&Coord::new(-0.880, -0.122)), false);
+    }
+
+    #[test]
+    fn given_shape_slow_contains_then_contains() {
+        //M -1 -0.9 C -1 -0.9 -1 1 -1 1 C -1 1 0.9 1 0.9 1 C 0.9 1 -1 -0.9 -1 -0.9 Z
+        //M 1 0.9 C 1 0.9 -0.9 -1 -0.9 -1 C -0.9 -1 1 -1 1 -1 C 1 -1 1 0.9 1 0.9 Z
+
+        let vgc = generate_from_push(vec![
+            vec![
+                Coord::new(-1.0, -0.9),
+                //
+                Coord::new(-1.0, -0.9),
+                Coord::new(-1.0, 1.0),
+                Coord::new(-1.0, 1.0),
+                //
+                Coord::new(-1.0, 1.0),
+                Coord::new(0.9, 1.0),
+                Coord::new(0.9, 1.0),
+                //
+                Coord::new(0.9, 1.0),
+                Coord::new(-1.0, -0.9),
+                Coord::new(-1.0, -0.9),
+            ],
+            vec![
+                Coord::new(1.0, 0.9),
+                //
+                Coord::new(1.0, 0.9),
+                Coord::new(-0.9, -1.0),
+                Coord::new(-0.9, -1.0),
+                //
+                Coord::new(-0.9, -1.0),
+                Coord::new(1.0, -1.0),
+                Coord::new(1.0, -1.0),
+                //
+                Coord::new(1.0, -1.0),
+                Coord::new(1.0, 0.9),
+                Coord::new(1.0, 0.9),
+            ],
+        ]);
+
+        let shapes = vgc.shapes_contains(&Coord::new(-0.6, 0.3));
+        assert_eq!(shapes.len(), 1);
+        assert_eq!(shapes[0], 0);
+
+        let shapes = vgc.shapes_contains(&Coord::new(-0.5, -0.73));
+        assert_eq!(shapes.len(), 1);
+        assert_eq!(shapes[0], 1);
     }
 }

@@ -235,9 +235,9 @@ mod test {
     #[test]
     fn test_inverse() {
         let mat = Affine::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
-        println!("{}", mat);
+
         let inv = mat.inverse();
-        println!("{}", inv);
+
         assert_eq!(mat * inv, Affine::identity());
     }
 

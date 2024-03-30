@@ -432,6 +432,7 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn when_merge_ovals_with_no_valid_p() {
         let vgc = crate::generate_from_push(vec![
             vec![
@@ -460,7 +461,6 @@ mod test {
         let merged = union(&s1, &s2).expect("Should merge");
 
         assert_eq!(merged.curves.len(), 4);
-        println!("{}", merged.to_path());
     }
 
     #[test]

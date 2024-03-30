@@ -2,7 +2,7 @@ use common::pures::Affine;
 use common::types::Coord;
 use common::Rgba;
 use vgc::VgcRenderer;
-use web_sys::CanvasRenderingContext2d;
+use web_sys::{CanvasRenderingContext2d, CanvasWindingRule};
 
 pub struct CanvasContext2DRender<'a> {
     context: &'a CanvasRenderingContext2d,
@@ -65,7 +65,8 @@ impl<'a> VgcRenderer for CanvasContext2DRender<'a> {
 
     fn close_shape(&mut self) -> Result<(), String> {
         self.context.close_path();
-        self.context.fill();
+        self.context
+            .fill_with_canvas_winding_rule(CanvasWindingRule::Evenodd);
         Ok(())
     }
 

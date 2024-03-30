@@ -136,6 +136,17 @@ impl Vgc {
         vec
     }
 
+    pub fn shapes_contains(&self, coord: &Coord) -> Vec<usize> {
+        let mut vec = Vec::new();
+        for shape_index in (0..self.shapes.len()).rev() {
+            let shape = &self.shapes[shape_index];
+            if shape.contains(coord) {
+                vec.push(shape_index);
+            }
+        }
+        vec
+    }
+
     pub fn debug_string(&self) -> String {
         let mut string = "".to_string();
         for shape in &self.shapes {

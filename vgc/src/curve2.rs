@@ -151,7 +151,7 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
 
         let max = Rect::max(&c1_rect, &c2_rect);
 
-        if max.approx_diagonal() < f32::EPSILON * f32::EPSILON * 1.0 || cu.level > 35 {
+        if max.approx_diagonal() < f32::EPSILON * f32::EPSILON * 2.0 || cu.level > 25 {
             let rtn = IntersectionPoint {
                 coord: cubic_bezier(cu.t1, &cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1),
                 t1: cu.t1,
@@ -274,7 +274,7 @@ fn own_intersect(a: &Rect, b: &Rect) -> bool {
 pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: f32) -> Vec<f32> {
     let mut vec = Vec::new();
 
-    let p0y= p0.y() as f64;
+    let p0y = p0.y() as f64;
     let cp0y = cp0.y() as f64;
     let cp1y = cp1.y() as f64;
     let p1y = p1.y() as f64;
@@ -285,18 +285,21 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     let coeff2: f64 = 3.0 * (p0y - 2.0 * cp0y + cp1y);
     let coeff3: f64 = -p0y + 3.0 * cp0y - 3.0 * cp1y + p1y;
 
-    let roots = Poly::new_from_coeffs(&vec![coeff0, coeff1, coeff2, coeff3]).real_roots();
-
-    match roots {
-        Some(roots) => {
-            for root in roots {
-                if root >= 0.0 && root < 1.0 {
-                    vec.push(root as f32);
-                }
-            }
-        }
-        None => return vec,
+    //We got a line parallel to y
+    if f64::abs(coeff3) < f64::EPSILON {
+        return vec;
     }
+
+    let poly = Poly::new_from_coeffs(&vec![coeff0, coeff1, coeff2, coeff3]);
+
+    let croots = poly.complex_roots();
+
+    for root in croots {
+        if 0.0 <= root.0 && root.0 < 1.0 && f64::abs(root.1) < (f32::EPSILON as f64) {
+            vec.push(root.0 as f32);
+        }
+    }
+
     vec
 }
 

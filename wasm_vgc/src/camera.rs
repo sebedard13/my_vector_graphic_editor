@@ -3,7 +3,7 @@ use common::pures::{Affine, Vec2};
 use common::types::{Coord, Length2d, Rect, ScreenCoord, ScreenLength2d, ScreenRect};
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::{console_log, CanvasContent};
+use crate::CanvasContent;
 
 #[derive(Debug, Clone, Copy)]
 #[wasm_bindgen]
@@ -83,7 +83,6 @@ macro_rules! generate_child_methods {
 
 impl Camera {
     pub fn new(default_translate: Coord, width: f32, height: f32) -> Self {
-        console_log!("default_translate: {:?}", default_translate);
         Self {
             position: default_translate,
             scaling: 1.0,

@@ -3,6 +3,7 @@ import { EventsService } from "./scene/events.service";
 import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
 import { map } from "rxjs";
+import { DebugService } from "./scene/debug.service";
 
 @Component({
     selector: "app-root",
@@ -26,6 +27,7 @@ export class AppComponent {
         protected eventsService: EventsService,
         protected cameraService: CameraService,
         private modalService: ModalService,
+        private debugService: DebugService,
     ) {
         cameraService.activate();
         this.modalService.getModalObservable().subscribe((data) => {
