@@ -93,6 +93,13 @@ impl Rect {
         let dy = self.height();
         dx * dx + dy * dy
     }
+
+    pub fn contains(&self, point: &Coord) -> bool {
+        self.top_left.c.x <= point.c.x
+            && self.bottom_right.c.x >= point.c.x
+            && self.top_left.c.y <= point.c.y
+            && self.bottom_right.c.y >= point.c.y
+    }
 }
 
 /**

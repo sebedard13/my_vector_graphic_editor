@@ -1,6 +1,6 @@
 use crate::coord::{CoordPtr, CoordType};
-use crate::curve;
-use crate::curve::Curve;
+use crate::curve::{cubic_bezier, Curve};
+use crate::{curve, curve2};
 use common::types::Coord;
 use common::Rgba;
 use std::cell::RefCell;
@@ -282,6 +282,29 @@ impl Shape {
             self.curves.is_empty()
         }
     }
+
+    /// Return true if the coord is inside the shape
+    /// Use the even-odd rule
+    pub fn is_inside(&self, coord: &Coord) -> bool {
+        let mut count = 0;
+        let mut prev_coord = self.start.borrow();
+        for curve in &self.curves {
+            let cp0 = curve.cp0.borrow();
+            let cp1 = curve.cp1.borrow();
+            let p1 = curve.p1.borrow();
+
+            let t_intersections =
+                curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());
+            for t in t_intersections {
+                let x = cubic_bezier(t, &prev_coord, &cp0, &cp1, &p1).x();
+                if x < coord.x() {
+                    count += 1;
+                }
+            }
+            prev_coord = p1;
+        }
+        count % 2 == 1
+    }
 }
 
 #[cfg(test)]
@@ -354,5 +377,62 @@ mod test {
 
         assert_eq!(Rc::strong_count(&c2), 1 + 1);
         assert_eq!(Rc::strong_count(&p2), 2 + 1);
+    }
+
+    #[test]
+    fn given_wikipedia_shape_then_multiple_is_inside_then_valid() {
+        let vgc = generate_from_push(vec![vec![
+            Coord::new(21.0, 0.0),
+            Coord::new(21.0, 0.0),
+            //
+            Coord::new(29.0, -2.0),
+            Coord::new(29.0, 13.0),
+            Coord::new(29.0, 29.0),
+            //
+            Coord::new(15.0, 40.0),
+            Coord::new(15.0, 40.0),
+            Coord::new(15.0, 40.0),
+            ////
+            Coord::new(0.0, 30.0),
+            Coord::new(0.0, 30.0),
+            Coord::new(0.0, 30.0),
+            //
+            Coord::new(10.0, 50.0),
+            Coord::new(10.0, 50.0),
+            Coord::new(10.0, 50.0),
+            //
+            Coord::new(43.0, 37.0),
+            Coord::new(41.0, 23.0),
+            Coord::new(39.0, 2.0),
+            //
+            Coord::new(8.0, 3.0),
+            Coord::new(6.0, 12.0),
+            Coord::new(4.0, 21.0),
+            //
+            Coord::new(17.0, 52.0),
+            Coord::new(35.0, 47.0),
+            Coord::new(54.0, 42.0),
+            //
+            Coord::new(22.0, 25.0),
+            Coord::new(22.0, 25.0),
+            Coord::new(22.0, 25.0),
+            //
+            Coord::new(21.0, 0.0),
+        ]]);
+
+        let shape = vgc.get_shape(0).expect("Shape should exist");
+
+        assert_eq!(shape.is_inside(&Coord::new(17.0, 4.0)), false);
+        assert_eq!(shape.is_inside(&Coord::new(13.5, 38.0)), false);
+        assert_eq!(shape.is_inside(&Coord::new(18.0, 39.0)), false);
+        assert_eq!(shape.is_inside(&Coord::new(24.0, 24.0)), false);
+        assert_eq!(shape.is_inside(&Coord::new(30.0, 34.0)), false);
+
+        assert_eq!(shape.is_inside(&Coord::new(24.0, 4.0)), true);
+        assert_eq!(shape.is_inside(&Coord::new(23.0, 27.0)), true);
+        assert_eq!(shape.is_inside(&Coord::new(23.0, 27.0)), true);
+        assert_eq!(shape.is_inside(&Coord::new(13.0, 44.0)), true);
+        assert_eq!(shape.is_inside(&Coord::new(36.0, 39.0)), true);
+        assert_eq!(shape.is_inside(&Coord::new(30.0, 21.0)), true);
     }
 }

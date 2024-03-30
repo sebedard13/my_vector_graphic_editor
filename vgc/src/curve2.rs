@@ -271,6 +271,35 @@ fn own_intersect(a: &Rect, b: &Rect) -> bool {
         && a.bottom_right.y() > b.top_left.y()
 }
 
+pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: f32) -> Vec<f32> {
+    let mut vec = Vec::new();
+
+    let p0y= p0.y() as f64;
+    let cp0y = cp0.y() as f64;
+    let cp1y = cp1.y() as f64;
+    let p1y = p1.y() as f64;
+    let y = y as f64;
+
+    let coeff0: f64 = p0y - y;
+    let coeff1: f64 = 3.0 * (cp0y - p0y);
+    let coeff2: f64 = 3.0 * (p0y - 2.0 * cp0y + cp1y);
+    let coeff3: f64 = -p0y + 3.0 * cp0y - 3.0 * cp1y + p1y;
+
+    let roots = Poly::new_from_coeffs(&vec![coeff0, coeff1, coeff2, coeff3]).real_roots();
+
+    match roots {
+        Some(roots) => {
+            for root in roots {
+                if root >= 0.0 && root < 1.0 {
+                    vec.push(root as f32);
+                }
+            }
+        }
+        None => return vec,
+    }
+    vec
+}
+
 #[cfg(test)]
 mod tests {
     use common::pures::{Affine, Vec2};
@@ -446,5 +475,20 @@ mod tests {
             cubic_bezier(res[2].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[2].coord
         );
+    }
+
+    #[test]
+    fn given_complex_curve_when_intersect_with_y_then_3_t_found() {
+        let p0 = Coord::new(52.0, 77.0);
+        let cp0 = Coord::new(83.0, 249.0);
+        let cp1 = Coord::new(133.0, 19.0);
+        let p1 = Coord::new(172.0, 192.0);
+
+        let vec = intersection_with_y(&p0, &cp0, &cp1, &p1, 137.0);
+
+        assert_eq!(vec.len(), 3);
+        assert_approx_eq!(f32, cubic_bezier(vec[0], &p0, &cp0, &cp1, &p1).y(), 137.0);
+        assert_approx_eq!(f32, cubic_bezier(vec[1], &p0, &cp0, &cp1, &p1).y(), 137.0);
+        assert_approx_eq!(f32, cubic_bezier(vec[2], &p0, &cp0, &cp1, &p1).y(), 137.0);
     }
 }
