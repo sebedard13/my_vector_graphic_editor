@@ -146,6 +146,17 @@ impl GreinerShape {
         }
         count
     }
+
+    pub fn get(&self, index: usize) -> Rc<RefCell<CoordOfIntersection>>{
+        let mut current = self.start.clone();
+        let mut count = 0;
+        while count < index {
+            let clone = current.borrow().next.clone().unwrap();
+            current = clone;
+            count += 1;
+        }
+        current
+    }
 }
 
 impl Drop for GreinerShape {
@@ -388,13 +399,52 @@ fn create_all_shape(
     start_a
 }
 
+
+fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape){
+    let mut status_entry = true;
+    if b.contains(&ag.start.borrow().coord){
+        status_entry = false;
+    }
+
+    let mut current = ag.start.clone();
+    while current.borrow().next.is_some() && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &ag.start){
+        let next = {
+            let borrow_current = current.borrow();
+            borrow_current.next.as_ref().unwrap().clone()
+        };
+        if next.borrow().intersect{
+            next.borrow_mut().entry = status_entry;
+            status_entry = !status_entry;
+        }
+        current = next.clone();
+    }
+
+    status_entry = true;
+    if a.contains(&bg.start.borrow().coord){
+        status_entry = false;
+    }
+
+    current = bg.start.clone();
+    while current.borrow().next.is_some() && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &bg.start){
+        let next = {
+            let borrow_current = current.borrow();
+            borrow_current.next.as_ref().unwrap().clone()
+        };
+        if next.borrow().intersect{
+            next.borrow_mut().entry = status_entry;
+            status_entry = !status_entry;
+        }
+        current = next.clone();
+    }
+}
+
 #[cfg(test)]
 mod test {
     use common::{types::Coord, Rgba};
 
     use crate::{
         create_circle,
-        shape_boolean::{find_all_intersecion, union},
+        shape_boolean::{find_all_intersecion, mark_entry_exit_points, union},
         Vgc,
     };
 
@@ -430,6 +480,34 @@ mod test {
         assert_eq!(a.len(), 18);
         assert_eq!(b.len(), 18);
     }
+
+    #[test]
+    fn when_merge_circle2_find_entry() {
+        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
+
+        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
+        create_circle(&mut vgc, Coord::new(0.2, 0.0), 0.2, 0.2);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let (mut ag, mut bg) = find_all_intersecion(a, b);
+
+        assert_eq!(ag.len(), 18);
+        assert_eq!(bg.len(), 18);
+
+        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+
+        assert_eq!(ag.get(0).borrow().entry, false);
+        assert_eq!(ag.get(3).borrow().entry, true);
+        assert_eq!(ag.get(9).borrow().entry, false);
+
+        assert_eq!(bg.get(0).borrow().entry, false);
+        assert_eq!(bg.get(9).borrow().entry, true);
+        assert_eq!(bg.get(15).borrow().entry, false);
+
+    }
+
 
     #[test]
     #[ignore]
