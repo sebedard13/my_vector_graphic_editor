@@ -305,6 +305,27 @@ impl Shape {
         }
         count % 2 == 1
     }
+
+    //Change the start of the shape to the coord of the curve
+    //And shift all the curves to fix the order
+    pub fn set_start_at_curve(&mut self, curve_index: usize) {
+        let curve = self.curves.get(curve_index).expect("Index should be valid");
+        self.start = curve.p1.clone();
+
+        let mut new_curves: Vec<Curve> = Vec::new();
+        for i in 0..self.curves.len() {
+            let curve = self
+                .curves
+                .get((curve_index + i + 1) % self.curves.len())
+                .expect("Index should be valid");
+            new_curves.push(Curve::new(
+                curve.cp0.clone(),
+                curve.cp1.clone(),
+                curve.p1.clone(),
+            ));
+        }
+        self.curves = new_curves;
+    }
 }
 
 #[cfg(test)]
@@ -509,5 +530,38 @@ mod test {
         let shapes = vgc.shapes_contains(&Coord::new(-0.5, -0.73));
         assert_eq!(shapes.len(), 1);
         assert_eq!(shapes[0], 1);
+    }
+
+    #[test]
+    fn set_start_at_curve() {
+        let mut vgc = generate_from_push(vec![vec![
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(0.0, 0.0),
+        ]]);
+
+        let shape = vgc.get_shape_mut(0).expect("Shape should exist");
+
+        println!("{}", shape.to_path());
+        shape.set_start_at_curve(0);
+
+        println!("{}", shape.to_path());
+
+        let (c0_p0, c0_cp0, c0_cp1, c0_p1) = shape.get_coords_of_curve(0);
+        let (c1_p0, c1_cp0, c1_cp1, c1_p1) = shape.get_coords_of_curve(1);
+
+        assert_eq!(*c0_p0.borrow(), Coord::new(1.0, 1.0));
+        assert_eq!(*c0_cp0.borrow(), Coord::new(1.0, 1.0));
+        assert_eq!(*c0_cp1.borrow(), Coord::new(1.0, 1.0));
+        assert_eq!(*c0_p1.borrow(), Coord::new(0.0, 0.0));
+
+        assert_eq!(*c1_p0.borrow(), Coord::new(0.0, 0.0));
+        assert_eq!(*c1_cp0.borrow(), Coord::new(0.0, 0.0));
+        assert_eq!(*c1_cp1.borrow(), Coord::new(0.0, 0.0));
+        assert_eq!(*c1_p1.borrow(), Coord::new(1.0, 1.0));
     }
 }

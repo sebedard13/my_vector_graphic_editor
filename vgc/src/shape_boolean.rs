@@ -12,12 +12,12 @@ use std::{
     rc::{Rc, Weak},
 };
 
-use common::{pures::Vec2, types::Coord};
+use common::types::Coord;
 
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, Curve},
-    curve2::{intersection, IntersectionPoint},
+    curve2::intersection,
     shape::Shape,
 };
 
@@ -128,6 +128,7 @@ impl GreinerShape {
         Self { start }
     }
 
+    #[allow(dead_code)] // For testing
     pub fn len(&self) -> usize {
         let mut current = self.start.clone();
         let mut count = 1;
@@ -147,7 +148,8 @@ impl GreinerShape {
         count
     }
 
-    pub fn get(&self, index: usize) -> Rc<RefCell<CoordOfIntersection>>{
+    #[allow(dead_code)] // For testing
+    pub fn get(&self, index: usize) -> Rc<RefCell<CoordOfIntersection>> {
         let mut current = self.start.clone();
         let mut count = 0;
         while count < index {
@@ -176,12 +178,6 @@ struct CoordOfIntersection {
     pub intersect: bool,
     pub coord: Coord,
     pub rel_coord: Option<CoordPtr>,
-}
-
-struct CoordNode {
-    pub coord: Coord,
-    pub next: Option<Rc<CoordNode>>,
-    pub prev: Option<Weak<CoordNode>>,
 }
 
 impl CoordOfIntersection {
@@ -224,6 +220,13 @@ impl CoordOfIntersection {
             intersect: false,
             coord: coord,
             rel_coord: None,
+        }
+    }
+
+    pub fn coord_ptr(&self) -> CoordPtr {
+        match &self.rel_coord {
+            Some(rel_coord) => rel_coord.clone(),
+            None => Rc::new(RefCell::new(self.coord.clone())),
         }
     }
 }
@@ -321,7 +324,7 @@ fn create_all_shape(
         {
             let intersection = current_intersection.unwrap();
 
-            let t = (intersection.borrow().t - last_t)/(1.0 - last_t);
+            let t = (intersection.borrow().t - last_t) / (1.0 - last_t);
 
             let (new_cp0, new_cp1l, new_p1, new_cp1r, new_cp2) = add_smooth_result(
                 &current_p0.0,
@@ -399,20 +402,21 @@ fn create_all_shape(
     start_a
 }
 
-
-fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape){
+fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
     let mut status_entry = true;
-    if b.contains(&ag.start.borrow().coord){
+    if b.contains(&ag.start.borrow().coord) {
         status_entry = false;
     }
 
     let mut current = ag.start.clone();
-    while current.borrow().next.is_some() && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &ag.start){
+    while current.borrow().next.is_some()
+        && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &ag.start)
+    {
         let next = {
             let borrow_current = current.borrow();
             borrow_current.next.as_ref().unwrap().clone()
         };
-        if next.borrow().intersect{
+        if next.borrow().intersect {
             next.borrow_mut().entry = status_entry;
             status_entry = !status_entry;
         }
@@ -420,22 +424,86 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     }
 
     status_entry = true;
-    if a.contains(&bg.start.borrow().coord){
+    if a.contains(&bg.start.borrow().coord) {
         status_entry = false;
     }
 
     current = bg.start.clone();
-    while current.borrow().next.is_some() && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &bg.start){
+    while current.borrow().next.is_some()
+        && !Rc::ptr_eq(current.borrow().next.as_ref().unwrap(), &bg.start)
+    {
         let next = {
             let borrow_current = current.borrow();
             borrow_current.next.as_ref().unwrap().clone()
         };
-        if next.borrow().intersect{
+        if next.borrow().intersect {
             next.borrow_mut().entry = status_entry;
             status_entry = !status_entry;
         }
         current = next.clone();
     }
+}
+
+fn merge(ag: &GreinerShape, _bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {
+    let first_intersection = {
+        let mut current = ag.start.clone();
+        while !current.borrow().intersect {
+            let next = current.borrow().next.as_ref().unwrap().clone();
+            current = next;
+        }
+        current
+    };
+
+    let mut merged = Shape {
+        start: first_intersection.borrow().coord_ptr(),
+        curves: Vec::new(),
+        color: a.color.clone(),
+    };
+
+    let mut current = first_intersection.clone();
+    loop {
+        //If current shape enter other shape, we need to switch to the other shape
+        if current.borrow().intersect && current.borrow().entry {
+            let next = current
+                .borrow()
+                .neighbor
+                .as_ref()
+                .unwrap()
+                .upgrade()
+                .unwrap()
+                .clone();
+            current = next;
+        }
+
+        let next = current.borrow().next.as_ref().unwrap().clone();
+        current = next;
+        let cp0 = current.borrow().coord_ptr();
+
+        let next = current.borrow().next.as_ref().unwrap().clone();
+        current = next;
+        let cp1 = current.borrow().coord_ptr();
+
+        let next = current.borrow().next.as_ref().unwrap().clone();
+        current = next;
+        let p1 = current.borrow().coord_ptr();
+
+        merged.curves.push(Curve::new(cp0, cp1, p1));
+
+        if Rc::ptr_eq(&current, &first_intersection) {
+            break;
+        }
+    }
+
+    merged
+}
+
+#[allow(dead_code)]
+pub fn union2(a: &Shape, b: &Shape) -> Shape {
+    let (mut ag, mut bg) = find_all_intersecion(a, b);
+
+    mark_entry_exit_points(&mut ag, a, &mut bg, b);
+
+    merge(&ag, &bg, a, b)
 }
 
 #[cfg(test)]
@@ -444,7 +512,7 @@ mod test {
 
     use crate::{
         create_circle,
-        shape_boolean::{find_all_intersecion, mark_entry_exit_points, union},
+        shape_boolean::{find_all_intersecion, mark_entry_exit_points, union, union2},
         Vgc,
     };
 
@@ -475,10 +543,13 @@ mod test {
         let s1 = vgc.get_shape(0).expect("Shape should exist");
         let s2 = vgc.get_shape(1).expect("Shape should exist");
 
-        let (a, b) = find_all_intersecion(s1, s2);
+        let mut merged = union2(&s1, &s2);
 
-        assert_eq!(a.len(), 18);
-        assert_eq!(b.len(), 18);
+        merged.set_start_at_curve(6);
+
+        assert_eq!(*(merged.curves[1].p1.borrow()), Coord::new(0.2, 0.20001104));
+        assert_eq!(merged.curves.len(), 8);
+        assert_eq!(merged.to_path(),"M 0 0.20001104 C 0.03648475 0.19992407 0.07062003 0.19018893 0.09999999 0.17321143 C 0.12937993 0.19018891 0.16351523 0.19992408 0.2 0.20001104 C 0.3106854 0.19974719 0.3997472 0.110685386 0.40001106 0 C 0.3997472 -0.110685386 0.3106854 -0.19974719 0.2 -0.20001104 C 0.16351528 -0.19992407 0.12938002 -0.19018893 0.1 -0.17321147 C 0.07062003 -0.19018894 0.03648475 -0.19992407 0 -0.20001104 C -0.110685386 -0.19974719 -0.19974719 -0.110685386 -0.20001104 0 C -0.19974719 0.110685386 -0.110685386 0.19974719 0 0.20001104 Z");
     }
 
     #[test]
@@ -505,9 +576,7 @@ mod test {
         assert_eq!(bg.get(0).borrow().entry, false);
         assert_eq!(bg.get(9).borrow().entry, true);
         assert_eq!(bg.get(15).borrow().entry, false);
-
     }
-
 
     #[test]
     #[ignore]
@@ -567,10 +636,8 @@ mod test {
         let s1 = vgc.get_shape(0).expect("Shape should exist");
         let s2 = vgc.get_shape(1).expect("Shape should exist");
 
-        
-        let (a, b) = find_all_intersecion(s1, s2);
+        let merged = union2(&s1, &s2);
 
-        assert_eq!(a.len(), 18);
-        assert_eq!(b.len(), 18);
+        assert_eq!(merged.curves.len(), 4);
     }
 }
