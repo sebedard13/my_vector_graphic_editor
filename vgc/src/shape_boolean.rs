@@ -159,6 +159,31 @@ impl GreinerShape {
         }
         current
     }
+
+    pub fn print_coords_table(&self) {
+        let mut current = self.start.clone();
+        println!("Coord, Intersection, Entry");
+        loop {
+            println!(
+                "{:?}, {}, {}",
+                current.borrow().coord,
+                current.borrow().intersect,
+                current.borrow().entry
+            );
+            let next = current.borrow().next.as_ref().unwrap().clone();
+            current = next; //cp0
+
+            let next = current.borrow().next.as_ref().unwrap().clone();
+            current = next; //cp1
+
+            let next = current.borrow().next.as_ref().unwrap().clone();
+            current = next; //p1
+
+            if Rc::ptr_eq(&current, &self.start) {
+                break;
+            }
+        }
+    }
 }
 
 impl Drop for GreinerShape {
@@ -404,7 +429,8 @@ fn create_all_shape(
 
 fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
     let mut status_entry = true;
-    if b.contains(&ag.start.borrow().coord) {
+    let con = b.contains(&ag.start.borrow().coord);
+    if con {
         status_entry = false;
     }
 
@@ -511,7 +537,7 @@ mod test {
     use common::{types::Coord, Rgba};
 
     use crate::{
-        create_circle,
+        create_circle, shape,
         shape_boolean::{find_all_intersecion, mark_entry_exit_points, union, union2},
         Vgc,
     };
@@ -534,7 +560,7 @@ mod test {
     }
 
     #[test]
-    fn when_merge_circle2() {
+    fn when_merge_two_circle2() {
         let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
 
         create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
@@ -612,31 +638,44 @@ mod test {
 
     #[test]
     fn when_merge_ovals_with_no_valid_p2() {
-        let vgc = crate::generate_from_push(vec![
-            vec![
-                Coord::new(0.0, 0.3),
-                Coord::new(0.8, 0.3),
-                Coord::new(0.8, -0.3),
-                Coord::new(0.0, -0.3),
-                Coord::new(-0.8, -0.3),
-                Coord::new(-0.8, 0.3),
-                Coord::new(0.0, 0.3),
-            ],
-            vec![
-                Coord::new(0.3, 0.0),
-                Coord::new(0.3, 0.8),
-                Coord::new(-0.3, 0.8),
-                Coord::new(-0.3, 0.0),
-                Coord::new(-0.3, -0.8),
-                Coord::new(0.3, -0.8),
-                Coord::new(0.3, 0.0),
-            ],
-        ]);
+        let mut shape1 = vec![
+            Coord::new(0.0, 0.3),
+            Coord::new(0.8, 0.3),
+            Coord::new(0.8, -0.3),
+            Coord::new(0.0, -0.3),
+            Coord::new(-0.8, -0.3),
+            Coord::new(-0.8, 0.3),
+            Coord::new(0.0, 0.3),
+        ];
+        //shape1.reverse();
 
-        let s1 = vgc.get_shape(0).expect("Shape should exist");
-        let s2 = vgc.get_shape(1).expect("Shape should exist");
+        let mut shape2 = vec![
+            Coord::new(0.3, 0.0),
+            Coord::new(0.3, 0.8),
+            Coord::new(-0.3, 0.8),
+            Coord::new(-0.3, 0.0),
+            Coord::new(-0.3, -0.8),
+            Coord::new(0.3, -0.8),
+            Coord::new(0.3, 0.0),
+        ];
 
-        let merged = union2(&s1, &s2);
+        let vgc = crate::generate_from_push(vec![shape1, shape2]);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let (mut ag, mut bg) = find_all_intersecion(a, b);
+
+        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+        ag.print_coords_table();
+        bg.print_coords_table();
+
+        assert_eq!(ag.len(), 18);
+        assert_eq!(bg.len(), 18);
+
+        let merged = union2(&a, &b);
+        println!("{}", merged.to_path());
 
         assert_eq!(merged.curves.len(), 4);
     }
