@@ -286,7 +286,7 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     let coeff3: f64 = -p0y + 3.0 * cp0y - 3.0 * cp1y + p1y;
 
     //We got a line parallel to y
-    if f64::abs(coeff3) < f64::EPSILON {
+    if f64::abs(coeff3) < f64::EPSILON && f64::abs(coeff2) < f64::EPSILON && f64::abs(coeff1) < f64::EPSILON{
         return vec;
     }
 

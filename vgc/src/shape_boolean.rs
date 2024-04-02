@@ -515,7 +515,7 @@ fn merge(ag: &GreinerShape, _bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape 
 
         merged.curves.push(Curve::new(cp0, cp1, p1));
 
-        if Rc::ptr_eq(&current, &first_intersection) {
+        if Rc::ptr_eq(&current, &first_intersection) || Rc::ptr_eq(&current, &first_intersection.borrow().neighbor.as_ref().unwrap().upgrade().unwrap()) {
             break;
         }
     }
@@ -640,14 +640,13 @@ mod test {
     fn when_merge_ovals_with_no_valid_p2() {
         let mut shape1 = vec![
             Coord::new(0.0, 0.3),
-            Coord::new(0.8, 0.3),
-            Coord::new(0.8, -0.3),
-            Coord::new(0.0, -0.3),
-            Coord::new(-0.8, -0.3),
             Coord::new(-0.8, 0.3),
+            Coord::new(-0.8, -0.3),
+            Coord::new(0.0, -0.3),
+            Coord::new(0.8, -0.3),
+            Coord::new(0.8, 0.3),
             Coord::new(0.0, 0.3),
         ];
-        //shape1.reverse();
 
         let mut shape2 = vec![
             Coord::new(0.3, 0.0),

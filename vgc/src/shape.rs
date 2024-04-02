@@ -294,7 +294,7 @@ impl Shape {
             let p1 = curve.p1.borrow();
 
             let t_intersections =
-                curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());
+                curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());  
             for t in t_intersections {
                 let x = cubic_bezier(t, &prev_coord, &cp0, &cp1, &p1).x();
                 if x > coord.x() {
@@ -530,6 +530,24 @@ mod test {
         let shapes = vgc.shapes_contains(&Coord::new(-0.5, -0.73));
         assert_eq!(shapes.len(), 1);
         assert_eq!(shapes[0], 1);
+    }
+
+    #[test]
+    fn given_shape_oval_when_contains_then_true() {
+        //M 0.3 0 C 0.3 0.8 -0.3 0.8 -0.3 0 C -0.3 -0.8 0.3 -0.8 0.3 0 Z
+        let vgc = generate_from_push(vec![vec![
+            Coord::new(0.3, 0.0),
+            //
+            Coord::new(0.3, 0.8),
+            Coord::new(-0.3, 0.8),
+            Coord::new(-0.3, 0.0),
+        ]]);
+
+        let shape = vgc.get_shape(0).expect("Shape should exist");
+
+        let contain = shape.contains(&Coord::new(0.0, 0.3));
+
+        assert_eq!(contain, true);
     }
 
     #[test]
