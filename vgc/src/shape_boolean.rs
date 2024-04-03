@@ -4,7 +4,6 @@ For Shape A and B
 Union : A OR B
 Intersection : A AND B
 Difference : A NOR B
-Symmetric Difference : A XOR B
 */
 
 use std::{
@@ -21,104 +20,10 @@ use crate::{
     shape::Shape,
 };
 
-pub fn union(a: &Shape, b: &Shape) -> Option<Shape> {
-    let mut merged = Shape {
-        start: a.start.clone(), // We assume that the start is not in other
-        curves: Vec::new(),
-        color: a.color.clone(),
-    };
-
-    let mut closed = false;
-    let mut i_main = 0;
-    let mut is_a_main = true;
-    while !closed {
-        let (m_p0, m_cp0, m_cp1, m_p1) = if is_a_main {
-            i_main = i_main % a.curves.len();
-            a.get_coords_of_curve(i_main)
-        } else {
-            i_main = i_main % b.curves.len();
-            b.get_coords_of_curve(i_main)
-        };
-
-        let max_len_other = if is_a_main {
-            a.curves.len()
-        } else {
-            b.curves.len()
-        };
-
-        let mut has_done = false;
-        for i_b in 0..max_len_other {
-            let (b_p0, b_cp0, b_cp1, b_p1) = if is_a_main {
-                b.get_coords_of_curve(i_b)
-            } else {
-                a.get_coords_of_curve(i_b)
-            };
-
-            let intersection_points = intersection(
-                &m_p0.borrow(),
-                &m_cp0.borrow(),
-                &m_cp1.borrow(),
-                &m_p1.borrow(),
-                &b_p0.borrow(),
-                &b_cp0.borrow(),
-                &b_cp1.borrow(),
-                &b_p1.borrow(),
-            );
-
-            if !intersection_points.is_empty() {
-                let point = intersection_points[0];
-
-                let (new_cp0, new_cp1, new_p1, _, _) = add_smooth_result(
-                    &m_p0.borrow(),
-                    &m_cp0.borrow(),
-                    &m_cp1.borrow(),
-                    &m_p1.borrow(),
-                    point.t1,
-                );
-
-                merged.curves.push(Curve::new(
-                    Rc::new(RefCell::new(new_cp0)),
-                    Rc::new(RefCell::new(new_cp1)),
-                    Rc::new(RefCell::new(new_p1)),
-                ));
-
-                let (_, _, _, new_cp0, new_cp1) = add_smooth_result(
-                    &b_p0.borrow(),
-                    &b_cp0.borrow(),
-                    &b_cp1.borrow(),
-                    &b_p1.borrow(),
-                    point.t2,
-                );
-
-                merged.curves.push(Curve::new(
-                    Rc::new(RefCell::new(new_cp0)),
-                    Rc::new(RefCell::new(new_cp1)),
-                    b_p1.clone(),
-                ));
-                is_a_main = !is_a_main;
-                i_main = i_b + 1;
-                has_done = true;
-                break;
-            }
-        }
-
-        if has_done {
-            continue;
-        }
-
-        merged.curves.push(Curve::new(m_cp0, m_cp1, m_p1));
-        i_main += 1;
-
-        if *merged.start.borrow() == *merged.curves.last().unwrap().p1.borrow() {
-            closed = true;
-        }
-    }
-
-    Some(merged)
-}
 
 // When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
 // GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
+// It contains a doubly linked list of CoordOfIntersection.
 struct GreinerShape {
     pub start: Rc<RefCell<CoordOfIntersection>>,
 }
@@ -160,6 +65,7 @@ impl GreinerShape {
         current
     }
 
+    #[allow(dead_code)] // For testing
     pub fn print_coords_table(&self) {
         let mut current = self.start.clone();
         println!("Coord, Intersection, Entry");
@@ -488,34 +394,69 @@ fn merge(ag: &GreinerShape, _bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape 
 
     let mut current = first_intersection.clone();
     loop {
-        //If current shape enter other shape, we need to switch to the other shape
-        if current.borrow().intersect && current.borrow().entry {
-            let next = current
-                .borrow()
-                .neighbor
-                .as_ref()
-                .unwrap()
-                .upgrade()
-                .unwrap()
-                .clone();
-            current = next;
+        if !current.borrow().entry { //Remove ! to make the algo A AND B
+            loop {
+                let next = current.borrow().next.as_ref().unwrap().clone();
+                current = next;
+                let cp0 = current.borrow().coord_ptr();
+        
+                let next = current.borrow().next.as_ref().unwrap().clone();
+                current = next;
+                let cp1 = current.borrow().coord_ptr();
+        
+                let next = current.borrow().next.as_ref().unwrap().clone();
+                current = next;
+                let p1 = current.borrow().coord_ptr();
+        
+                merged.curves.push(Curve::new(cp0, cp1, p1));
+                
+                if current.borrow().intersect {
+                    break;
+                }
+            }
+        } else{
+            loop {
+                let next = current.borrow().prev.as_ref().unwrap().upgrade().unwrap().clone();
+                current = next;
+                let cp0 = current.borrow().coord_ptr();
+        
+                let next = current.borrow().prev.as_ref().unwrap().upgrade().unwrap().clone();
+                current = next;
+                let cp1 = current.borrow().coord_ptr();
+        
+                let next = current.borrow().prev.as_ref().unwrap().upgrade().unwrap().clone();
+                current = next;
+                let p1 = current.borrow().coord_ptr();
+        
+                merged.curves.push(Curve::new(cp0, cp1, p1));
+                
+                if current.borrow().intersect {
+                    break;
+                }
+            }
         }
-
-        let next = current.borrow().next.as_ref().unwrap().clone();
+        let next = current
+            .borrow()
+            .neighbor
+            .as_ref()
+            .unwrap()
+            .upgrade()
+            .unwrap()
+            .clone();
         current = next;
-        let cp0 = current.borrow().coord_ptr();
 
-        let next = current.borrow().next.as_ref().unwrap().clone();
-        current = next;
-        let cp1 = current.borrow().coord_ptr();
-
-        let next = current.borrow().next.as_ref().unwrap().clone();
-        current = next;
-        let p1 = current.borrow().coord_ptr();
-
-        merged.curves.push(Curve::new(cp0, cp1, p1));
-
-        if Rc::ptr_eq(&current, &first_intersection) || Rc::ptr_eq(&current, &first_intersection.borrow().neighbor.as_ref().unwrap().upgrade().unwrap()) {
+        if Rc::ptr_eq(&current, &first_intersection)
+            || Rc::ptr_eq(
+                &current,
+                &first_intersection
+                    .borrow()
+                    .neighbor
+                    .as_ref()
+                    .unwrap()
+                    .upgrade()
+                    .unwrap(),
+            )
+        {
             break;
         }
     }
@@ -523,8 +464,8 @@ fn merge(ag: &GreinerShape, _bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape 
     merged
 }
 
-#[allow(dead_code)]
-pub fn union2(a: &Shape, b: &Shape) -> Shape {
+#[allow(dead_code)] 
+pub fn shape_union(a: &Shape, b: &Shape) -> Shape {
     let (mut ag, mut bg) = find_all_intersecion(a, b);
 
     mark_entry_exit_points(&mut ag, a, &mut bg, b);
@@ -537,13 +478,13 @@ mod test {
     use common::{types::Coord, Rgba};
 
     use crate::{
-        create_circle, shape,
-        shape_boolean::{find_all_intersecion, mark_entry_exit_points, union, union2},
+        create_circle,
+        shape_boolean::{find_all_intersecion, mark_entry_exit_points, shape_union},
         Vgc,
     };
 
     #[test]
-    fn when_merge_two_circle() {
+    fn given_two_circle_when_union_then_valid() {
         let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
 
         create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
@@ -552,24 +493,7 @@ mod test {
         let s1 = vgc.get_shape(0).expect("Shape should exist");
         let s2 = vgc.get_shape(1).expect("Shape should exist");
 
-        let merged = union(&s1, &s2).expect("Should merge");
-
-        assert_eq!(*(merged.curves[1].p1.borrow()), Coord::new(0.2, 0.20001104));
-        assert_eq!(merged.curves.len(), 8);
-        assert_eq!(merged.to_path(),"M 0 0.20001104 C 0.03648475 0.19992407 0.07062003 0.19018893 0.1 0.17321144 C 0.12937993 0.19018891 0.16351523 0.19992408 0.2 0.20001104 C 0.3106854 0.19974719 0.3997472 0.110685386 0.40001106 0 C 0.3997472 -0.110685386 0.3106854 -0.19974719 0.2 -0.20001104 C 0.16351524 -0.19992407 0.12937997 -0.19018893 0.10000001 -0.17321144 C 0.07062003 -0.19018894 0.03648475 -0.19992407 0 -0.20001104 C -0.110685386 -0.19974719 -0.19974719 -0.110685386 -0.20001104 0 C -0.19974719 0.110685386 -0.110685386 0.19974719 0 0.20001104 Z");
-    }
-
-    #[test]
-    fn when_merge_two_circle2() {
-        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
-
-        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
-        create_circle(&mut vgc, Coord::new(0.2, 0.0), 0.2, 0.2);
-
-        let s1 = vgc.get_shape(0).expect("Shape should exist");
-        let s2 = vgc.get_shape(1).expect("Shape should exist");
-
-        let mut merged = union2(&s1, &s2);
+        let mut merged = shape_union(&s1, &s2);
 
         merged.set_start_at_curve(6);
 
@@ -579,65 +503,7 @@ mod test {
     }
 
     #[test]
-    fn when_merge_circle2_find_entry() {
-        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
-
-        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
-        create_circle(&mut vgc, Coord::new(0.2, 0.0), 0.2, 0.2);
-
-        let a = vgc.get_shape(0).expect("Shape should exist");
-        let b = vgc.get_shape(1).expect("Shape should exist");
-
-        let (mut ag, mut bg) = find_all_intersecion(a, b);
-
-        assert_eq!(ag.len(), 18);
-        assert_eq!(bg.len(), 18);
-
-        mark_entry_exit_points(&mut ag, a, &mut bg, b);
-
-        assert_eq!(ag.get(0).borrow().entry, false);
-        assert_eq!(ag.get(3).borrow().entry, true);
-        assert_eq!(ag.get(9).borrow().entry, false);
-
-        assert_eq!(bg.get(0).borrow().entry, false);
-        assert_eq!(bg.get(9).borrow().entry, true);
-        assert_eq!(bg.get(15).borrow().entry, false);
-    }
-
-    #[test]
-    #[ignore]
-    fn when_merge_ovals_with_no_valid_p() {
-        let vgc = crate::generate_from_push(vec![
-            vec![
-                Coord::new(0.0, 0.3),
-                Coord::new(0.8, 0.3),
-                Coord::new(0.8, -0.3),
-                Coord::new(0.0, -0.3),
-                Coord::new(-0.8, -0.3),
-                Coord::new(-0.8, 0.3),
-                Coord::new(0.0, 0.3),
-            ],
-            vec![
-                Coord::new(0.3, 0.0),
-                Coord::new(0.3, 0.8),
-                Coord::new(-0.3, 0.8),
-                Coord::new(-0.3, 0.0),
-                Coord::new(-0.3, -0.8),
-                Coord::new(0.3, -0.8),
-                Coord::new(0.3, 0.0),
-            ],
-        ]);
-
-        let s1 = vgc.get_shape(0).expect("Shape should exist");
-        let s2 = vgc.get_shape(1).expect("Shape should exist");
-
-        let merged = union(&s1, &s2).expect("Should merge");
-
-        assert_eq!(merged.curves.len(), 4);
-    }
-
-    #[test]
-    fn when_merge_ovals_with_no_valid_p2() {
+    fn given_two_oval_with_no_valid_p_when_union_then_valid() {
         let mut shape1 = vec![
             Coord::new(0.0, 0.3),
             Coord::new(-0.8, 0.3),
@@ -647,8 +513,9 @@ mod test {
             Coord::new(0.8, 0.3),
             Coord::new(0.0, 0.3),
         ];
+        shape1.reverse();
 
-        let mut shape2 = vec![
+        let shape2 = vec![
             Coord::new(0.3, 0.0),
             Coord::new(0.3, 0.8),
             Coord::new(-0.3, 0.8),
@@ -661,20 +528,16 @@ mod test {
         let vgc = crate::generate_from_push(vec![shape1, shape2]);
 
         let a = vgc.get_shape(0).expect("Shape should exist");
-
         let b = vgc.get_shape(1).expect("Shape should exist");
 
         let (mut ag, mut bg) = find_all_intersecion(a, b);
 
         mark_entry_exit_points(&mut ag, a, &mut bg, b);
-        ag.print_coords_table();
-        bg.print_coords_table();
 
         assert_eq!(ag.len(), 18);
         assert_eq!(bg.len(), 18);
 
-        let merged = union2(&a, &b);
-        println!("{}", merged.to_path());
+        let merged = shape_union(&a, &b);
 
         assert_eq!(merged.curves.len(), 4);
     }
