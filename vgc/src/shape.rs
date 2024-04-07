@@ -6,6 +6,8 @@ use common::Rgba;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+mod new;
+
 #[derive(Debug)]
 pub struct Shape {
     pub start: Rc<RefCell<Coord>>,
@@ -294,7 +296,7 @@ impl Shape {
             let p1 = curve.p1.borrow();
 
             let t_intersections =
-                curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());  
+                curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());
             for t in t_intersections {
                 let x = cubic_bezier(t, &prev_coord, &cp0, &cp1, &p1).x();
                 if x > coord.x() {
@@ -333,7 +335,9 @@ mod test {
     use std::rc::Rc;
 
     use crate::generate_from_push;
-    use common::types::Coord;
+    use common::{pures::Vec2, types::Coord, Rgba};
+
+    use super::Shape;
 
     #[test]
     fn cloest_pt() {
@@ -551,6 +555,21 @@ mod test {
     }
 
     #[test]
+    fn given_circle_point_tangente_when_contain_then_invalid() {
+        let shape = Shape::new_circle(
+            Coord::new(0.0, 0.0),
+            Vec2::new(0.5, 0.5),
+            Rgba::new(0, 0, 0, 1),
+        );
+        let (p0, _, _, _) = shape.get_coords_of_curve(0);
+
+        let coord = (*p0.borrow()) - Coord::new(0.7, 0.0);
+
+        assert_eq!(shape.contains(&coord), false);
+
+    }
+
+    #[test]
     fn set_start_at_curve() {
         let mut vgc = generate_from_push(vec![vec![
             Coord::new(0.0, 0.0),
@@ -564,10 +583,9 @@ mod test {
 
         let shape = vgc.get_shape_mut(0).expect("Shape should exist");
 
-        println!("{}", shape.to_path());
+      
         shape.set_start_at_curve(0);
 
-        println!("{}", shape.to_path());
 
         let (c0_p0, c0_cp0, c0_cp1, c0_p1) = shape.get_coords_of_curve(0);
         let (c1_p0, c1_cp0, c1_cp1, c1_p1) = shape.get_coords_of_curve(1);

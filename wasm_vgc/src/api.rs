@@ -1,9 +1,11 @@
+use crate::user_selection::SelectedShape;
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
 use common::types::{Coord, ScreenLength2d};
 use common::Rgba;
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
+use vgc::shape::Shape;
 use vgc::{coord::RefCoordType, Vgc};
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -142,7 +144,7 @@ pub fn toggle_handle(
 }
 
 #[wasm_bindgen]
-pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
+pub fn draw_shape(selected: &mut Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
 
@@ -150,7 +152,13 @@ pub fn draw_shape(_: &Selected, canvas_content: &mut CanvasContent, mouse_positi
 
     let pos = camera.project(mouse_position);
     // if click create a new shape on point and ready to new point
-    vgc::create_circle(vgc_data, pos, radius.c.x, radius.c.y);
+    let shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
+
+
+    //for selected shape try to union the new shape
+
+    //for unselected shape try to difference the new shape
+    
 }
 
 #[wasm_bindgen]

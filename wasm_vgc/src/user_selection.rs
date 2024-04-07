@@ -259,7 +259,7 @@ enum CoordState {
 }
 
 impl SelectedShape {
-    fn new(shape_index: usize) -> Self {
+    pub fn new(shape_index: usize) -> Self {
         Self {
             shape_index,
             coords: Vec::new(),

@@ -11,7 +11,7 @@ use super::Vec2;
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-// Transformation matrix for 2D space
+/// Transformation matrix for 2D space
 pub struct Affine {
     /// m00 m01 m02
     /// m10 m11 m12

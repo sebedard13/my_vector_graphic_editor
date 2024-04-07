@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use common::types::{Coord, Rect};
+use common::{pures::Vec2, types::{Coord, Rect}};
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
@@ -19,8 +19,8 @@ pub mod render;
 #[cfg(feature = "serialization")]
 mod serialization;
 
-mod shape;
-mod shape_boolean;
+pub mod shape;
+pub mod shape_boolean;
 
 /// Maximum size of the image, if we want to have detail for each pixel
 /// This is a limit because of f32 precision with 2^-23 for the smallest value
@@ -58,6 +58,11 @@ impl Vgc {
 
     pub fn get_shape_mut(&mut self, index_shape: usize) -> Option<&mut Shape> {
         self.shapes.get_mut(index_shape)
+    }
+
+    pub fn push_shape(&mut self, shape: Shape) -> usize {
+        self.shapes.push(shape);
+        self.shapes.len() - 1
     }
 
     pub fn render<T>(&self, renderer: &mut T) -> Result<(), String>
@@ -281,50 +286,16 @@ pub fn generate_from_push(shapes_coords: Vec<Vec<Coord>>) -> Vgc {
     canvas
 }
 
-pub fn create_circle(canvas: &mut Vgc, center: Coord, radius_x: f32, radius_y: f32) {
-    //https://spencermortensen.com/articles/bezier-circle/
-    let a = 1.000_055_2;
-    let b = 0.553_426_9;
-    let c = 0.998_735_9;
+//Return the index of the created shape
+pub fn create_circle(canvas: &mut Vgc, center: Coord, radius_x: f32, radius_y: f32) -> usize {
+    let color = Rgba {
+        r: 255,
+        g: 255,
+        b: 255,
+        a: 255,
+    };
 
-    let p0 = Coord::new(0.0, a);
+    let shape = Shape::new_circle(center, Vec2::new(radius_x, radius_y), color);
 
-    let shape_index = canvas.create_shape(
-        p0.clone(),
-        Rgba {
-            r: 0,
-            g: 0,
-            b: 0,
-            a: 255,
-        },
-    );
-    let shape = canvas.get_shape_mut(shape_index).unwrap();
-
-    let vec = vec![
-        shape.start.clone(),
-        Rc::new(RefCell::new(Coord::new(b, c))),
-        Rc::new(RefCell::new(Coord::new(c, b))),
-        Rc::new(RefCell::new(Coord::new(a, 0.0))),
-        Rc::new(RefCell::new(Coord::new(c, -b))),
-        Rc::new(RefCell::new(Coord::new(b, -c))),
-        Rc::new(RefCell::new(Coord::new(0.0, -a))),
-        Rc::new(RefCell::new(Coord::new(-b, -c))),
-        Rc::new(RefCell::new(Coord::new(-c, -b))),
-        Rc::new(RefCell::new(Coord::new(-a, 0.0))),
-        Rc::new(RefCell::new(Coord::new(-c, b))),
-        Rc::new(RefCell::new(Coord::new(-b, c))),
-    ];
-
-    shape.push_coord(vec[1].clone(), vec[2].clone(), vec[3].clone());
-
-    shape.push_coord(vec[4].clone(), vec[5].clone(), vec[6].clone());
-
-    shape.push_coord(vec[7].clone(), vec[8].clone(), vec[9].clone());
-
-    shape.push_coord(vec[10].clone(), vec[11].clone(), vec[0].clone());
-
-    for coord_ref in vec {
-        let mut coord = coord_ref.borrow_mut();
-        (*coord) = (*coord).scale(center.x(), center.y(), radius_x, radius_y);
-    }
+    canvas.push_shape(shape)
 }
