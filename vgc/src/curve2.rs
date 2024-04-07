@@ -295,7 +295,8 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     let croots = poly.complex_roots();
 
     for root in croots {
-        if 0.0 <= root.0 && root.0 < 1.0 && f64::abs(root.1) < (f32::EPSILON as f64) {
+        //For the even-odd rule, we don't care if root is at 0.0 or 1.0, because it need to add 2 intersections
+        if 0.0 < root.0 && root.0 < 1.0 && f64::abs(root.1) < (f32::EPSILON as f64) {
             vec.push(root.0 as f32);
         }
     }
