@@ -23,16 +23,24 @@ use crate::{
 struct GreinerShape {
     pub data: Vec<CoordOfIntersection>,
     pub start: usize,
-    pub intersection_count: usize,
+}
+
+#[derive(Clone)]
+struct CoordOfIntersection {
+    pub curve_index: usize,
+    pub t: f32,
+    pub neighbor: Option<usize>,
+    pub next: Option<usize>,
+    pub prev: Option<usize>,
+    pub entry: bool,
+    pub intersect: bool,
+    pub coord: Coord,
+    pub rel_coord: Option<CoordPtr>,
 }
 
 impl GreinerShape {
-    pub fn new(data: Vec<CoordOfIntersection>, start: usize, intersection_count: usize) -> Self {
-        Self {
-            data,
-            start,
-            intersection_count,
-        }
+    pub fn new(data: Vec<CoordOfIntersection>, start: usize) -> Self {
+        Self { data, start }
     }
 
     #[allow(dead_code)] // For testing
@@ -53,7 +61,7 @@ impl GreinerShape {
 
     #[allow(dead_code)] // For testing
     pub fn print_coords_table(&self) {
-        println!("Index, x, yCoordinate, Intersect, Next, Prev");
+        println!("Index, x, y, In.sect, Next, Prev");
         for (i, c) in self.data.iter().enumerate() {
             let x = format!("{:.2}", c.coord.x());
             let y = format!("{:.2}", c.coord.y());
@@ -72,18 +80,6 @@ impl GreinerShape {
     }
 }
 
-#[derive(Clone)]
-struct CoordOfIntersection {
-    pub curve_index: usize,
-    pub t: f32,
-    pub neighbor: Option<usize>,
-    pub next: Option<usize>,
-    pub prev: Option<usize>,
-    pub entry: bool,
-    pub intersect: bool,
-    pub coord: Coord,
-    pub rel_coord: Option<CoordPtr>,
-}
 
 impl CoordOfIntersection {
     pub fn from_existing(rel_coord: &CoordPtr) -> Self {
@@ -161,8 +157,7 @@ impl PartialEq for CoordOfIntersection {
     }
 }
 
-#[allow(dead_code)]
-fn find_all_intersecion(a: &Shape, b: &Shape) -> (GreinerShape, GreinerShape) {
+fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<CoordOfIntersection>) {
     let mut intersection_a: Vec<CoordOfIntersection> = Vec::with_capacity(a.curves.len());
     let mut intersection_b: Vec<CoordOfIntersection> = Vec::with_capacity(b.curves.len());
 
@@ -197,21 +192,10 @@ fn find_all_intersecion(a: &Shape, b: &Shape) -> (GreinerShape, GreinerShape) {
         }
     }
 
-    let intersection_in_a = intersection_a.len();
-    let intersection_a = create_all_shape(a, intersection_a);
-
-    let intersection_in_b = intersection_b.len();
-    let intersection_b = create_all_shape(b, intersection_b);
-    (
-        GreinerShape::new(intersection_a, intersection_in_a, intersection_in_a),
-        GreinerShape::new(intersection_b, intersection_in_b, intersection_in_b),
-    )
+    (intersection_a, intersection_b)
 }
 
-fn create_all_shape(
-    shape: &Shape,
-    mut intersections: Vec<CoordOfIntersection>,
-) -> Vec<CoordOfIntersection> {
+fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> GreinerShape {
     let mut result = Vec::with_capacity(shape.curves.len() * 3 + intersections.len() * 3);
     result.append(&mut intersections.clone());
     result.push(CoordOfIntersection::from_existing(&shape.start));
@@ -324,7 +308,7 @@ fn create_all_shape(
     last_cp.next = Some(start_a);
     result[start_a].prev = Some(result.len() - 1);
 
-    result
+    GreinerShape::new(result, start_a)
 }
 
 fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
@@ -449,13 +433,42 @@ fn merge(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {
     merged
 }
 
+pub enum ShapeUnion {
+    /// A contains fully B
+    A,
+    /// B contains fully A
+    B,
+    /// A and B do not fully contain each other
+    /// New shape is created    
+    New(Shape),
+    /// A and B do not intersect each other
+    None,
+}
+
 #[allow(dead_code)]
-pub fn shape_union(a: &Shape, b: &Shape) -> Shape {
-    let (mut ag, mut bg) = find_all_intersecion(a, b);
+pub fn shape_union(a: &Shape, b: &Shape) -> ShapeUnion {
+    let (intersections_a, intersections_b) = find_intersecions(a, b);
+
+    assert_eq!(intersections_a.len(), intersections_b.len());
+    assert_eq!(intersections_a.len() % 2, 0); // Shape are closed so we should have an even number of intersections
+    if intersections_a.is_empty() && intersections_b.is_empty() {
+        if a.contains(&b.start.borrow()) {
+            return ShapeUnion::A;
+        } else if b.contains(&a.start.borrow()) {
+            return ShapeUnion::B;
+        } else {
+            return ShapeUnion::None;
+        }
+    }
+
+    let mut ag = create_shape(a, intersections_a);
+    let mut bg = create_shape(b, intersections_b);
 
     mark_entry_exit_points(&mut ag, a, &mut bg, b);
 
-    merge(&ag, &bg, a, b)
+    let merge_shape = merge(&ag, &bg, a, b);
+
+    ShapeUnion::New(merge_shape)
 }
 
 #[cfg(test)]
@@ -464,12 +477,14 @@ mod test {
 
     use crate::{
         create_circle,
-        shape_boolean::{find_all_intersecion, mark_entry_exit_points, shape_union},
+        shape_boolean::{
+            create_shape, find_intersecions, mark_entry_exit_points, shape_union, ShapeUnion,
+        },
         Vgc,
     };
 
     #[test]
-    fn given_two_circle_when_union_then_valid() {
+    fn given_two_circle_when_union_then_new() {
         let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
 
         create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
@@ -478,7 +493,13 @@ mod test {
         let a = vgc.get_shape(0).expect("Shape should exist");
         let b = vgc.get_shape(1).expect("Shape should exist");
 
-        let (mut ag, mut bg) = find_all_intersecion(a, b);
+        let (i_a, i_b) = find_intersecions(a, b);
+
+        assert_eq!(i_a.len(), 2);
+        assert_eq!(i_b.len(), 2);
+
+        let mut ag = create_shape(a, i_a);
+        let mut bg = create_shape(b, i_b);
 
         assert_eq!(ag.len(), 18);
         assert_eq!(bg.len(), 18);
@@ -494,6 +515,11 @@ mod test {
         assert_eq!(bg.get(15).entry, false);
 
         let merged = shape_union(&a, &b);
+        let merged = match merged {
+            ShapeUnion::New(merged) => merged,
+            _ => panic!("Should be a new shape"),
+        };
+
         assert_eq!(merged.curves.len(), 8);
 
         let steps = 5;
@@ -512,7 +538,7 @@ mod test {
     }
 
     #[test]
-    fn given_two_oval_with_no_valid_p_when_union_then_valid() {
+    fn given_two_oval_with_no_valid_p_when_union_then_new() {
         let mut shape1 = vec![
             Coord::new(0.0, 0.3),
             Coord::new(-0.8, 0.3),
@@ -539,7 +565,13 @@ mod test {
         let a = vgc.get_shape(0).expect("Shape should exist");
         let b = vgc.get_shape(1).expect("Shape should exist");
 
-        let (mut ag, mut bg) = find_all_intersecion(a, b);
+        let (i_a, i_b) = find_intersecions(a, b);
+
+        assert_eq!(i_a.len(), 4);
+        assert_eq!(i_b.len(), 4);
+
+        let mut ag = create_shape(a, i_a);
+        let mut bg = create_shape(b, i_b);
 
         mark_entry_exit_points(&mut ag, a, &mut bg, b);
 
@@ -547,6 +579,11 @@ mod test {
         assert_eq!(bg.len(), 18);
 
         let merged = shape_union(&a, &b);
+
+        let merged = match merged {
+            ShapeUnion::New(merged) => merged,
+            _ => panic!("Should be a new shape"),
+        };
 
         assert_eq!(merged.curves.len(), 4);
         println!("Merged curves: {:?}", merged.to_path());
@@ -564,5 +601,38 @@ mod test {
                 );
             }
         }
+    }
+
+    #[test]
+    fn given_two_circle_when_union_then_a() {
+        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
+
+        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
+        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.1, 0.1);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let merged = shape_union(&a, &b);
+
+        assert!(matches!(merged, ShapeUnion::A), "Should be ShapeUnion::A");
+    }
+
+    #[test]
+    fn given_two_circle_when_union_then_none() {
+        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
+
+        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
+        create_circle(&mut vgc, Coord::new(0.3, 0.3), 0.1, 0.1);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let merged = shape_union(&a, &b);
+
+        assert!(
+            matches!(merged, ShapeUnion::None),
+            "Should be ShapeUnion::None"
+        );
     }
 }
