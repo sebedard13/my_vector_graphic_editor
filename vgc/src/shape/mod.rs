@@ -7,6 +7,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 mod new;
+pub mod boolean;
 
 #[derive(Debug)]
 pub struct Shape {
