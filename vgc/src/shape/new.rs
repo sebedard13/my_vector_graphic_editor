@@ -19,7 +19,7 @@ impl Shape {
     }
 
     //List of coordinates of curves. The first coordinate is the start of the curve.
-    pub fn new_from_path(coords: Vec<Coord>, transform: Affine, fill: Rgba) -> Self {
+    pub fn new_from_path(coords: &Vec<Coord>, transform: Affine, fill: Rgba) -> Self {
         let start = coords[0].transform(&transform);
         let mut shape = Shape::new(start, fill);
 
@@ -58,6 +58,6 @@ impl Shape {
             Coord::new(0.0, a),
         ];
 
-        Shape::new_from_path(coords, transform, fill)
+        Shape::new_from_path(&coords, transform, fill)
     }
 }
