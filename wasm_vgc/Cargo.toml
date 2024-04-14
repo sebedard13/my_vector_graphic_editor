@@ -14,9 +14,13 @@ path = "src/lib.rs"
 # logging them with `console.error`. This is great for development, but requires
 # all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
 # code size when deploying.
+console_log = "1.0.0"
+log = "0.4.21"
 console_error_panic_hook = { version = "0.1.7", optional = true }
+
 js-sys = { version = "0.3.66" }
 wasm-bindgen = { version = "0.2.89" }
+
 postcard = { version = "1.0.7", features = ["alloc"] }
 common = { path = "../common" }
 vgc = { path = "../vgc" }

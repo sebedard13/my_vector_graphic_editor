@@ -1,5 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
-import { animationFrames } from "rxjs";
+import { Subscription, animationFrames } from "rxjs";
 import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scene/scenes.service";
@@ -15,6 +15,9 @@ export class CanvasComponent implements AfterViewInit {
     @ViewChild("canvas") canvas!: ElementRef<HTMLCanvasElement>;
     private resizeObserver: ResizeObserver | undefined;
     private ctx!: CanvasRenderingContext2D;
+
+    private renderError = 0;
+    private renderSub: Subscription | undefined;
 
     constructor(
         private mouseInfo: MouseInfoService,
@@ -59,7 +62,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
 
-        animationFrames().subscribe((_) => {
+        this.renderSub = animationFrames().subscribe((_) => {
             let mouseInfo: { x: number; y: number } | null = null;
             if (this.mouseInfo.mouseInCanvas()) {
                 mouseInfo = this.mouseInfo.mouseCanvasPosSignal();
@@ -72,16 +75,27 @@ export class CanvasComponent implements AfterViewInit {
     }
 
     public render(canvasContent: CanvasContent, mouseCoords: { x: number; y: number } | null) {
-        render(this.ctx, canvasContent);
+        try {
+            render(this.ctx, canvasContent);
 
-        draw(this.selectionService.selection, canvasContent, this.ctx);
-        if (mouseCoords != null) {
-            draw_closest_pt(
-                this.selectionService.selection,
-                canvasContent,
-                this.ctx,
-                new ScreenCoord(mouseCoords.x, mouseCoords.y),
-            );
+            draw(this.selectionService.selection, canvasContent, this.ctx);
+            if (mouseCoords != null) {
+                draw_closest_pt(
+                    this.selectionService.selection,
+                    canvasContent,
+                    this.ctx,
+                    new ScreenCoord(mouseCoords.x, mouseCoords.y),
+                );
+            }
+        } catch (e) {
+            //Wasm vgc mostly crash and is irrecoverable
+            if (this.renderError < 3) {
+                console.error(e);
+                this.renderError++;
+            } else {
+                this.renderSub?.unsubscribe();
+                console.error("Wasm vgc crashed, stopping rendering");
+            }
         }
 
         this.showCanvas();

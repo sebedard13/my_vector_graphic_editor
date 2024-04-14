@@ -6,8 +6,8 @@ use common::Rgba;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-mod new;
 pub mod boolean;
+mod new;
 
 #[derive(Debug)]
 pub struct Shape {
@@ -567,7 +567,6 @@ mod test {
         let coord = (*p0.borrow()) - Coord::new(0.7, 0.0);
 
         assert_eq!(shape.contains(&coord), false);
-
     }
 
     #[test]
@@ -584,9 +583,7 @@ mod test {
 
         let shape = vgc.get_shape_mut(0).expect("Shape should exist");
 
-      
         shape.set_start_at_curve(0);
-
 
         let (c0_p0, c0_cp0, c0_cp1, c0_p1) = shape.get_coords_of_curve(0);
         let (c1_p0, c1_cp0, c1_cp1, c1_p1) = shape.get_coords_of_curve(1);

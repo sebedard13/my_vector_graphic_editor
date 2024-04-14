@@ -1,14 +1,17 @@
 pub mod api;
 mod camera;
 mod canvas_context_2d_render;
+
 pub mod user_selection;
 
 use crate::canvas_context_2d_render::CanvasContext2DRender;
 use camera::Camera;
 use common::{
+    dbg_str,
     pures::{Affine, Vec2},
     types::{Coord, ScreenRect},
 };
+use log::{info, warn};
 use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
@@ -163,12 +166,32 @@ pub fn set_panic_hook() {
 }
 
 #[wasm_bindgen]
-extern "C" {
-    // For alerting
-    pub(crate) fn alert(s: &str);
-    // For logging in the console.
-    #[wasm_bindgen(js_namespace = console)]
-    pub fn log(s: &str);
+pub fn set_logger(string: String) {
+    match string.as_str() {
+        "trace" => {
+            console_log::init_with_level(log::Level::Trace).expect("error initializing log");
+            info!("{}", dbg_str!("Trace log level set"));
+        }
+        "debug" => {
+            console_log::init_with_level(log::Level::Debug).expect("error initializing log");
+            info!("{}", dbg_str!("Debug log level set"));
+        }
+        "info" => {
+            console_log::init_with_level(log::Level::Info).expect("error initializing log");
+            info!("{}", dbg_str!("Info log level set"));
+        }
+        "warn" => {
+            console_log::init_with_level(log::Level::Warn).expect("error initializing log");
+        }
+        "error" => {
+            console_log::init_with_level(log::Level::Error).expect("error initializing log");
+        }
+        "off" => {}
+        _ => {
+            console_log::init_with_level(log::Level::Debug).expect("error initializing log");
+            warn!("{}", dbg_str!("Invalid log level, defaulting to debug"));
+        }
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -181,10 +204,4 @@ macro_rules! value {
     ($value:expr) => {
         wasm_bindgen::JsValue::from($value)
     };
-}
-
-/// Calls the wasm_bindgen console.log.
-#[macro_export]
-macro_rules! console_log {
-    ($($t:tt)*) => ($crate::log(&format_args!($($t)*).to_string()))
 }

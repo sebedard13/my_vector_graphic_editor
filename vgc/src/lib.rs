@@ -1,11 +1,14 @@
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::{cell::RefCell, error};
 
-use common::{pures::Vec2, types::{Coord, Rect}};
+use common::{
+    pures::Vec2,
+    types::{Coord, Rect},
+};
 use coord::{CoordPtr, RefCoordType};
 use shape::Shape;
 
-use common::Rgba;
+use common::{dbg_str, Rgba};
 #[cfg(feature = "tiny-skia")]
 pub use render::TinySkiaRenderer;
 pub use render::VgcRenderer;
@@ -30,7 +33,7 @@ static MAX_DETAIL_SIZE: u32 = 52000000;
 #[derive(Debug)]
 pub struct Vgc {
     pub background: Rgba,
-    shapes: Vec<Shape>,
+    pub shapes: Vec<Shape>,
 }
 
 impl Vgc {
@@ -62,6 +65,17 @@ impl Vgc {
     pub fn push_shape(&mut self, shape: Shape) -> usize {
         self.shapes.push(shape);
         self.shapes.len() - 1
+    }
+
+    pub fn replace_shape(&mut self, index_shape: usize, shape: Shape) {
+        if (index_shape < self.shapes.len()) {
+            self.shapes[index_shape] = shape;
+        } else {
+            log::error!(
+                "{}",
+                dbg_str!("Index out of bound {}/{}", index_shape, self.shapes.len())
+            );
+        }
     }
 
     pub fn render<T>(&self, renderer: &mut T) -> Result<(), String>

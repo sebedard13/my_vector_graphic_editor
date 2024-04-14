@@ -1,10 +1,10 @@
-use crate::user_selection::SelectedShape;
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
 use common::types::{Coord, ScreenLength2d};
-use common::Rgba;
+use common::{dbg_str, Rgba};
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
+use vgc::shape::boolean::{ShapeDifference, ShapeUnion};
 use vgc::shape::Shape;
 use vgc::{coord::RefCoordType, Vgc};
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -144,7 +144,11 @@ pub fn toggle_handle(
 }
 
 #[wasm_bindgen]
-pub fn draw_shape(selected: &mut Selected, canvas_content: &mut CanvasContent, mouse_position: ScreenCoord) {
+pub fn draw_shape(
+    selected: &mut Selected,
+    canvas_content: &mut CanvasContent,
+    mouse_position: ScreenCoord,
+) {
     let vgc_data = &mut canvas_content.vgc_data;
     let camera = &mut canvas_content.camera;
 
@@ -154,11 +158,48 @@ pub fn draw_shape(selected: &mut Selected, canvas_content: &mut CanvasContent, m
     // if click create a new shape on point and ready to new point
     let shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
 
-
     //for selected shape try to union the new shape
+    for shape_selected in &selected.shapes {
+        let selected_shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
+        let result = selected_shape.union(&shape);
+        match result {
+            ShapeUnion::New(new_shape) => {
+                vgc_data.replace_shape(shape_selected.shape_index, new_shape);
+            }
+            ShapeUnion::A => {}
+            ShapeUnion::B => {
+                /*shape.color = selected_shape.color.clone();
+                vgc_data.remove_shape(shape_selected.shape_index);
+                vgc_data.push_shape(shape);*/
+            }
+            ShapeUnion::None => {}
+        }
+    }
 
     //for unselected shape try to difference the new shape
-    
+    for shape_index in 0..vgc_data.shapes.len() {
+        if !selected.shapes.iter().any(|s| s.shape_index == shape_index) {
+            let selected_shape = vgc_data.get_shape(shape_index).unwrap();
+            let result = selected_shape.difference(&shape);
+            match result {
+                ShapeDifference::New(mut new_shapes) => {
+                    vgc_data.replace_shape(shape_index, new_shapes.swap_remove(0));
+                    for new_shape in new_shapes {
+                        vgc_data.push_shape(new_shape);
+                    }
+                }
+                ShapeDifference::EraseA => {
+                    vgc_data.remove_shape(shape_index);
+                }
+                ShapeDifference::A => {}
+                ShapeDifference::AWithBHole => {
+                    
+                    log::error!("{}", dbg_str!("AWithBHole"));
+                    todo!("Add an hole to A");
+                }
+            }
+        }
+    }
 }
 
 #[wasm_bindgen]

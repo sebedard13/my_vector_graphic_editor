@@ -14,6 +14,24 @@ use crate::{coord::CoordPtr, curve::add_smooth_result, curve2::intersection, sha
 use common::types::Coord;
 use std::{cell::RefCell, rc::Rc};
 
+pub use self::{difference::ShapeDifference, intersection::ShapeIntersection, union::ShapeUnion};
+
+
+impl Shape {
+    pub fn union(&self, other: &Shape) -> ShapeUnion {
+        union::shape_union(self, other)
+    }
+
+    pub fn intersection(&self, other: &Shape) -> ShapeIntersection {
+        intersection::shape_intersection(self, other)
+    }
+
+    pub fn difference(&self, other: &Shape) -> ShapeDifference {
+        difference::shape_difference(self, other)
+    }
+}
+
+
 // When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
 // GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
 // It contains a doubly linked list of CoordOfIntersection.
