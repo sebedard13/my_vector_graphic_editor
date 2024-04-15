@@ -30,9 +30,9 @@ impl Shape {
     }
 }
 
-// When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
-// GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
-// It contains a doubly linked list of CoordOfIntersection.
+/// When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
+/// GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
+/// It contains a doubly linked list of CoordOfIntersection.
 struct GreinerShape {
     pub data: Vec<CoordOfIntersection>,
     pub start: usize,
@@ -204,6 +204,20 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
         }
     }
 
+    assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
+
+    (intersections_a, intersections_b)
+}
+
+/// A Shape should be closed so we should have an even number of intersections between two shapes.
+/// If not, it is maybe a bug in the intersection calculation or a precision problem.
+/// In this case, we remove the closest intersection point to the others and update the neighbor index.
+fn assert_intersections_even_count(
+    a: &Shape,
+    intersections_a: &mut Vec<CoordOfIntersection>,
+    b: &Shape,
+    intersections_b: &mut Vec<CoordOfIntersection>,
+) {
     assert_eq!(intersections_a.len(), intersections_b.len());
     if (intersections_a.len() % 2) != 0 {
         log::warn!(
@@ -216,28 +230,31 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
         let mut difference = Vec::with_capacity(intersections_a.len() * intersections_a.len());
         for i in 0..intersections_a.len() {
             for j in 0..intersections_a.len() {
-                difference.push((
-                    (intersections_a[i].coord - intersections_a[j].coord).norm(),
-                    i,
-                    j,
-                ));
+                difference.push((intersections_a[i].coord - intersections_a[j].coord).norm());
             }
         }
 
         //find min of difference
         let mut min = f32::MAX;
-        let mut min_index: (usize, usize) = (0, 0);
+        let mut min_index: usize = 0;
         for i in 0..difference.len() {
-            if difference[i].0 < min {
-                min = difference[i].0;
-                min_index.0 = difference[i].1;
-                min_index.1 = difference[i].2;
+            if difference[i] < min {
+                min = difference[i];
+                min_index = (i - (i % intersections_a.len())) / intersections_a.len();
+            }
+        }
+
+        intersections_a.remove(min_index);
+        intersections_b.remove(min_index);
+
+        for i in 0..intersections_a.len() {
+            if intersections_a[i].neighbor.unwrap() > min_index {
+                intersections_a[i].neighbor = Some(intersections_a[i].neighbor.unwrap() - 1);
+                intersections_b[i].neighbor = Some(intersections_b[i].neighbor.unwrap() - 1);
             }
         }
     }
     assert_eq!(intersections_a.len() % 2, 0); // Shape are closed so we should have an even number of intersections
-
-    (intersections_a, intersections_b)
 }
 
 fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> GreinerShape {
@@ -394,4 +411,46 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     }
 }
 
-//Function find_intersecions, create_shape and mark_entry_exit_points are tested more in detail in the tests of union.rs
+#[cfg(test)]
+mod test {
+    use common::{types::Coord, Rgba};
+
+    use crate::shape::Shape;
+
+    use super::CoordOfIntersection;
+
+    #[test]
+    fn given_intersection_count_not_even_when_assert_then_is_fix() {
+        let a = Shape::new(Coord::new(0.0, 0.0), Rgba::new(255, 255, 255, 255));
+        let b = Shape::new(Coord::new(0.0, 0.0), Rgba::new(255, 255, 255, 255));
+
+        let mut intersection_a = vec![
+            CoordOfIntersection::from_intersection(Coord::new(0.0, 0.0), 0.0, 0),
+            CoordOfIntersection::from_intersection(Coord::new(0.00001, 0.000001), 0.000001, 0),
+            CoordOfIntersection::from_intersection(Coord::new(2.0, 1.0), 0.0, 1),
+        ];
+
+        let mut intersection_b = vec![
+            CoordOfIntersection::from_intersection(Coord::new(0.0, 0.0), 0.0, 0),
+            CoordOfIntersection::from_intersection(Coord::new(0.00001, 0.000001), 0.000001, 0),
+            CoordOfIntersection::from_intersection(Coord::new(2.0, 1.0), 0.0, 1),
+        ];
+
+        for i in 0..intersection_a.len() {
+            intersection_a[i].neighbor = Some(i);
+            intersection_b[i].neighbor = Some(i);
+        }
+
+        super::assert_intersections_even_count(&a, &mut intersection_a, &b, &mut intersection_b);
+
+        assert_eq!(intersection_a.len(), 2);
+        assert_eq!(intersection_b.len(), 2);
+
+        for i in 0..intersection_a.len() {
+            assert_eq!(intersection_a[i].neighbor.unwrap(), i);
+            assert_eq!(intersection_b[i].neighbor.unwrap(), i);
+        }
+    }
+
+    //Function find_intersecions, create_shape and mark_entry_exit_points are tested more in detail in the tests of union.rs
+}
