@@ -64,6 +64,10 @@ impl Coord {
             c: Vec2::max(&a.c, &b.c),
         }
     }
+
+    pub fn norm(&self) -> f32 {
+        self.c.norm()
+    }
 }
 
 impl PartialEq for Coord {

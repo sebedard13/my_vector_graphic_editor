@@ -138,6 +138,8 @@ pub fn intersection(
     run_intersection(&mut todo)
 }
 
+const PRECISION: f32 = 4.0;
+
 fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
     while todo.len() > 0 {
@@ -151,7 +153,9 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
 
         let max = Rect::max(&c1_rect, &c2_rect);
 
-        if max.approx_diagonal() < f32::EPSILON * f32::EPSILON * 2.0 || cu.level > 25 {
+        let max_iter = 30;//30 and 0.5 are over kill for precision, but it's better to have too much than not enough
+        let min_diago = f32::EPSILON * PRECISION * f32::EPSILON * PRECISION * 0.5;
+        if max.approx_diagonal() < min_diago || cu.level > max_iter {
             let rtn = IntersectionPoint {
                 coord: cubic_bezier(cu.t1, &cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1),
                 t1: cu.t1,
@@ -168,10 +172,10 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
 
             if !is_present {
                 res.push(rtn);
-                // if cu.level > 30 {
-                //     println!("Max level reached with rect {:#?}, approx diagonal: {}, width {}, height {}", max, max.approx_diagonal(), max.width(), max.height());
-                //     println!("eps: {}", f32::EPSILON * f32::EPSILON);
-                // }
+                if cu.level > max_iter {
+                    println!("Max level reached with rect {:#?},\napprox diagonal: {}, width {}, height {}", max, max.approx_diagonal(), max.width(), max.height());
+                    println!("eps            : {}", min_diago);
+                }
             }
 
             continue;
@@ -257,7 +261,8 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
 }
 
 fn coord_equal(a: &Coord, b: &Coord) -> bool {
-    f32::abs(a.x() - b.x()) <= f32::EPSILON * 1.0 && f32::abs(a.y() - b.y()) <= f32::EPSILON * 1.0
+    f32::abs(a.x() - b.x()) <= f32::EPSILON * PRECISION
+        && f32::abs(a.y() - b.y()) <= f32::EPSILON * PRECISION
 }
 
 //Intersection between two rectangles
@@ -286,7 +291,10 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     let coeff3: f64 = -p0y + 3.0 * cp0y - 3.0 * cp1y + p1y;
 
     //We got a line parallel to y
-    if f64::abs(coeff3) < f64::EPSILON && f64::abs(coeff2) < f64::EPSILON && f64::abs(coeff1) < f64::EPSILON{
+    if f64::abs(coeff3) < f64::EPSILON
+        && f64::abs(coeff2) < f64::EPSILON
+        && f64::abs(coeff1) < f64::EPSILON
+    {
         return vec;
     }
 

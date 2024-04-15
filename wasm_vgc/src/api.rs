@@ -158,10 +158,12 @@ pub fn draw_shape(
     // if click create a new shape on point and ready to new point
     let shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
 
+    log::debug!("{}", dbg_str!("start Union"));
     //for selected shape try to union the new shape
     for shape_selected in &selected.shapes {
         let selected_shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
         let result = selected_shape.union(&shape);
+        log::info!("{}", dbg_str!("Union good"));
         match result {
             ShapeUnion::New(new_shape) => {
                 vgc_data.replace_shape(shape_selected.shape_index, new_shape);
@@ -180,20 +182,22 @@ pub fn draw_shape(
     for shape_index in 0..vgc_data.shapes.len() {
         if !selected.shapes.iter().any(|s| s.shape_index == shape_index) {
             let selected_shape = vgc_data.get_shape(shape_index).unwrap();
+            log::info!("{}", dbg_str!("start Difference"));
             let result = selected_shape.difference(&shape);
             match result {
                 ShapeDifference::New(mut new_shapes) => {
+                    log::debug!("{}", dbg_str!("Difference New shape"));
                     vgc_data.replace_shape(shape_index, new_shapes.swap_remove(0));
                     for new_shape in new_shapes {
                         vgc_data.push_shape(new_shape);
                     }
                 }
                 ShapeDifference::EraseA => {
+                    log::debug!("{}", dbg_str!("Difference erase A"));
                     vgc_data.remove_shape(shape_index);
                 }
                 ShapeDifference::A => {}
                 ShapeDifference::AWithBHole => {
-                    
                     log::error!("{}", dbg_str!("AWithBHole"));
                     todo!("Add an hole to A");
                 }

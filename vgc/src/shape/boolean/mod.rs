@@ -6,16 +6,15 @@ Intersection : A AND B
 Difference : A NOT B
 */
 
-mod union;
-mod intersection;
 mod difference;
+mod intersection;
+mod union;
 
 use crate::{coord::CoordPtr, curve::add_smooth_result, curve2::intersection, shape::Shape};
-use common::types::Coord;
+use common::{dbg_str, types::Coord};
 use std::{cell::RefCell, rc::Rc};
 
 pub use self::{difference::ShapeDifference, intersection::ShapeIntersection, union::ShapeUnion};
-
 
 impl Shape {
     pub fn union(&self, other: &Shape) -> ShapeUnion {
@@ -30,7 +29,6 @@ impl Shape {
         difference::shape_difference(self, other)
     }
 }
-
 
 // When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
 // GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
@@ -172,8 +170,8 @@ impl PartialEq for CoordOfIntersection {
 }
 
 fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<CoordOfIntersection>) {
-    let mut intersection_a: Vec<CoordOfIntersection> = Vec::with_capacity(a.curves.len());
-    let mut intersection_b: Vec<CoordOfIntersection> = Vec::with_capacity(b.curves.len());
+    let mut intersections_a: Vec<CoordOfIntersection> = Vec::with_capacity(a.curves.len());
+    let mut intersections_b: Vec<CoordOfIntersection> = Vec::with_capacity(b.curves.len());
 
     for i in 0..a.curves.len() {
         let (a_p0, a_cp0, a_cp1, a_p1) = a.get_coords_of_curve(i);
@@ -197,16 +195,49 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
 
                 let mut point_b = CoordOfIntersection::from_intersection(point.coord, point.t2, j);
 
-                point_a.neighbor = Some(intersection_b.len());
-                point_b.neighbor = Some(intersection_a.len());
+                point_a.neighbor = Some(intersections_b.len());
+                point_b.neighbor = Some(intersections_a.len());
 
-                intersection_a.push(point_a);
-                intersection_b.push(point_b);
+                intersections_a.push(point_a);
+                intersections_b.push(point_b);
             }
         }
     }
 
-    (intersection_a, intersection_b)
+    assert_eq!(intersections_a.len(), intersections_b.len());
+    if (intersections_a.len() % 2) != 0 {
+        log::warn!(
+            "{}",
+            dbg_str!("Shape are closed so we should have an even number of intersections. Fix will be applied with a lost in precision")
+        );
+        log::info!("A: {}", a.to_path());
+        log::info!("B: {}", b.to_path());
+
+        let mut difference = Vec::with_capacity(intersections_a.len() * intersections_a.len());
+        for i in 0..intersections_a.len() {
+            for j in 0..intersections_a.len() {
+                difference.push((
+                    (intersections_a[i].coord - intersections_a[j].coord).norm(),
+                    i,
+                    j,
+                ));
+            }
+        }
+
+        //find min of difference
+        let mut min = f32::MAX;
+        let mut min_index: (usize, usize) = (0, 0);
+        for i in 0..difference.len() {
+            if difference[i].0 < min {
+                min = difference[i].0;
+                min_index.0 = difference[i].1;
+                min_index.1 = difference[i].2;
+            }
+        }
+    }
+    assert_eq!(intersections_a.len() % 2, 0); // Shape are closed so we should have an even number of intersections
+
+    (intersections_a, intersections_b)
 }
 
 fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> GreinerShape {

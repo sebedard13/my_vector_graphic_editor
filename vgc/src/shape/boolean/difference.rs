@@ -22,8 +22,6 @@ pub enum ShapeDifference {
 pub fn shape_difference(a: &Shape, b: &Shape) -> ShapeDifference {
     let (intersections_a, intersections_b) = find_intersecions(a, b);
 
-    assert_eq!(intersections_a.len(), intersections_b.len());
-    assert_eq!(intersections_a.len() % 2, 0); // Shape are closed so we should have an even number of intersections
     if intersections_a.is_empty() && intersections_b.is_empty() {
         if a.contains(&b.start.borrow()) {
             return ShapeDifference::AWithBHole;

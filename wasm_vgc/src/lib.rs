@@ -155,18 +155,9 @@ pub fn render_cover(
 // Utilities
 //------------------------------------------------------------------------------
 
-/// Panic hook lets us get better error messages if our Rust code ever panics.
-///
-/// For more details see
-/// <https://github.com/rustwasm/console_error_panic_hook#readme>
-#[wasm_bindgen(js_name = "setPanicHook")]
-pub fn set_panic_hook() {
-    #[cfg(feature = "console_error_panic_hook")]
-    console_error_panic_hook::set_once();
-}
-
 #[wasm_bindgen]
 pub fn set_logger(string: String) {
+    console_error_panic_hook::set_once();
     match string.as_str() {
         "trace" => {
             console_log::init_with_level(log::Level::Trace).expect("error initializing log");

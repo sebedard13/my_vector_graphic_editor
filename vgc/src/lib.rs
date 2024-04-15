@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::{cell::RefCell, error};
+use std::cell::RefCell;
 
 use common::{
     pures::Vec2,
@@ -68,7 +68,7 @@ impl Vgc {
     }
 
     pub fn replace_shape(&mut self, index_shape: usize, shape: Shape) {
-        if (index_shape < self.shapes.len()) {
+        if index_shape < self.shapes.len() {
             self.shapes[index_shape] = shape;
         } else {
             log::error!(

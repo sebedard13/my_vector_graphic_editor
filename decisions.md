@@ -10,18 +10,20 @@ I agree that a canvas with a rectangular aspect ratio will lose some precision f
 
 ## Coordinate precision
 
-A 32-bit float value has precision of 2^-23 for a value between -1.0 and 1.0. This is enough for the precision of the coordinates. The biggest art piece in pixels could be defined by this formula if we want a point to still be in 1/3 pixel, :
+A 32-bit float value has precision of 2^-23 for a value between -1.0 and 1.0. This is enough for the precision of the coordinates. The biggest art piece in pixels could be defined by this formula if we want a point to still be in 1/4 pixel, :
+
+The point per pixel is useful in calulation because we can truncate some of the values.
 
 ```
-point_per_pixel = 3
-largest_size * 2^23 < (1.0- (-1.0)) * point_per_pixel
-largest_size ≈ 52 000 000
+point_per_pixel = 4
+largest_size * 2^-23 < (1.0- (-1.0)) / point_per_pixel
+largest_size ≈ 4 200 000
 ```
 
 After with a dpi of 300, we can find the size of canvas in inch/meter.
 
 ```
-largest_size / 300 ≈ 173333.3 inch or 4402.6 meter
+largest_size / 300 ≈ 13981 inch or 355 meter
 ```
 
 It should be large enough for any art piece.
@@ -30,7 +32,7 @@ The other choice is using a 64-bit float value. This is not necessary and will t
 The same formula with a 64-bit float value:
 
 ```
-largest_size * 2^-52 < (1.0- (-1.0)) * point_per_pixel
-largest_size ≈ 2.70e16
-largest_size / 300 ≈ 2.28e12 m or 15.29 au
+largest_size * 2^-52 < (1.0- (-1.0)) / point_per_pixel
+largest_size ≈ 2.25e15
+largest_size / 300 ≈ 1.9e11 m or 1.27 au
 ```
