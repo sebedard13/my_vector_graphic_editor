@@ -1,8 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
-
 use polynomen::Poly;
 
 use common::{pures::Vec2, types::Coord};
+
+use crate::coord::CoordPtr;
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
@@ -11,13 +11,13 @@ use common::{pures::Vec2, types::Coord};
 /// The curve is drawn from the previous curve point [i-1].p1, with [i].cp0 and [i].cp1 as control points and [i].p1 for the final points.
 #[derive(Debug, Clone)]
 pub struct Curve {
-    pub cp0: Rc<RefCell<Coord>>,
-    pub cp1: Rc<RefCell<Coord>>,
-    pub p1: Rc<RefCell<Coord>>,
+    pub cp0: CoordPtr,
+    pub cp1: CoordPtr,
+    pub p1: CoordPtr,
 }
 
 impl Curve {
-    pub fn new(cp0: Rc<RefCell<Coord>>, cp1: Rc<RefCell<Coord>>, p1: Rc<RefCell<Coord>>) -> Curve {
+    pub fn new(cp0: CoordPtr, cp1: CoordPtr, p1: CoordPtr) -> Curve {
         Curve { cp0, cp1, p1 }
     }
 

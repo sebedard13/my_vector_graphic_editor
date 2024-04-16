@@ -11,7 +11,7 @@ mod new;
 
 #[derive(Debug, Clone)]
 pub struct Shape {
-    pub start: Rc<RefCell<Coord>>,
+    pub start: CoordPtr,
     pub curves: Vec<Curve>,
     pub color: Rgba,
 }
@@ -168,16 +168,11 @@ impl Shape {
         (prev_coord, cp0, cp1, p1)
     }
 
-    pub fn push_coord(
-        &mut self,
-        cp0: Rc<RefCell<Coord>>,
-        cp1: Rc<RefCell<Coord>>,
-        p1: Rc<RefCell<Coord>>,
-    ) {
+    pub fn push_coord(&mut self, cp0: CoordPtr, cp1: CoordPtr, p1: CoordPtr) {
         self.curves.push(Curve::new(cp0, cp1, p1));
     }
 
-    pub fn get_coords_of_shape_tmp(&self) -> Vec<Rc<RefCell<Coord>>> {
+    pub fn get_coords_of_shape_tmp(&self) -> Vec<CoordPtr> {
         let mut vec = Vec::new();
         vec.push(self.start.clone());
         for curve in self.curves.iter() {

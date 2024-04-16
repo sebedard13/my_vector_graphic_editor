@@ -29,18 +29,17 @@ where
     let transform = renderer.get_transform()?;
     let m = &transform;
 
-    for i_region in 0..canvas.shapes.len() {
-        let region = &canvas.shapes[i_region];
+    for region in &canvas.shapes {
 
         renderer.set_fill(&region.color)?;
 
         renderer.start_shape(&region.start.borrow().transform(m))?;
 
-        for i_curve in 0..region.curves.len() {
+        for curve in &region.curves {
             renderer.move_curve(
-                &region.curves[i_curve].cp0.borrow().transform(m),
-                &region.curves[i_curve].cp1.borrow().transform(m),
-                &region.curves[i_curve].p1.borrow().transform(m),
+                &curve.cp0.borrow().transform(m),
+                &curve.cp1.borrow().transform(m),
+                &curve.p1.borrow().transform(m),
             )?;
         }
         renderer.close_shape()?;

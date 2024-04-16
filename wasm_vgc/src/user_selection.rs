@@ -2,6 +2,7 @@ use std::{cell::RefCell, f64::consts::PI, rc::Rc};
 
 use common::types::{Coord, ScreenCoord, ScreenLength2d};
 use common::Rgba;
+use vgc::coord::CoordPtr;
 use wasm_bindgen::prelude::wasm_bindgen;
 use web_sys::CanvasRenderingContext2d;
 
@@ -19,8 +20,8 @@ pub struct Selected {
 #[derive(Debug, Default)]
 pub struct SelectedShape {
     pub shape_index: usize,
-    pub coords: Vec<Rc<RefCell<Coord>>>,
-    pub hover_coord: Option<Rc<RefCell<Coord>>>,
+    pub coords: Vec<CoordPtr>,
+    pub hover_coord: Option<CoordPtr>,
 }
 
 #[wasm_bindgen]
@@ -267,7 +268,7 @@ impl SelectedShape {
         }
     }
 
-    fn coord_state(&self, coord_ref: &Rc<RefCell<Coord>>) -> CoordState {
+    fn coord_state(&self, coord_ref: &CoordPtr) -> CoordState {
         match &self.hover_coord {
             Some(hover_coord) if hover_coord == coord_ref => CoordState::Hover,
             _ => match self.coords.iter().find(|coord| *coord == coord_ref) {

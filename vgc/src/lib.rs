@@ -5,7 +5,7 @@ use common::{
     pures::Vec2,
     types::{Coord, Rect},
 };
-use coord::{CoordPtr};
+use coord::CoordPtr;
 use shape::Shape;
 
 use common::{dbg_str, Rgba};
