@@ -1,4 +1,4 @@
-use crate::coord::{CoordPtr, CoordType};
+use crate::coord::CoordPtr;
 use crate::curve::{cubic_bezier, Curve};
 use crate::{curve, curve2};
 use common::types::Coord;
@@ -9,10 +9,10 @@ use std::rc::Rc;
 pub mod boolean;
 mod new;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Shape {
     pub start: Rc<RefCell<Coord>>,
-    pub(crate) curves: Vec<Curve>,
+    pub curves: Vec<Curve>,
     pub color: Rgba,
 }
 
@@ -186,31 +186,6 @@ impl Shape {
             vec.push(curve.p1.clone());
         }
         vec
-    }
-
-    pub fn move_coord(&mut self, coord_type: &CoordType, x: f32, y: f32) {
-        match coord_type {
-            CoordType::Start => {
-                let mut coord = self.start.borrow_mut();
-                coord.set_x(x);
-                coord.set_y(y);
-            }
-            CoordType::Cp0(index_curve) => {
-                let mut coord = self.curves[*index_curve].cp0.borrow_mut();
-                coord.set_x(x);
-                coord.set_y(y);
-            }
-            CoordType::Cp1(index_curve) => {
-                let mut coord = self.curves[*index_curve].cp1.borrow_mut();
-                coord.set_x(x);
-                coord.set_y(y);
-            }
-            CoordType::P1(index_curve) => {
-                let mut coord = self.curves[*index_curve].p1.borrow_mut();
-                coord.set_x(x);
-                coord.set_y(y);
-            }
-        }
     }
 
     /// Cut curve_index at t without chnaging the curve by replacing the handles

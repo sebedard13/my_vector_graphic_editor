@@ -5,7 +5,7 @@ use common::{
     pures::Vec2,
     types::{Coord, Rect},
 };
-use coord::{CoordPtr, RefCoordType};
+use coord::{CoordPtr};
 use shape::Shape;
 
 use common::{dbg_str, Rgba};
@@ -85,26 +85,6 @@ impl Vgc {
         render::render_true(self, renderer)
     }
 
-    pub fn visit(&self, f: &mut dyn FnMut(usize, RefCoordType)) {
-        for (shape_index, shape) in self.shapes.iter().enumerate() {
-            f(shape_index, RefCoordType::Start(shape.start.borrow()));
-            for (curve_index, curve) in shape.curves.iter().enumerate() {
-                f(
-                    shape_index,
-                    RefCoordType::Cp0(curve_index, curve.cp0.borrow()),
-                );
-                f(
-                    shape_index,
-                    RefCoordType::Cp1(curve_index, curve.cp1.borrow()),
-                );
-                f(
-                    shape_index,
-                    RefCoordType::P1(curve_index, curve.p1.borrow()),
-                );
-            }
-        }
-    }
-
     pub fn visit_ptr(&self, f: &mut dyn FnMut(&CoordPtr)) {
         for (_, shape) in self.shapes.iter().enumerate() {
             f(&shape.start);
@@ -114,29 +94,6 @@ impl Vgc {
                 f(&curve.p1);
             }
         }
-    }
-
-    pub fn visit_vec(&self) -> Vec<(usize, RefCoordType)> {
-        let mut vec = Vec::new();
-        for (shape_index, shape) in self.shapes.iter().enumerate() {
-            vec.push((shape_index, RefCoordType::Start(shape.start.borrow())));
-            for (curve_index, curve) in shape.curves.iter().enumerate() {
-                vec.push((
-                    shape_index,
-                    RefCoordType::Cp0(curve_index, curve.cp0.borrow()),
-                ));
-                vec.push((
-                    shape_index,
-                    RefCoordType::Cp1(curve_index, curve.cp1.borrow()),
-                ));
-                vec.push((
-                    shape_index,
-                    RefCoordType::P1(curve_index, curve.p1.borrow()),
-                ));
-            }
-        }
-
-        vec
     }
 
     pub fn shapes_closest(&self, coord: &Coord) -> Vec<(usize, usize, f32, Coord)> {

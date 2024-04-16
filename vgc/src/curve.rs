@@ -9,7 +9,7 @@ use common::{pures::Vec2, types::Coord};
 /// - p1 is the current point
 ///
 /// The curve is drawn from the previous curve point [i-1].p1, with [i].cp0 and [i].cp1 as control points and [i].p1 for the final points.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Curve {
     pub cp0: Rc<RefCell<Coord>>,
     pub cp1: Rc<RefCell<Coord>>,
@@ -393,8 +393,7 @@ mod test {
         let i1 = 0.25;
         let i2 = 0.75;
 
-        let (_, _, p1_rtn, cp1r_rtn, cp2_rtn) =
-            add_smooth_result(&p0, &cp0, &cp1, &p1, 0.25);
+        let (_, _, p1_rtn, cp1r_rtn, cp2_rtn) = add_smooth_result(&p0, &cp0, &cp1, &p1, 0.25);
 
         let (_, _, p1_rtn2, _, _) =
             add_smooth_result(&p1_rtn, &cp1r_rtn, &cp2_rtn, &p1, (i2 - i1) / (1.0 - i1));
