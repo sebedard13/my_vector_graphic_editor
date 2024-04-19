@@ -93,13 +93,13 @@ impl Shape {
         self.curves[curve_index_p1].cp1 = coord_index.clone();
     }
 
-    pub fn to_path(&self) -> String {
+    pub fn path(&self) -> String {
         let mut path = String::new();
         let start = self.start.borrow();
         path.push_str(&format!("M {} {}", start.x(), start.y()));
         for curve in &self.curves {
             path.push(' ');
-            path.push_str(&curve.to_path());
+            path.push_str(&curve.path());
         }
         if self.is_closed() {
             path.push_str(" Z");

@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use common::{
     pures::Vec2,
@@ -125,7 +125,7 @@ impl Vgc {
     pub fn debug_string(&self) -> String {
         let mut string = "".to_string();
         for shape in &self.shapes {
-            string.push_str(&shape.to_path());
+            string.push_str(&shape.path());
             string.push('\n');
         }
         string

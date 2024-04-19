@@ -16,6 +16,10 @@ impl Rgba {
         Rgba { r, g, b, a }
     }
 
+    pub fn black() -> Rgba {
+        Rgba::new(0, 0, 0, 255)
+    }
+
     ///
     /// ```rust
     /// use common::Rgba;

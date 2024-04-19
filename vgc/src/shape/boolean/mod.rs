@@ -224,8 +224,8 @@ fn assert_intersections_even_count(
             "{}",
             dbg_str!("Shape are closed so we should have an even number of intersections. Fix will be applied with a lost in precision")
         );
-        log::info!("A: {}", a.to_path());
-        log::info!("B: {}", b.to_path());
+        log::info!("A: {}", a.path());
+        log::info!("B: {}", b.path());
 
         let mut difference = Vec::with_capacity(intersections_a.len() * intersections_a.len());
         for i in 0..intersections_a.len() {

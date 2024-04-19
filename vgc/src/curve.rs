@@ -21,7 +21,7 @@ impl Curve {
         Curve { cp0, cp1, p1 }
     }
 
-    pub fn to_path(&self) -> String {
+    pub fn path(&self) -> String {
         let cp0 = self.cp0.borrow();
         let cp1 = self.cp1.borrow();
         let p1 = self.p1.borrow();
