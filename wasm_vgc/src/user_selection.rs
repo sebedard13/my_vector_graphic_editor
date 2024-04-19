@@ -1,4 +1,4 @@
-use std::{cell::RefCell, f64::consts::PI, rc::Rc};
+use std::f64::consts::PI;
 
 use common::types::{Coord, ScreenCoord, ScreenLength2d};
 use common::Rgba;
