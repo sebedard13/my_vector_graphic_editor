@@ -111,6 +111,9 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
         }
     }
 
+    let len_last = merged.curves.len() - 1;
+    merged.curves[len_last].p1 = merged.start.clone();
+
     merged
 }
 
@@ -434,5 +437,73 @@ mod test {
             ShapeUnion::New(merged) => merged,
             _ => panic!("Should be a new shape"),
         };
+    }
+
+    #[test]
+    fn union_line_triangle() {
+        // A: M -1 1 C -1 1 -1 -1 -1 -1 C -1 -1 0 0 0 0 C 0 0 1 1 1 1 C 1 1 -1 1 -1 1 Z
+        /*B: M -0.72533333 -0.4059889
+        C -0.6515431 -0.40625277 -0.59216857 -0.49531457 -0.5919926 -0.60599995
+        C -0.59216857 -0.7166853 -0.6515431 -0.80574715 -0.72533333 -0.80601096
+        C -0.7991236 -0.80574715 -0.8584981 -0.7166853 -0.85867405 -0.60599995
+        C -0.8584981 -0.49531457 -0.7991236 -0.40625277 -0.72533333 -0.4059889 Z*/
+
+        let a_coords = vec![
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+        ];
+
+        let b_coords = vec![
+            Coord::new(-0.72533333, -0.4059889),
+            Coord::new(-0.6515431, -0.40625277),
+            Coord::new(-0.59216857, -0.49531457),
+            Coord::new(-0.5919926, -0.60599995),
+            Coord::new(-0.59216857, -0.7166853),
+            Coord::new(-0.6515431, -0.80574715),
+            Coord::new(-0.72533333, -0.80601096),
+            Coord::new(-0.7991236, -0.80574715),
+            Coord::new(-0.8584981, -0.7166853),
+            Coord::new(-0.85867405, -0.60599995),
+            Coord::new(-0.8584981, -0.49531457),
+            Coord::new(-0.7991236, -0.40625277),
+            Coord::new(-0.72533333, -0.4059889),
+        ];
+
+        let a = Shape::new_from_path(&a_coords, Affine::identity(), Rgba::new(255, 255, 255, 255));
+        let b = Shape::new_from_path(&b_coords, Affine::identity(), Rgba::new(255, 255, 255, 255));
+
+        let intersections = super::find_intersecions(&a, &b);
+        assert_eq!(intersections.0.len(), 2);
+
+        assert_eq!(intersections.0[1].t, 0.299266011);
+
+        let mut ag = super::create_shape(&a, intersections.0);
+        let mut bg = super::create_shape(&b, intersections.1);
+
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+
+        let valid_values = vec![-0.5923179, -0.7849242, -1.00, 1.00, 0.00];
+        for i in 0..ag.data.len() {
+            let coord = ag.data[i].coord;
+            assert!(
+                valid_values
+                    .iter()
+                    .any(|v| (v - coord.x()).abs() < 0.0001) && valid_values.iter().any(|v| (v - coord.y()).abs() < 0.0001),
+                "Invalid value ({}, {})",
+                coord.x(),
+                coord.y()
+            );
+        }
     }
 }

@@ -10,7 +10,12 @@ mod difference;
 mod intersection;
 mod union;
 
-use crate::{coord::CoordPtr, curve::add_smooth_result, curve2::intersection, shape::Shape};
+use crate::{
+    coord::CoordPtr,
+    curve::{add_smooth_result, is_line},
+    curve2:: intersection,
+    shape::Shape,
+};
 use common::{dbg_str, types::Coord};
 use std::{cell::RefCell, rc::Rc};
 
@@ -370,7 +375,62 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
     last_cp.next = Some(start_a);
     result[start_a].prev = Some(result.len() - 1);
 
+    compress_coord_ptr(&mut result, start_a);
+
     GreinerShape::new(result, start_a)
+}
+
+fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
+    let mut index = 0;
+    let mut current_index = start_a;
+
+    let mut i_p0 = start_a;
+    let mut i_cp0 = 0;
+    let mut i_cp1 = 0;
+
+    while index == 0 || current_index != start_a {
+        //cp0
+        if index % 3 == 1 {
+            i_cp0 = current_index;
+        }
+        //cp1
+        else if index % 3 == 2 {
+            i_cp1 = current_index;
+        }
+        //p1
+        if index % 3 == 0 && index != 0 {
+            let i_p1 = current_index;
+
+            let p0 = list[i_p0].coord;
+            let cp0 = list[i_cp0].coord;
+            let cp1 = list[i_cp1].coord;
+            let p1 = list[i_p1].coord;
+
+            if is_line(&p0, &cp0, &cp1, &p1) {
+                list[i_cp0].coord = list[i_p0].coord;
+                list[i_cp1].coord = list[i_p1].coord;
+
+                if list[i_p0].rel_coord.is_some() {
+                    list[i_cp0].rel_coord = list[i_p0].rel_coord.clone();
+                } else {
+                    let rc = Some(list[i_p0].coord_ptr());
+                    list[i_p0].rel_coord = rc.clone();
+                    list[i_cp0].rel_coord = rc;
+                }
+                if list[i_p1].rel_coord.is_some() {
+                    list[i_cp1].rel_coord = list[i_p1].rel_coord.clone();
+                } else {
+                    let rc = Some(list[i_p1].coord_ptr());
+                    list[i_p1].rel_coord = rc.clone();
+                    list[i_cp1].rel_coord = rc;
+                }
+            }
+
+            i_p0 = current_index;
+        }
+        current_index = list[current_index].next.unwrap();
+        index += 1;
+    }
 }
 
 fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {

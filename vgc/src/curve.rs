@@ -2,7 +2,7 @@ use polynomen::Poly;
 
 use common::{pures::Vec2, types::Coord};
 
-use crate::{coord::CoordPtr, curve2::coord_equal};
+use crate::coord::CoordPtr;
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
@@ -217,12 +217,6 @@ pub fn add_smooth_result(
     p1: &Coord,
     t: f32,
 ) -> (Coord, Coord, Coord, Coord, Coord) {
-    //We got a line
-    if coord_equal(p0, cp0) && coord_equal(cp1, p1) {
-        let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);
-        return (p0.clone(), p1_rtn, p1_rtn, p1_rtn, p1.clone());
-    }
-
     let cp0_rtn = t * cp0 - (t - 1.0) * p0;
     let cp1l_rtn = t * t * cp1 - 2.0 * (t * (t - 1.0) * cp0 - 0.5 * (t * t - 2.0 * t + 1.0) * p0);
     let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);
@@ -233,12 +227,27 @@ pub fn add_smooth_result(
     (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn)
 }
 
+pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
+    let mut vec_line = p1.c - p0.c;
+    let mut vec_cp0 = cp0.c - p0.c;
+    let mut vec_cp1 = cp1.c - p0.c;
+
+    vec_line.normalize();
+    vec_cp0.normalize();
+    vec_cp1.normalize();
+
+    return (vec_cp0.prec_eq(&vec_line) || cp0.c == p0.c)
+        && (vec_cp1.prec_eq(&vec_line) || cp1.c == p0.c);
+}
+
 #[cfg(test)]
 mod test {
     use std::f32::consts::PI;
     use std::time::Instant;
 
     use float_cmp::assert_approx_eq;
+
+    use crate::curve::is_line;
 
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
     use common::{pures::Vec2, types::Coord};
@@ -424,5 +433,32 @@ mod test {
         // at 50, 151% faster
         // at 100, 128% slower
         // the approx is not that good and create a grabing effect in the corner of two curve
+    }
+
+    #[test]
+    fn given_line_when_is_line() {
+        let p0 = Coord::new(0.0, 0.0);
+        let cp0 = Coord::new(0.0, 0.0);
+        let cp1 = Coord::new(1.0, 1.0);
+        let p1 = Coord::new(1.0, 1.0);
+
+        assert!(is_line(&p0, &cp0, &cp1, &p1));
+
+        let p0 = Coord::new(0.0, 0.0);
+        let cp0 = Coord::new(0.2, 0.2);
+        let cp1 = Coord::new(0.7, 0.7);
+        let p1 = Coord::new(1.0, 1.0);
+
+        assert!(is_line(&p0, &cp0, &cp1, &p1));
+    }
+
+    #[test]
+    fn given_not_line_when_is_line() {
+        let p0 = Coord::new(0.0, 0.0);
+        let cp0 = Coord::new(0.24, 0.2);
+        let cp1 = Coord::new(0.7, 0.27);
+        let p1 = Coord::new(1.0, 1.0);
+
+        assert!(!is_line(&p0, &cp0, &cp1, &p1));
     }
 }

@@ -162,11 +162,18 @@ pub fn draw_shape(
     let mut shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
     let mut index: Option<usize> = None;
 
-    log::debug!("{}", dbg_str!("start Union"));
     //for selected shape try to union the new shape
     for shape_selected in &selected.shapes {
         let result = {
             let selected_shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
+            log::debug!(
+                "{}",
+                dbg_str!(
+                    "start Union A: {} \nB: {}",
+                    selected_shape.path(),
+                    shape.path()
+                )
+            );
             selected_shape.union(&shape)
         };
         log::info!("{}", dbg_str!("Union good"));

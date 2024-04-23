@@ -62,6 +62,11 @@ impl Vec2 {
             y: a.y.max(b.y),
         }
     }
+
+    pub fn prec_eq(&self, other: &Vec2) -> bool {
+        let precision = f32::EPSILON * 100.0;
+        (self.x - other.x).abs() < precision && (self.y - other.y).abs() < precision
+    }
 }
 
 impl Display for Vec2 {
