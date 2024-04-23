@@ -413,11 +413,11 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
 
 #[cfg(test)]
 mod test {
-    use common::{types::Coord, Rgba};
+    use common::{pures::Affine, types::Coord, Rgba};
 
     use crate::shape::Shape;
 
-    use super::CoordOfIntersection;
+    use super::{find_intersecions, CoordOfIntersection};
 
     #[test]
     fn given_intersection_count_not_even_when_assert_then_is_fix() {
@@ -450,6 +450,64 @@ mod test {
             assert_eq!(intersection_a[i].neighbor.unwrap(), i);
             assert_eq!(intersection_b[i].neighbor.unwrap(), i);
         }
+    }
+
+    #[test]
+    fn given_bug_diff_when_difference() {
+        // A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z wasm_vgc_bg.js:1982:12
+        //B:  C -0.5066913 -0.54993117 -0.50866926 -0.53057325 -0.5123266 -0.5123266 Z
+
+        let coords_a = vec![
+            Coord::new(1.0, -1.0),
+            Coord::new(1.0, -1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(1.0, -1.0),
+            Coord::new(1.0, -1.0),
+        ];
+
+        let coords_b = vec![
+            Coord::new(-0.5123266, -0.5123266),
+            Coord::new(-0.25828606, -0.25828606),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(0.0, 0.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, 1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-1.0, -1.0),
+            Coord::new(-0.880739, -0.880739),
+            Coord::new(-0.7245886, -0.7245886),
+            Coord::new(-0.7016079, -0.75289893),
+            Coord::new(-0.67217433, -0.7698959),
+            Coord::new(-0.6400001, -0.77001095),
+            Coord::new(-0.56620985, -0.76974714),
+            Coord::new(-0.50683534, -0.6806853),
+            Coord::new(-0.5066594, -0.56999993),
+            Coord::new(-0.5066913, -0.54993117),
+            Coord::new(-0.50866926, -0.53057325),
+            Coord::new(-0.5123266, -0.5123266),
+        ];
+
+        let a = Shape::new_from_path(&coords_a, Affine::identity(), Rgba::white());
+        let b = Shape::new_from_path(&coords_b, Affine::identity(), Rgba::white());
+
+        let merged = find_intersecions(&a, &b);
+        assert_eq!(merged.0.len(), 2);
+        assert_eq!(merged.0[0].t, 0.654658138);
+        assert_eq!(merged.0[1].t, 0.508218467);
     }
 
     //Function find_intersecions, create_shape and mark_entry_exit_points are tested more in detail in the tests of union.rs

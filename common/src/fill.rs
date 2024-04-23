@@ -20,6 +20,10 @@ impl Rgba {
         Rgba::new(0, 0, 0, 255)
     }
 
+    pub fn white() -> Rgba {
+        Rgba::new(255, 255, 255, 255)
+    }
+
     ///
     /// ```rust
     /// use common::Rgba;

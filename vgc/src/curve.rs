@@ -2,7 +2,7 @@ use polynomen::Poly;
 
 use common::{pures::Vec2, types::Coord};
 
-use crate::coord::CoordPtr;
+use crate::{coord::CoordPtr, curve2::coord_equal};
 /// A curve is a cubic bezier curve, defined by 4 points:
 /// - cp0 is the control point for the point before the current curve
 /// - cp1 is the control point before the current point
@@ -78,6 +78,21 @@ pub fn t_closest(
 
     vec.reverse();
 
+    for i in 0..vec.len() {
+        if vec[i].is_nan() {
+            log::error!("Nan in vec[{}]: {:?}", i, vec);
+            log::debug!(
+                "coord: {:?}, p0: {:?}, cp0: {:?}, cp1: {:?}, p1: {:?}",
+                coord,
+                p0,
+                cp0,
+                cp1,
+                p1
+            );
+            return (0.0, 0.0, Coord::new(0.0, 0.0));
+        }
+    }
+
     let poly = Poly::new_from_coeffs(&vec);
 
     let real_roots_raw = poly.complex_roots();
@@ -149,39 +164,6 @@ fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> V
     );
 }
 
-/// Return two control points to create a smooth curve at t of curve defined by p0, cp0, cp1, p1
-/// if t = 0.0 or 1.0 use tangent_cornor_pts() to use the sum of vector of two curve
-#[allow(dead_code)]
-fn tangent_pts(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> (Coord, Coord) {
-    if p0 == p1 && p0 == cp0 && p0 == cp1 {
-        return (p0 - &Coord::new(0.1, 0.1), p0 + &Coord::new(0.1, 0.1));
-    }
-
-    let tangent_vector = tangent_vector(t, p0, cp0, cp1, p1);
-    let coord = cubic_bezier(t, p0, cp0, cp1, p1);
-
-    let t_at = {
-        let t_x = (p0.x() - p1.x()).abs();
-        let t_y = (p0.y() - p1.y()).abs();
-        if t_x > t_y {
-            t_x / 2.0
-        } else {
-            t_y / 2.0
-        }
-    };
-
-    (
-        Coord::new(
-            coord.x() - t_at * tangent_vector.x,
-            coord.y() - t_at * tangent_vector.y,
-        ),
-        Coord::new(
-            coord.x() + t_at * tangent_vector.x,
-            coord.y() + t_at * tangent_vector.y,
-        ),
-    )
-}
-
 /// Return two control points to create a smooth curve at a ppoint of two curves (p1).
 /// The first curve is defined by p0, cp0, cp1, p1
 /// The second curve is defined by p1, cp2, cp3, p2
@@ -235,6 +217,12 @@ pub fn add_smooth_result(
     p1: &Coord,
     t: f32,
 ) -> (Coord, Coord, Coord, Coord, Coord) {
+    //We got a line
+    if coord_equal(p0, cp0) && coord_equal(cp1, p1) {
+        let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);
+        return (p0.clone(), p1_rtn, p1_rtn, p1_rtn, p1.clone());
+    }
+
     let cp0_rtn = t * cp0 - (t - 1.0) * p0;
     let cp1l_rtn = t * t * cp1 - 2.0 * (t * (t - 1.0) * cp0 - 0.5 * (t * t - 2.0 * t + 1.0) * p0);
     let p1_rtn = cubic_bezier(t, p0, cp0, cp1, p1);

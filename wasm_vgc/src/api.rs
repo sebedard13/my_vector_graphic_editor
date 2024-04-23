@@ -203,7 +203,14 @@ pub fn draw_shape(
     for shape_index in 0..vgc_data.shapes.len() {
         if !selected.shapes.iter().any(|s| s.shape_index == shape_index) {
             let selected_shape = vgc_data.get_shape(shape_index).unwrap();
-            log::info!("{}", dbg_str!("start Difference"));
+            log::info!(
+                "{}",
+                dbg_str!(
+                    "Difference with A: {} \nB: {}",
+                    selected_shape.path(),
+                    shape.path()
+                )
+            );
             let result = selected_shape.difference(&shape);
             match result {
                 ShapeDifference::New(mut new_shapes) => {

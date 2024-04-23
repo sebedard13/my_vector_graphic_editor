@@ -1,4 +1,9 @@
-use common::types::{Coord, Rect};
+use std::vec;
+
+use common::{
+    dbg_str,
+    types::{Coord, Rect},
+};
 use polynomen::Poly;
 
 use crate::curve::{add_smooth_result, cubic_bezier};
@@ -119,6 +124,11 @@ pub fn intersection(
     c2_cp1: &Coord,
     c2_p1: &Coord,
 ) -> Vec<IntersectionPoint> {
+    match curves_overlap(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1) {
+        Overlap::None => {}
+        _ => return Vec::new(),
+    }
+
     let mut todo = Vec::new();
     let first_todo = IntersectionToDo {
         c1_p0: *c1_p0,
@@ -135,14 +145,49 @@ pub fn intersection(
     };
     todo.push(first_todo);
 
-    run_intersection(&mut todo)
+    let res = match run_intersection(&mut todo) {
+        Ok(res) => res,
+        Err(e) => {
+            log::error!("{}", dbg_str!("{}", e));
+            log::debug!("c1: {:?} {:?} {:?} {:?}", c1_p0, c1_cp0, c1_cp1, c1_p1);
+            log::debug!("c2: {:?} {:?} {:?} {:?}", c2_p0, c2_cp0, c2_cp1, c2_p1);
+
+            return Vec::new();
+        }
+    };
+
+    //Remove the intersection at the extremities
+    let mut t_res = Vec::new();
+    for r in res {
+        let t1_t2_0 = coord_equal(&r.coord, c1_p0) && coord_equal(&r.coord, c2_p0);
+        let t1_0_t2_1 = coord_equal(&r.coord, c1_p0) && coord_equal(&r.coord, c2_p1);
+        let t1_1_t2_0 = coord_equal(&r.coord, c1_p1) && coord_equal(&r.coord, c2_p0);
+        let t1_t2_1 = coord_equal(&r.coord, c1_p1) && coord_equal(&r.coord, c2_p1);
+
+        if t1_t2_0 || t1_0_t2_1 || t1_1_t2_0 || t1_t2_1 {
+            continue;
+        }
+
+        t_res.push(r);
+    }
+
+    t_res
 }
 
 const PRECISION: f32 = 4.0;
 
-fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> {
+fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
+    let mut max_todo = 0;
+    let mut i = 0;
     while todo.len() > 0 {
+        max_todo = max_todo.max(todo.len());
+        //println!("i: {} todo: {}", i, todo.len());
+        if i > 2000 {
+            return Err("Max iteration reached, stopping the intersection calculation. We may be in an infinite loop because of overlapping curves.".to_string());
+        }
+        i += 1;
+
         let cu = todo.pop().expect("No empty todo");
         let c1_rect = bounding_box(&cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1);
         let c2_rect = bounding_box(&cu.c2_p0, &cu.c2_cp0, &cu.c2_cp1, &cu.c2_p1);
@@ -153,7 +198,7 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
 
         let max = Rect::max(&c1_rect, &c2_rect);
 
-        let max_iter = 30;//30 and 0.5 are over kill for precision, but it's better to have too much than not enough
+        let max_iter = 30; //30 and 0.5 are over kill for precision, but it's better to have too much than not enough
         let min_diago = f32::EPSILON * PRECISION * f32::EPSILON * PRECISION * 0.5;
         if max.approx_diagonal() < min_diago || cu.level > max_iter {
             let rtn = IntersectionPoint {
@@ -257,10 +302,10 @@ fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Vec<IntersectionPoint> 
         todo.push(res_c1_2_c2_2);
     }
 
-    res
+    Ok(res)
 }
 
-fn coord_equal(a: &Coord, b: &Coord) -> bool {
+pub fn coord_equal(a: &Coord, b: &Coord) -> bool {
     f32::abs(a.x() - b.x()) <= f32::EPSILON * PRECISION
         && f32::abs(a.y() - b.y()) <= f32::EPSILON * PRECISION
 }
@@ -310,6 +355,72 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     }
 
     vec
+}
+
+pub enum Overlap {
+    ASmallerAndInsideB,
+    BSmallerAndInsideA,
+    None,
+}
+pub fn curves_overlap(
+    c1_p0: &Coord,
+    c1_cp0: &Coord,
+    c1_cp1: &Coord,
+    c1_p1: &Coord,
+    c2_p0: &Coord,
+    c2_cp0: &Coord,
+    c2_cp1: &Coord,
+    c2_p1: &Coord,
+) -> Overlap {
+    let ts = vec![
+        0.006263, 0.108011, 0.278309, 0.548986, 0.85558, 0.935159, 0.977084,
+    ];
+    let end_value = ts[ts.len() - 1];
+    for t in &ts {
+        let c1 = cubic_bezier(*t, c1_p0, c1_cp0, c1_cp1, c1_p1);
+        let intesections = intersection_with_y(c2_p0, c2_cp0, c2_cp1, c2_p1, c1.y());
+
+        let mut one_equal = false;
+        for t2 in intesections {
+            let c2 = cubic_bezier(t2, c2_p0, c2_cp0, c2_cp1, c2_p1);
+            if f32::abs(c1.x() - c2.x()) < f32::EPSILON * PRECISION {
+                one_equal = true;
+                break;
+            }
+        }
+        if !one_equal {
+            break;
+        }
+
+        //If we reach the end, it means that all the x are equal
+        if *t == end_value {
+            return Overlap::ASmallerAndInsideB;
+        }
+    }
+
+    for t in ts {
+        let c2 = cubic_bezier(t, c2_p0, c2_cp0, c2_cp1, c2_p1);
+        let intesections = intersection_with_y(c1_p0, c1_cp0, c1_cp1, c1_p1, c2.y());
+
+        let mut one_equal = false;
+        for t2 in intesections {
+            let c1 = cubic_bezier(t2, c1_p0, c1_cp0, c1_cp1, c1_p1);
+            if f32::abs(c1.x() - c2.x()) < f32::EPSILON * PRECISION {
+                one_equal = true;
+                break;
+            }
+        }
+        if !one_equal {
+            break;
+        }
+
+        //If we reach the end, it means that all the x are equal
+        if t == end_value {
+            return Overlap::BSmallerAndInsideA;
+        }
+    }
+
+    return Overlap::None;
 }
 
 #[cfg(test)]
@@ -502,5 +613,78 @@ mod tests {
         assert_approx_eq!(f32, cubic_bezier(vec[0], &p0, &cp0, &cp1, &p1).y(), 137.0);
         assert_approx_eq!(f32, cubic_bezier(vec[1], &p0, &cp0, &cp1, &p1).y(), 137.0);
         assert_approx_eq!(f32, cubic_bezier(vec[2], &p0, &cp0, &cp1, &p1).y(), 137.0);
+    }
+
+    #[test]
+    fn given_not_overlap_curves_when_overlap_none() {
+        let p0 = Coord::new(0.0, 0.0);
+        let cp0 = Coord::new(0.0, 0.0);
+        let cp1 = Coord::new(0.0, 1.0);
+        let p1 = Coord::new(0.0, 1.0);
+
+        let p2 = Coord::new(1.0, 0.0);
+        let cp2 = Coord::new(1.0, 0.0);
+        let cp3 = Coord::new(1.0, 1.0);
+        let p3 = Coord::new(1.0, 1.0);
+
+        let res = curves_overlap(&p0, &cp0, &cp1, &p1, &p2, &cp2, &cp3, &p3);
+
+        assert!(matches!(res, Overlap::None));
+    }
+
+    #[test]
+    fn given_same_curve_when_overlap_a_smaller_and_inside_b() {
+        let p0 = Coord::new(0.0, 0.0);
+        let cp0 = Coord::new(0.0, 0.0);
+        let cp1 = Coord::new(1.0, 1.0);
+        let p1 = Coord::new(1.0, 1.0);
+
+        let p2 = Coord::new(0.0, 0.0);
+        let cp2 = Coord::new(0.0, 0.0);
+        let cp3 = Coord::new(1.0, 1.0);
+        let p3 = Coord::new(1.0, 1.0);
+
+        let res = curves_overlap(&p0, &cp0, &cp1, &p1, &p2, &cp2, &cp3, &p3);
+
+        assert!(matches!(res, Overlap::ASmallerAndInsideB));
+    }
+
+    #[test]
+    fn given_overlap_curvewhen_overlap_a_smaller_and_inside_b() {
+        let c1_p0 = Coord::new(0.0, 0.0);
+        let c1_cp0 = Coord::new(0.1, 0.4);
+        let c1_cp1 = Coord::new(0.5, 1.0);
+        let c1_p1 = Coord::new(1.0, 1.0);
+
+        let (c2_cp0, c2_cp1, c2_p1, _, _) =
+            add_smooth_result(&c1_p0, &c1_cp0, &c1_cp1, &c1_p1, 0.6788);
+
+        let res = curves_overlap(
+            &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p1, &c2_cp1, &c2_cp0, &c1_p0,
+        );
+
+        assert!(matches!(res, Overlap::BSmallerAndInsideA));
+    }
+
+    #[test]
+    fn given_curves_when_intersection_then_max_iteration() {
+        // c1: Coord { c: Vec2 { x: 1.0, y: -1.0 } } Coord { c: Vec2 { x: 1.0, y: -1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } main.js:4311:13
+        //c2: Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 0.0, y: 0.0 } } Coord { c: Vec2 { x: 0.0, y: 0.0 } }
+
+        let c1_p0 = Coord::new(1.0, -1.0);
+        let c1_cp0 = Coord::new(1.0, -1.0);
+        let c1_cp1 = Coord::new(1.0, 1.0);
+        let c1_p1 = Coord::new(1.0, 1.0);
+
+        let c2_p0 = Coord::new(1.0, 1.0);
+        let c2_cp0 = Coord::new(1.0, 1.0);
+        let c2_cp1 = Coord::new(0.0, 0.0);
+        let c2_p1 = Coord::new(0.0, 0.0);
+
+        let res = intersection(
+            &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
+        );
+
+        assert_eq!(res.len(), 0); //gets filtered out
     }
 }
