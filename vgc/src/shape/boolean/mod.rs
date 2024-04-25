@@ -13,7 +13,7 @@ mod union;
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, is_line},
-    curve2:: intersection,
+    curve2::intersection,
     shape::Shape,
 };
 use common::{dbg_str, types::Coord};
@@ -41,6 +41,7 @@ impl Shape {
 struct GreinerShape {
     pub data: Vec<CoordOfIntersection>,
     pub start: usize,
+    pub intersections_len: usize,
 }
 
 #[derive(Clone)]
@@ -57,8 +58,12 @@ struct CoordOfIntersection {
 }
 
 impl GreinerShape {
-    pub fn new(data: Vec<CoordOfIntersection>, start: usize) -> Self {
-        Self { data, start }
+    pub fn new(data: Vec<CoordOfIntersection>, start: usize, intersections_len: usize) -> Self {
+        Self {
+            data,
+            start,
+            intersections_len,
+        }
     }
 
     #[allow(dead_code)] // For testing
@@ -79,6 +84,10 @@ impl GreinerShape {
 
     #[allow(dead_code)] // For testing
     pub fn print_coords_table(&self) {
+        println!(
+            "Start: {} | Intersections: {}",
+            self.start, self.intersections_len
+        );
         println!("Index, x, y, In.sect, Next, Prev");
         for (i, c) in self.data.iter().enumerate() {
             let x = format!("{:.2}", c.coord.x());
@@ -199,6 +208,24 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 let mut point_a = CoordOfIntersection::from_intersection(point.coord, point.t1, i);
 
                 let mut point_b = CoordOfIntersection::from_intersection(point.coord, point.t2, j);
+                if point_a.t == 1.0 {
+                    point_a.t = 0.0;
+                    point_a.curve_index = (point_a.curve_index + 1) % a.curves.len();
+                    point_a.rel_coord = Some(a_p1.clone());
+                    point_b.rel_coord = Some(a_p1.clone());
+                } else if point_a.t == 0.0 {
+                    point_a.rel_coord = Some(a_p0.clone());
+                    point_b.rel_coord = Some(a_p0.clone());
+                }
+                if point_b.t == 1.0 {
+                    point_b.t = 0.0;
+                    point_b.curve_index = (point_b.curve_index + 1) % b.curves.len();
+                    point_b.rel_coord = Some(b_p1.clone());
+                    point_a.rel_coord = Some(b_p1.clone());
+                } else if point_b.t == 0.0 {
+                    point_b.rel_coord = Some(b_p0.clone());
+                    point_a.rel_coord = Some(b_p0.clone());
+                }
 
                 point_a.neighbor = Some(intersections_b.len());
                 point_b.neighbor = Some(intersections_a.len());
@@ -268,10 +295,10 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
     result.push(CoordOfIntersection::from_existing(&shape.start));
 
     let mut current_index = result.len() - 1;
-    let start_a = result.len() - 1;
+    let mut start_a = result.len() - 1;
 
     intersections.sort();
-    let mut iter = intersections.iter().enumerate();
+    let mut iter = intersections.iter();
     let mut current_intersection = iter.next();
 
     for curve_index in 0..shape.curves.len() {
@@ -287,11 +314,33 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
         let mut last_t = 0.0;
         while current_intersection.is_some()
-            && current_intersection.unwrap().1.curve_index == curve_index
+            && current_intersection.unwrap().curve_index == curve_index
         {
-            let intersection = current_intersection.unwrap().1;
+            let intersection = current_intersection.unwrap();
 
             let t = (intersection.t - last_t) / (1.0 - last_t);
+
+            // with t ==0.0, the intersection is at the start of the curve so we can remove the last p1 added
+            if t == 0.0 {
+                //Neighbor is actualy the index of itself because they are not sorted in result
+                let index_intersection = intersection.neighbor.unwrap();
+                if result[current_index].prev.is_some() {
+                    let prev_index = result[current_index].prev.unwrap();
+
+                    result[prev_index].next = Some(index_intersection);
+                    result[index_intersection].prev = Some(prev_index);
+                }
+
+                result.remove(current_index);
+
+                if current_index == start_a {
+                    start_a = index_intersection;
+                }
+
+                current_index = index_intersection;
+                current_intersection = iter.next();
+                continue;
+            }
 
             let (new_cp0, new_cp1l, new_p1, new_cp1r, new_cp2) = add_smooth_result(
                 &current_p0.0,
@@ -377,7 +426,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     compress_coord_ptr(&mut result, start_a);
 
-    GreinerShape::new(result, start_a)
+    GreinerShape::new(result, start_a, intersections.len())
 }
 
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {

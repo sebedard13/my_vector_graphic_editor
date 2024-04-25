@@ -48,8 +48,7 @@ fn find_index_false(v: &Vec<bool>) -> Option<usize> {
 }
 
 fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
-    //ag.start is also the number of intersection
-    let mut intersections_done = vec![false; ag.start];
+    let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
 
     while let Some(i) = find_index_false(&intersections_done) {
@@ -282,7 +281,11 @@ mod test {
             Coord::new(-0.375, -0.03),
         ];
 
-        let a = Shape::new_from_path(&c_shape_coords, Affine::identity(), Rgba::new(255, 255, 255, 255));
+        let a = Shape::new_from_path(
+            &c_shape_coords,
+            Affine::identity(),
+            Rgba::new(255, 255, 255, 255),
+        );
         let b = Shape::new_from_path(
             &c_shape_coords,
             Affine::identity()

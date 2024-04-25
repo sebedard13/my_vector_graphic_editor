@@ -156,7 +156,7 @@ pub fn intersection(
         }
     };
 
-    //Remove the intersection at the extremities
+    //Remove the intersection at the extremities if curve got common extremities
     let mut t_res = Vec::new();
     for r in res {
         let t1_t2_0 = coord_equal(&r.coord, c1_p0) && coord_equal(&r.coord, c2_p0);
@@ -169,6 +169,25 @@ pub fn intersection(
         }
 
         t_res.push(r);
+    }
+
+    //Set the t value to 0.0 or 1.0 if the intersection is at the extremities
+    for r in &mut t_res {
+        if coord_equal(&r.coord, c1_p0){
+            r.t1 = 0.0;
+        }
+
+        if coord_equal(&r.coord, c1_p1){
+            r.t1 = 1.0;
+        }
+
+        if coord_equal(&r.coord, c2_p0){
+            r.t2 = 0.0;
+        }
+
+        if coord_equal(&r.coord, c2_p1){
+            r.t2 = 1.0;
+        }
     }
 
     t_res

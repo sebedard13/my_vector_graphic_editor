@@ -52,8 +52,7 @@ fn find_index_false(v: &Vec<bool>) -> Option<usize> {
 }
 
 fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
-    //ag.start is also the number of intersection
-    let mut intersections_done = vec![false; ag.start];
+    let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
 
     while let Some(i) = find_index_false(&intersections_done) {
@@ -186,7 +185,7 @@ mod test {
     use super::{shape_difference, ShapeDifference};
     use common::{pures::Affine, types::Coord, Rgba};
 
-    use crate::{ create_circle, shape::Shape, Vgc};
+    use crate::{create_circle, shape::Shape, Vgc};
 
     #[test]
     fn given_two_circle_when_difference_then_new_1() {
@@ -334,83 +333,69 @@ mod test {
         );
     }
 
-
     #[test]
-    fn given_bug_diff(){
-        //A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z 
-        //B: M -0.5181128 -0.5181128 C -0.2622234 -0.2622234 0 0 0 0 C 0 0 1 1 1 1 C 1 1 -1 1 -1 1 C -1 1 -1 -1 -1 -1 C -1 -1 -0.8840468 -0.8840468 -0.73110896 -0.73110896 C -0.7079589 -0.7603058 -0.6780642 -0.77789396 -0.64533335 -0.77801096 C -0.5715431 -0.77774715 -0.5121685 -0.6886853 -0.51199263 -0.57799995 C -0.51202583 -0.5571176 -0.5141662 -0.5370049 -0.5181128 -0.5181128 Z
-   
+    fn given_shape_with_intersections_point_as_b_when_difference_then_valid() {
+        //A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z
+        /*B: M -0.47455588 -0.47455588
+        C -0.47455588 -0.47455588 0 0 0 0
+        C 0 0 1 1 1 1
+        C 1 1 -1 1 -1 1
+        C -1 1 -1 -1 -1 -1
+        C -1 -1 -0.68605244 -0.68605244 -0.68605244 -0.68605244
+        C -0.6632519 -0.713484 -0.6342824 -0.729898 -0.6026667 -0.730011
+        C -0.5288764 -0.7297472 -0.46950188 -0.6406853 -0.46932596 -0.53
+        C -0.46935654 -0.51074654 -0.4711784 -0.4921474 -0.47455588 -0.47455588 Z*/
+
         let coord_a = vec![
             Coord::new(1.0, -1.0),
-
             Coord::new(1.0, -1.0),
             Coord::new(1.0, 1.0),
             Coord::new(1.0, 1.0),
-
             Coord::new(1.0, 1.0),
             Coord::new(0.0, 0.0),
             Coord::new(0.0, 0.0),
-
             Coord::new(0.0, 0.0),
             Coord::new(-1.0, -1.0),
             Coord::new(-1.0, -1.0),
-
             Coord::new(-1.0, -1.0),
             Coord::new(1.0, -1.0),
             Coord::new(1.0, -1.0),
-
-
         ];
 
         let coord_b = vec![
-            Coord::new(-0.5181128, -0.5181128),
-
-            Coord::new(-0.2622234, -0.2622234),
+            Coord::new(-0.47455588, -0.47455588),
+            Coord::new(-0.47455588, -0.47455588),
             Coord::new(0.0, 0.0),
             Coord::new(0.0, 0.0),
-
             Coord::new(0.0, 0.0),
             Coord::new(1.0, 1.0),
             Coord::new(1.0, 1.0),
-
             Coord::new(1.0, 1.0),
             Coord::new(-1.0, 1.0),
             Coord::new(-1.0, 1.0),
-
             Coord::new(-1.0, 1.0),
             Coord::new(-1.0, -1.0),
             Coord::new(-1.0, -1.0),
-
             Coord::new(-1.0, -1.0),
-            Coord::new(-0.8840468, -0.8840468),
-            Coord::new(-0.73110896, -0.73110896),
-
-            Coord::new(-0.7079589, -0.7603058),
-            Coord::new(-0.6780642, -0.77789396),
-            Coord::new(-0.64533335, -0.77801096),
-
-            Coord::new(-0.5715431, -0.77774715),
-            Coord::new(-0.5121685, -0.6886853),
-            Coord::new(-0.51199263, -0.57799995),
-
-            Coord::new(-0.51202583, -0.5571176),
-            Coord::new(-0.5141662, -0.5370049),
-            Coord::new(-0.5181128, -0.5181128),
+            Coord::new(-0.68605244, -0.68605244),
+            Coord::new(-0.68605244, -0.68605244),
+            Coord::new(-0.6632519, -0.713484),
+            Coord::new(-0.6342824, -0.729898),
+            Coord::new(-0.6026667, -0.730011),
+            Coord::new(-0.5288764, -0.7297472),
+            Coord::new(-0.46950188, -0.6406853),
+            Coord::new(-0.46932596, -0.53),
+            Coord::new(-0.46935654, -0.51074654),
+            Coord::new(-0.4711784, -0.4921474),
+            Coord::new(-0.47455588, -0.47455588),
         ];
 
         let a = Shape::new_from_path(&coord_a, Affine::identity(), Rgba::black());
         let b = Shape::new_from_path(&coord_b, Affine::identity(), Rgba::black());
 
-        let intersections = super::find_intersecions(&a, &b);
-
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-
-        ag.print_coords_table();
-        bg.print_coords_table();
-
+        //let intersections = super::find_intersecions(&a, &b);
+        //let bg = super::create_shape(&b, intersections.1);
+        //bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -426,9 +411,7 @@ mod test {
 
         assert_eq!(merged.len(), 1);
 
-        println!("merged: {}", merged[0].path());
-
-        let steps = 5;
+        let steps = 6;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x, y);
@@ -441,7 +424,5 @@ mod test {
                 );
             }
         }
-   
     }
-
 }
