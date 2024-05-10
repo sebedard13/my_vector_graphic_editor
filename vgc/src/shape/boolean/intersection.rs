@@ -1,4 +1,4 @@
-use super::{create_shape, find_intersecions, mark_entry_exit_points, GreinerShape};
+use super::{create_shape, find_intersecions, mark_entry_exit_points, GreinerShape, IntersectionType};
 use crate::{curve::Curve, shape::Shape};
 
 pub enum ShapeIntersection {
@@ -80,7 +80,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.curves.push(Curve::new(cp0, cp1, p1));
 
-                    if current.intersect {
+                    if current.intersect == IntersectionType::Intersection {
                         intersections_done[next] = true;
                         break;
                     }
@@ -101,7 +101,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.curves.push(Curve::new(cp0, cp1, p1));
 
-                    if current.intersect {
+                    if current.intersect == IntersectionType::Intersection {
                         intersections_done[next] = true;
                         break;
                     }

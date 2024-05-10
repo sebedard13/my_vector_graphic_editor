@@ -259,6 +259,9 @@ impl Shape {
     /// Return true if the coord is inside the shape
     /// Use the even-odd rule
     pub fn contains(&self, coord: &Coord) -> bool {
+        let mut debug_array: Vec<(usize, f32, bool)> = Vec::new();
+        let mut i = 0;
+
         let mut count = 0;
         let mut prev_coord = self.start.borrow();
         for curve in &self.curves {
@@ -270,12 +273,18 @@ impl Shape {
                 curve2::intersection_with_y(&prev_coord, &cp0, &cp1, &p1, coord.y());
             for t in t_intersections {
                 let x = cubic_bezier(t, &prev_coord, &cp0, &cp1, &p1).x();
-                if x > coord.x() {
+                if x >= coord.x() {
                     count += 1;
+                    debug_array.push((i, t, true));
+                } else {
+                    debug_array.push((i, t, false));
                 }
             }
             prev_coord = p1;
+            i += 1;
         }
+
+        //println!("{:?}", debug_array);
         count % 2 == 1
     }
 

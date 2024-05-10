@@ -1,4 +1,6 @@
-use super::{create_shape, find_intersecions, mark_entry_exit_points, GreinerShape};
+use super::{
+    create_shape, find_intersecions, mark_entry_exit_points, GreinerShape, IntersectionType,
+};
 use crate::{curve::Curve, shape::Shape};
 
 pub enum ShapeUnion {
@@ -66,7 +68,9 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
 
                 merged.curves.push(Curve::new(cp0, cp1, p1));
 
-                if current.intersect {
+                if current.intersect == IntersectionType::Intersection
+                    || current.intersect == IntersectionType::CommonIntersection
+                {
                     break;
                 }
             }
@@ -86,7 +90,9 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
 
                 merged.curves.push(Curve::new(cp0, cp1, p1));
 
-                if current.intersect {
+                if current.intersect == IntersectionType::Intersection
+                    || current.intersect == IntersectionType::CommonIntersection
+                {
                     break;
                 }
             }
@@ -119,7 +125,6 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
 
 #[cfg(test)]
 mod test {
-    use super::super::{create_shape, find_intersecions, mark_entry_exit_points};
     use super::{shape_union, ShapeUnion};
     use common::pures::Affine;
     use common::{types::Coord, Rgba};
@@ -136,27 +141,6 @@ mod test {
 
         let a = vgc.get_shape(0).expect("Shape should exist");
         let b = vgc.get_shape(1).expect("Shape should exist");
-
-        let (i_a, i_b) = find_intersecions(a, b);
-
-        assert_eq!(i_a.len(), 2);
-        assert_eq!(i_b.len(), 2);
-
-        let mut ag = create_shape(a, i_a);
-        let mut bg = create_shape(b, i_b);
-
-        assert_eq!(ag.len(), 18);
-        assert_eq!(bg.len(), 18);
-
-        mark_entry_exit_points(&mut ag, a, &mut bg, b);
-
-        assert_eq!(ag.get(0).entry, false);
-        assert_eq!(ag.get(3).entry, true);
-        assert_eq!(ag.get(9).entry, false);
-
-        assert_eq!(bg.get(0).entry, false);
-        assert_eq!(bg.get(9).entry, true);
-        assert_eq!(bg.get(15).entry, false);
 
         let merged = shape_union(&a, &b);
         let merged = match merged {
@@ -208,19 +192,6 @@ mod test {
 
         let a = vgc.get_shape(0).expect("Shape should exist");
         let b = vgc.get_shape(1).expect("Shape should exist");
-
-        let (i_a, i_b) = find_intersecions(a, b);
-
-        assert_eq!(i_a.len(), 4);
-        assert_eq!(i_b.len(), 4);
-
-        let mut ag = create_shape(a, i_a);
-        let mut bg = create_shape(b, i_b);
-
-        mark_entry_exit_points(&mut ag, a, &mut bg, b);
-
-        assert_eq!(ag.len(), 18);
-        assert_eq!(bg.len(), 18);
 
         let merged = shape_union(&a, &b);
 
@@ -497,9 +468,8 @@ mod test {
         for i in 0..ag.data.len() {
             let coord = ag.data[i].coord;
             assert!(
-                valid_values
-                    .iter()
-                    .any(|v| (v - coord.x()).abs() < 0.0001) && valid_values.iter().any(|v| (v - coord.y()).abs() < 0.0001),
+                valid_values.iter().any(|v| (v - coord.x()).abs() < 0.0001)
+                    && valid_values.iter().any(|v| (v - coord.y()).abs() < 0.0001),
                 "Invalid value ({}, {})",
                 coord.x(),
                 coord.y()

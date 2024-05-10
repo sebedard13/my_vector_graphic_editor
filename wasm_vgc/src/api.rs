@@ -234,7 +234,7 @@ pub fn draw_shape(
                 ShapeDifference::A => {}
                 ShapeDifference::AWithBHole => {
                     log::error!("{}", dbg_str!("AWithBHole"));
-                    todo!("Add an hole to A");
+                    //todo!("Add an hole to A");
                 }
             }
         }

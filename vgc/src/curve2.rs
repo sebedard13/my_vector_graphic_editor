@@ -114,6 +114,13 @@ struct IntersectionToDo {
     level: i32,
 }
 
+pub enum IntersectionResult {
+    ASmallerAndInsideB,
+    BSmallerAndInsideA,
+    Pts(Vec<IntersectionPoint>),
+    None,
+}
+
 pub fn intersection(
     c1_p0: &Coord,
     c1_cp0: &Coord,
@@ -123,12 +130,31 @@ pub fn intersection(
     c2_cp0: &Coord,
     c2_cp1: &Coord,
     c2_p1: &Coord,
-) -> Vec<IntersectionPoint> {
+) -> IntersectionResult {
     match curves_overlap(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1) {
-        Overlap::None => {}
-        _ => return Vec::new(),
+        Overlap::ASmallerAndInsideB => return IntersectionResult::ASmallerAndInsideB,
+        Overlap::BSmallerAndInsideA => return IntersectionResult::BSmallerAndInsideA,
+        _ => {}
     }
+    let res = intersection_simple(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1);
+    if res.len() == 0 {
+        return IntersectionResult::None;
+    }
+    IntersectionResult::Pts(res)
+}
 
+const PRECISION: f32 = 4.0;
+
+fn intersection_simple(
+    c1_p0: &Coord,
+    c1_cp0: &Coord,
+    c1_cp1: &Coord,
+    c1_p1: &Coord,
+    c2_p0: &Coord,
+    c2_cp0: &Coord,
+    c2_cp1: &Coord,
+    c2_p1: &Coord,
+) -> Vec<IntersectionPoint> {
     let mut todo = Vec::new();
     let first_todo = IntersectionToDo {
         c1_p0: *c1_p0,
@@ -145,7 +171,7 @@ pub fn intersection(
     };
     todo.push(first_todo);
 
-    let res = match run_intersection(&mut todo) {
+    let mut res = match intersection_recsv(&mut todo) {
         Ok(res) => res,
         Err(e) => {
             log::error!("{}", dbg_str!("{}", e));
@@ -155,54 +181,35 @@ pub fn intersection(
             return Vec::new();
         }
     };
-
-    //Remove the intersection at the extremities if curve got common extremities
-    let mut t_res = Vec::new();
-    for r in res {
-        let t1_t2_0 = coord_equal(&r.coord, c1_p0) && coord_equal(&r.coord, c2_p0);
-        let t1_0_t2_1 = coord_equal(&r.coord, c1_p0) && coord_equal(&r.coord, c2_p1);
-        let t1_1_t2_0 = coord_equal(&r.coord, c1_p1) && coord_equal(&r.coord, c2_p0);
-        let t1_t2_1 = coord_equal(&r.coord, c1_p1) && coord_equal(&r.coord, c2_p1);
-
-        if t1_t2_0 || t1_0_t2_1 || t1_1_t2_0 || t1_t2_1 {
-            continue;
-        }
-
-        t_res.push(r);
-    }
-
     //Set the t value to 0.0 or 1.0 if the intersection is at the extremities
-    for r in &mut t_res {
-        if coord_equal(&r.coord, c1_p0){
+    for r in &mut res {
+        if coord_equal(&r.coord, c1_p0) {
             r.t1 = 0.0;
         }
 
-        if coord_equal(&r.coord, c1_p1){
+        if coord_equal(&r.coord, c1_p1) {
             r.t1 = 1.0;
         }
 
-        if coord_equal(&r.coord, c2_p0){
+        if coord_equal(&r.coord, c2_p0) {
             r.t2 = 0.0;
         }
 
-        if coord_equal(&r.coord, c2_p1){
+        if coord_equal(&r.coord, c2_p1) {
             r.t2 = 1.0;
         }
     }
-
-    t_res
+    res
 }
 
-const PRECISION: f32 = 4.0;
-
-fn run_intersection(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
+fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
     let mut max_todo = 0;
     let mut i = 0;
     while todo.len() > 0 {
         max_todo = max_todo.max(todo.len());
-        //println!("i: {} todo: {}", i, todo.len());
-        if i > 2000 {
+        // println!("i: {} todo: {}", i, todo.len());
+        if i > 30_000 {
             return Err("Max iteration reached, stopping the intersection calculation. We may be in an infinite loop because of overlapping curves.".to_string());
         }
         i += 1;
@@ -369,9 +376,16 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
     for root in croots {
         //For the even-odd rule, we don't care if root is at 0.0 or 1.0, because it need to add 2 intersections
         if 0.0 < root.0 && root.0 < 1.0 && f64::abs(root.1) < (f32::EPSILON as f64) {
+            if vec
+                .iter()
+                .any(|&x| f32::abs(x - root.0 as f32) < f32::EPSILON)
+            {
+                continue;
+            }
             vec.push(root.0 as f32);
         }
     }
+    //remove same value in vec
 
     vec
 }
@@ -394,6 +408,8 @@ pub fn curves_overlap(
     let ts = vec![
         0.006263, 0.108011, 0.278309, 0.548986, 0.85558, 0.935159, 0.977084,
     ];
+    let diff_check = f32::EPSILON * PRECISION * 100.0;
+
     let end_value = ts[ts.len() - 1];
     for t in &ts {
         let c1 = cubic_bezier(*t, c1_p0, c1_cp0, c1_cp1, c1_p1);
@@ -402,7 +418,7 @@ pub fn curves_overlap(
         let mut one_equal = false;
         for t2 in intesections {
             let c2 = cubic_bezier(t2, c2_p0, c2_cp0, c2_cp1, c2_p1);
-            if f32::abs(c1.x() - c2.x()) < f32::EPSILON * PRECISION {
+            if f32::abs(c1.x() - c2.x()) < diff_check {
                 one_equal = true;
                 break;
             }
@@ -424,7 +440,8 @@ pub fn curves_overlap(
         let mut one_equal = false;
         for t2 in intesections {
             let c1 = cubic_bezier(t2, c1_p0, c1_cp0, c1_cp1, c1_p1);
-            if f32::abs(c1.x() - c2.x()) < f32::EPSILON * PRECISION {
+
+            if f32::abs(c1.x() - c2.x()) < diff_check {
                 one_equal = true;
                 break;
             }
@@ -495,7 +512,7 @@ mod tests {
         let c2_cp1 = Coord::new(1.0, 0.0);
         let c2_p1 = Coord::new(1.0, 0.0);
 
-        let res = intersection(
+        let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
         );
 
@@ -532,7 +549,7 @@ mod tests {
         let c2_cp1 = Coord::new(220.0, 95.0).transform(&m);
         let c2_p1 = Coord::new(140.0, 240.0).transform(&m);
 
-        let res = intersection(
+        let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
         );
 
@@ -578,7 +595,7 @@ mod tests {
         let c2_cp1 = Coord::new(220.0, 95.0).transform(&m);
         let c2_p1 = Coord::new(140.0, 240.0).transform(&m);
 
-        let res = intersection(
+        let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
         );
 
@@ -687,23 +704,39 @@ mod tests {
 
     #[test]
     fn given_curves_when_intersection_then_max_iteration() {
-        // c1: Coord { c: Vec2 { x: 1.0, y: -1.0 } } Coord { c: Vec2 { x: 1.0, y: -1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } main.js:4311:13
-        //c2: Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 1.0, y: 1.0 } } Coord { c: Vec2 { x: 0.0, y: 0.0 } } Coord { c: Vec2 { x: 0.0, y: 0.0 } }
+        let c1_p0 = Coord::new(0.0, 0.0);
+        let c1_cp0 = Coord::new(0.0, 0.0);
+        let c1_cp1 = Coord::new(-1.0, -1.0);
+        let c1_p1 = Coord::new(-1.0, -1.0);
 
+        let c2_p0 = Coord::new(-0.5679927, -0.56999993);
+        let c2_cp0 = Coord::new(-0.56799376, -0.5693334);
+        let c2_cp1 = Coord::new(-0.567997, -0.5686675);
+        let c2_p1 = Coord::new(-0.56800234, -0.56800234);
+
+        let res = intersection_simple(
+            &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
+        );
+
+        assert_eq!(res.len(), 1); //gets filtered out
+    }
+
+    #[test]
+    fn inter() {
         let c1_p0 = Coord::new(1.0, -1.0);
         let c1_cp0 = Coord::new(1.0, -1.0);
         let c1_cp1 = Coord::new(1.0, 1.0);
         let c1_p1 = Coord::new(1.0, 1.0);
 
-        let c2_p0 = Coord::new(1.0, 1.0);
-        let c2_cp0 = Coord::new(1.0, 1.0);
-        let c2_cp1 = Coord::new(0.0, 0.0);
-        let c2_p1 = Coord::new(0.0, 0.0);
+        let c2_p0 = Coord::new(0.0, 0.0);
+        let c2_cp0 = Coord::new(0.0, 0.0);
+        let c2_cp1 = Coord::new(1.0, 1.0);
+        let c2_p1 = Coord::new(1.0, 1.0);
 
-        let res = intersection(
+        let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
         );
 
-        assert_eq!(res.len(), 0); //gets filtered out
+        assert_eq!(res.len(), 1);
     }
 }

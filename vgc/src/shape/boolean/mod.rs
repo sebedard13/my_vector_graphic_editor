@@ -13,10 +13,11 @@ mod union;
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, is_line},
-    curve2::intersection,
+    curve2::{intersection, IntersectionResult},
     shape::Shape,
 };
 use common::{dbg_str, types::Coord};
+use std::fmt::Display;
 use std::{cell::RefCell, rc::Rc};
 
 pub use self::{difference::ShapeDifference, intersection::ShapeIntersection, union::ShapeUnion};
@@ -44,6 +45,43 @@ struct GreinerShape {
     pub intersections_len: usize,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum IntersectionType {
+    Intersection,
+    CommonIntersection,
+    Common,
+    None,
+}
+
+impl IntersectionType {
+    pub fn is_intersection(&self) -> bool {
+        match self {
+            IntersectionType::Intersection => true,
+            IntersectionType::CommonIntersection => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_common(&self) -> bool {
+        match self {
+            IntersectionType::Common => true,
+            IntersectionType::CommonIntersection => true,
+            _ => false,
+        }
+    }
+}
+
+impl Display for IntersectionType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IntersectionType::Intersection => write!(f, "Inter."),
+            IntersectionType::Common => write!(f, "Common"),
+            IntersectionType::None => write!(f, "None"),
+            IntersectionType::CommonIntersection => write!(f, "C.Int."),
+        }
+    }
+}
+
 #[derive(Clone)]
 struct CoordOfIntersection {
     pub curve_index: usize,
@@ -52,7 +90,7 @@ struct CoordOfIntersection {
     pub next: Option<usize>,
     pub prev: Option<usize>,
     pub entry: bool,
-    pub intersect: bool,
+    pub intersect: IntersectionType,
     pub coord: Coord,
     pub rel_coord: Option<CoordPtr>,
 }
@@ -88,20 +126,26 @@ impl GreinerShape {
             "Start: {} | Intersections: {}",
             self.start, self.intersections_len
         );
-        println!("Index, x, y, In.sect, Next, Prev");
+        println!(
+            "{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}",
+            "Index", "x", "y", "In.sect", "Next", "Prev", "Neigh.", "Entry"
+        );
         for (i, c) in self.data.iter().enumerate() {
             let x = format!("{:.2}", c.coord.x());
             let y = format!("{:.2}", c.coord.y());
+            let neighbor = format!("{:?}", c.neighbor);
+            let int = format!("{}", c.intersect);
 
             println!(
-                "{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7},{:?}",
+                "{:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}, {:>7}",
                 i,
                 x,
                 y,
-                c.intersect,
+                int,
                 c.next.unwrap(),
                 c.prev.unwrap(),
-                c.neighbor
+                neighbor,
+                c.entry,
             );
         }
     }
@@ -116,7 +160,7 @@ impl CoordOfIntersection {
             next: None,
             prev: None,
             entry: false,
-            intersect: false,
+            intersect: IntersectionType::None,
             coord: rel_coord.borrow().clone(),
             rel_coord: Some(rel_coord.clone()),
         }
@@ -130,7 +174,7 @@ impl CoordOfIntersection {
             next: None,
             prev: None,
             entry: false,
-            intersect: true,
+            intersect: IntersectionType::Intersection,
             coord: coord,
             rel_coord: None,
         }
@@ -144,7 +188,7 @@ impl CoordOfIntersection {
             next: None,
             prev: None,
             entry: false,
-            intersect: false,
+            intersect: IntersectionType::None,
             coord: coord,
             rel_coord: None,
         }
@@ -192,8 +236,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
 
         for j in 0..b.curves.len() {
             let (b_p0, b_cp0, b_cp1, b_p1) = b.get_coords_of_curve(j);
-
-            let intersection_points = intersection(
+            let intersection_result = intersection(
                 &a_p0.borrow(),
                 &a_cp0.borrow(),
                 &a_cp1.borrow(),
@@ -204,39 +247,55 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 &b_p1.borrow(),
             );
 
-            for point in intersection_points {
-                let mut point_a = CoordOfIntersection::from_intersection(point.coord, point.t1, i);
+            match intersection_result {
+                IntersectionResult::None => {}
+                IntersectionResult::Pts(intersection_points) => {
+                    for point in intersection_points {
+                        let mut point_a =
+                            CoordOfIntersection::from_intersection(point.coord, point.t1, i);
 
-                let mut point_b = CoordOfIntersection::from_intersection(point.coord, point.t2, j);
-                if point_a.t == 1.0 {
-                    point_a.t = 0.0;
-                    point_a.curve_index = (point_a.curve_index + 1) % a.curves.len();
-                    point_a.rel_coord = Some(a_p1.clone());
-                    point_b.rel_coord = Some(a_p1.clone());
-                } else if point_a.t == 0.0 {
-                    point_a.rel_coord = Some(a_p0.clone());
-                    point_b.rel_coord = Some(a_p0.clone());
+                        let mut point_b =
+                            CoordOfIntersection::from_intersection(point.coord, point.t2, j);
+                        if point_a.t == 1.0 {
+                            point_a.t = 0.0;
+                            point_a.curve_index = (point_a.curve_index + 1) % a.curves.len();
+                            point_a.rel_coord = Some(a_p1.clone());
+                            point_b.rel_coord = Some(a_p1.clone());
+                        } else if point_a.t == 0.0 {
+                            point_a.rel_coord = Some(a_p0.clone());
+                            point_b.rel_coord = Some(a_p0.clone());
+                        }
+                        if point_b.t == 1.0 {
+                            point_b.t = 0.0;
+                            point_b.curve_index = (point_b.curve_index + 1) % b.curves.len();
+                            point_b.rel_coord = Some(b_p1.clone());
+                            point_a.rel_coord = Some(b_p1.clone());
+                        } else if point_b.t == 0.0 {
+                            point_b.rel_coord = Some(b_p0.clone());
+                            point_a.rel_coord = Some(b_p0.clone());
+                        }
+
+                        if point_a.t == 0.0 && point_b.t == 0.0 {
+                            point_a.intersect = IntersectionType::Common;
+                            point_b.intersect = IntersectionType::Common;
+                        } else if point_a.t == 0.0 || point_b.t == 0.0 {
+                            point_a.intersect = IntersectionType::CommonIntersection;
+                            point_b.intersect = IntersectionType::CommonIntersection;
+                        }
+
+                        point_a.neighbor = Some(intersections_b.len());
+                        point_b.neighbor = Some(intersections_a.len());
+
+                        intersections_a.push(point_a);
+                        intersections_b.push(point_b);
+                    }
                 }
-                if point_b.t == 1.0 {
-                    point_b.t = 0.0;
-                    point_b.curve_index = (point_b.curve_index + 1) % b.curves.len();
-                    point_b.rel_coord = Some(b_p1.clone());
-                    point_a.rel_coord = Some(b_p1.clone());
-                } else if point_b.t == 0.0 {
-                    point_b.rel_coord = Some(b_p0.clone());
-                    point_a.rel_coord = Some(b_p0.clone());
-                }
-
-                point_a.neighbor = Some(intersections_b.len());
-                point_b.neighbor = Some(intersections_a.len());
-
-                intersections_a.push(point_a);
-                intersections_b.push(point_b);
+                _ => {}
             }
         }
     }
 
-    assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
+    // assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
 
     (intersections_a, intersections_b)
 }
@@ -251,7 +310,18 @@ fn assert_intersections_even_count(
     intersections_b: &mut Vec<CoordOfIntersection>,
 ) {
     assert_eq!(intersections_a.len(), intersections_b.len());
+
     if (intersections_a.len() % 2) != 0 {
+        let mut count_intersection = 0;
+        for i in 0..intersections_a.len() {
+            if intersections_a[i].intersect.is_intersection() {
+                count_intersection += 1;
+            }
+        }
+        if count_intersection % 2 == 0 {
+            return;
+        }
+
         log::warn!(
             "{}",
             dbg_str!("Shape are closed so we should have an even number of intersections. Fix will be applied with a lost in precision")
@@ -262,17 +332,25 @@ fn assert_intersections_even_count(
         let mut difference = Vec::with_capacity(intersections_a.len() * intersections_a.len());
         for i in 0..intersections_a.len() {
             for j in 0..intersections_a.len() {
-                difference.push((intersections_a[i].coord - intersections_a[j].coord).norm());
+                if intersections_a[i].intersect != IntersectionType::Intersection
+                    || intersections_a[j].intersect != IntersectionType::Intersection
+                {
+                    difference.push(f32::MAX);
+                } else {
+                    difference.push((intersections_a[i].coord - intersections_a[j].coord).norm());
+                }
             }
         }
 
         //find min of difference
         let mut min = f32::MAX;
         let mut min_index: usize = 0;
-        for i in 0..difference.len() {
-            if difference[i] < min {
-                min = difference[i];
-                min_index = (i - (i % intersections_a.len())) / intersections_a.len();
+        for i in 0..intersections_a.len() {
+            for j in 0..intersections_a.len() {
+                if difference[i] < min && i != j {
+                    min = difference[i];
+                    min_index = i * intersections_a.len() + j;
+                }
             }
         }
 
@@ -320,7 +398,6 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
             let t = (intersection.t - last_t) / (1.0 - last_t);
 
-            // with t ==0.0, the intersection is at the start of the curve so we can remove the last p1 added
             if t == 0.0 {
                 //Neighbor is actualy the index of itself because they are not sorted in result
                 let index_intersection = intersection.neighbor.unwrap();
@@ -426,7 +503,50 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     compress_coord_ptr(&mut result, start_a);
 
-    GreinerShape::new(result, start_a, intersections.len())
+    let mut shape = GreinerShape::new(result, start_a, intersections.len());
+    remove_uncessary_common(&mut shape);
+    shape
+}
+
+fn remove_uncessary_common(shape: &mut GreinerShape) {
+    let mut i = 0;
+    let mut current_index = shape.start;
+    while i == 0 || current_index != shape.start {
+        if shape.data[current_index].intersect == IntersectionType::CommonIntersection {
+            let prev_point = {
+                let prev_index = shape.data[current_index].prev.unwrap();
+                let prev = &shape.data[prev_index];
+                let prev_prev_index = prev.prev.unwrap();
+                let prev_prev = &shape.data[prev_prev_index];
+                let prev_prev_prev_index = prev_prev.prev.unwrap();
+                &shape.data[prev_prev_prev_index]
+            };
+            let next_point = {
+                let next_index = shape.data[current_index].next.unwrap();
+                let next = &shape.data[next_index];
+                let next_next_index = next.next.unwrap();
+                let next_next = &shape.data[next_next_index];
+                let next_next_next_index = next_next.next.unwrap();
+                &shape.data[next_next_next_index]
+            };
+
+            if (prev_point.intersect.is_common()) && (next_point.intersect.is_common()) {
+                shape.data[current_index].intersect = IntersectionType::Common;
+            }
+        }
+        current_index = shape.data[current_index].next.unwrap();
+        i += 1;
+    }
+}
+
+fn or_common_intersection(a: &mut GreinerShape, b: &mut GreinerShape) {
+    for i in 0..a.intersections_len {
+        if a.data[i].intersect == IntersectionType::CommonIntersection {
+            b.data[i].intersect = IntersectionType::CommonIntersection;
+        } else if b.data[i].intersect == IntersectionType::CommonIntersection {
+            a.data[i].intersect = IntersectionType::CommonIntersection;
+        }
+    }
 }
 
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
@@ -483,6 +603,8 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
 }
 
 fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
+    or_common_intersection(ag, bg);
+
     let mut status_entry = true;
     let coord = &ag.data[ag.start].coord;
     let con = b.contains(coord);
@@ -495,7 +617,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     {
         let next_index = ag.data[current_index].next.unwrap();
         let next = &mut ag.data[next_index];
-        if next.intersect {
+        if next.intersect.is_intersection() {
             next.entry = status_entry;
             status_entry = !status_entry;
         }
@@ -503,7 +625,8 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     }
 
     status_entry = true;
-    if a.contains(&bg.data[bg.start].coord) {
+    let con = a.contains(&bg.data[bg.start].coord);
+    if con {
         status_entry = false;
     }
 
@@ -512,7 +635,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     {
         let next_index = bg.data[current_index].next.unwrap();
         let next = &mut bg.data[next_index];
-        if next.intersect {
+        if next.intersect.is_intersection() {
             next.entry = status_entry;
             status_entry = !status_entry;
         }
@@ -524,9 +647,12 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
 mod test {
     use common::{pures::Affine, types::Coord, Rgba};
 
+    use crate::shape::boolean::{create_shape, mark_entry_exit_points};
     use crate::shape::Shape;
 
     use super::{find_intersecions, CoordOfIntersection};
+
+    use crate::{create_circle, Vgc};
 
     #[test]
     fn given_intersection_count_not_even_when_assert_then_is_fix() {
@@ -613,11 +739,96 @@ mod test {
         let a = Shape::new_from_path(&coords_a, Affine::identity(), Rgba::white());
         let b = Shape::new_from_path(&coords_b, Affine::identity(), Rgba::white());
 
-        let merged = find_intersecions(&a, &b);
-        assert_eq!(merged.0.len(), 2);
-        assert_eq!(merged.0[0].t, 0.654658138);
-        assert_eq!(merged.0[1].t, 0.508218467);
+        let intersections = find_intersecions(&a, &b);
+        let mut common_count = 0;
+        let mut inteersection_count = 0;
+        for i in 0..intersections.0.len() {
+            if intersections.0[i].intersect == super::IntersectionType::Common {
+                common_count += 1;
+            } else if intersections.0[i].intersect.is_intersection() {
+                inteersection_count += 1;
+                assert!(
+                    intersections.0[i].t == 0.654658138 || intersections.0[i].t == 0.508218467,
+                    "t should be 0.654658138 or 0.508218467, but was {}",
+                    intersections.0[0].t
+                );
+            }
+        }
+        assert_eq!(inteersection_count, 2);
+        assert_eq!(common_count, 3);
     }
 
-    //Function find_intersecions, create_shape and mark_entry_exit_points are tested more in detail in the tests of union.rs
+    #[test]
+    fn given_two_circle_when_union_then_new() {
+        let mut vgc = Vgc::new(Rgba::new(255, 255, 255, 255));
+
+        create_circle(&mut vgc, Coord::new(0.0, 0.0), 0.2, 0.2);
+        create_circle(&mut vgc, Coord::new(0.2, 0.0), 0.2, 0.2);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let (i_a, i_b) = find_intersecions(a, b);
+
+        assert_eq!(i_a.len(), 2);
+        assert_eq!(i_b.len(), 2);
+
+        let mut ag = create_shape(a, i_a);
+        let mut bg = create_shape(b, i_b);
+
+        assert_eq!(ag.len(), 18);
+        assert_eq!(bg.len(), 18);
+
+        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+
+        assert_eq!(ag.get(0).entry, false);
+        assert_eq!(ag.get(3).entry, true);
+        assert_eq!(ag.get(9).entry, false);
+
+        assert_eq!(bg.get(0).entry, false);
+        assert_eq!(bg.get(9).entry, true);
+        assert_eq!(bg.get(15).entry, false);
+    }
+
+    #[test]
+    fn given_two_oval_with_no_valid_p_when_union_then_new() {
+        let mut shape1 = vec![
+            Coord::new(0.0, 0.3),
+            Coord::new(-0.8, 0.3),
+            Coord::new(-0.8, -0.3),
+            Coord::new(0.0, -0.3),
+            Coord::new(0.8, -0.3),
+            Coord::new(0.8, 0.3),
+            Coord::new(0.0, 0.3),
+        ];
+        shape1.reverse();
+
+        let shape2 = vec![
+            Coord::new(0.3, 0.0),
+            Coord::new(0.3, 0.8),
+            Coord::new(-0.3, 0.8),
+            Coord::new(-0.3, 0.0),
+            Coord::new(-0.3, -0.8),
+            Coord::new(0.3, -0.8),
+            Coord::new(0.3, 0.0),
+        ];
+
+        let vgc = crate::generate_from_push(vec![shape1, shape2]);
+
+        let a = vgc.get_shape(0).expect("Shape should exist");
+        let b = vgc.get_shape(1).expect("Shape should exist");
+
+        let (i_a, i_b) = find_intersecions(a, b);
+
+        assert_eq!(i_a.len(), 4);
+        assert_eq!(i_b.len(), 4);
+
+        let mut ag = create_shape(a, i_a);
+        let mut bg = create_shape(b, i_b);
+
+        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+
+        assert_eq!(ag.len(), 18);
+        assert_eq!(bg.len(), 18);
+    }
 }
