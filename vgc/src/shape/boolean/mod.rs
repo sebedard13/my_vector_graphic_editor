@@ -142,8 +142,8 @@ impl GreinerShape {
                 x,
                 y,
                 int,
-                c.next.unwrap(),
-                c.prev.unwrap(),
+                c.next.unwrap_or(usize::MAX),
+                c.prev.unwrap_or(usize::MAX),
                 neighbor,
                 c.entry,
             );
@@ -295,11 +295,10 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
         }
     }
 
-    assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
+    //assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
 
     (intersections_a, intersections_b)
 }
-
 /// A Shape should be closed so we should have an even number of intersections between two shapes.
 /// If not, it is maybe a bug in the intersection calculation or a precision problem.
 /// In this case, we remove the closest intersection point to the others and update the neighbor index.
@@ -504,7 +503,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
     compress_coord_ptr(&mut result, start_a);
 
     let mut shape = GreinerShape::new(result, start_a, intersections.len());
-    remove_uncessary_common(&mut shape);
+    //remove_uncessary_common(&mut shape);
     shape
 }
 

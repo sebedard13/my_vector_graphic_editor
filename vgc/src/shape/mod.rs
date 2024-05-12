@@ -284,7 +284,7 @@ impl Shape {
             i += 1;
         }
 
-        println!("{:?}", debug_array);
+        //println!("{:?}", debug_array);
         count % 2 == 1
     }
 

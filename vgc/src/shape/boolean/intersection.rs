@@ -1,4 +1,6 @@
-use super::{create_shape, find_intersecions, mark_entry_exit_points, GreinerShape, IntersectionType};
+use super::{
+    create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape, IntersectionType
+};
 use crate::{curve::Curve, shape::Shape};
 
 pub enum ShapeIntersection {
@@ -18,7 +20,7 @@ pub enum ShapeIntersection {
 pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
     let (intersections_a, intersections_b) = find_intersecions(a, b);
 
-    if intersections_a.is_empty() && intersections_b.is_empty() {
+    if empty_intersection(&intersections_a) && empty_intersection(&intersections_b) {
         if a.contains(&b.start.borrow()) {
             return ShapeIntersection::B;
         } else if b.contains(&a.start.borrow()) {
@@ -36,6 +38,15 @@ pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
     let merged_shapes = do_intersection(&ag, &bg, a, b);
 
     ShapeIntersection::New(merged_shapes)
+}
+
+fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
+    for i in 0..intersections.len() {
+        if intersections[i].intersect.is_intersection() {
+            return false;
+        }
+    }
+    true
 }
 
 fn find_index_false(v: &Vec<bool>) -> Option<usize> {
