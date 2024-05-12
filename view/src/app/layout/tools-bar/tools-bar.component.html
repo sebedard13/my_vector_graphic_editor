@@ -5,7 +5,6 @@
             type="radio"
             id="btn-id-{{ i }}"
             name="btn-toolsbar"
-            [attr.checked]="i === 0 ? true : null"
             (change)="onclick(button)"
         />
         <label title="{{ button.title }}" class="action flex center p-2 w-100" for="btn-id-{{ i }}"
