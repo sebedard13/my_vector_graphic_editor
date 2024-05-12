@@ -284,7 +284,7 @@ impl Shape {
             i += 1;
         }
 
-        //println!("{:?}", debug_array);
+        println!("{:?}", debug_array);
         count % 2 == 1
     }
 
@@ -544,6 +544,16 @@ mod test {
         let (p0, _, _, _) = shape.get_coords_of_curve(0);
 
         let coord = (*p0.borrow()) - Coord::new(0.7, 0.0);
+
+        assert_eq!(shape.contains(&coord), false);
+    }
+
+    #[test]
+    fn given_shape_with_line_on_x_when_contain_outside_then_invalid() {
+        let shape = Shape::quick_from_string(
+            "M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z",
+        );
+        let coord = Coord::new(-1.00, 1.00);
 
         assert_eq!(shape.contains(&coord), false);
     }

@@ -60,4 +60,31 @@ impl Shape {
 
         Shape::new_from_path(&coords, transform, fill)
     }
+
+    ///Creates a new shape from a string of path coordinates.
+    /// # Example
+    /// ```
+    /// use vgc::shape::Shape;
+    /// let shape = Shape::quick_from_string("M 0 0 C 1.000 1.000 2 2 0 0 Z");
+    /// assert_eq!(shape.curves.len(), 1);
+    /// assert_eq! (shape.curves[0].cp0.borrow().c.x, 1.0);
+    /// ```
+    pub fn quick_from_string(string: &str) -> Self {
+        let mut coords = vec![];
+        let mut x = 0.0;
+        let mut i = 0;
+        for current in string.split_whitespace() {
+            if current == "M" || current == "L" || current == "C" || current == "Z" {
+                continue;
+            }
+            if i % 2 == 0 {
+                x = current.parse::<f32>().unwrap();
+            } else {
+                coords.push(Coord::new(x, current.parse::<f32>().unwrap()));
+            }
+            i += 1;
+        }
+
+        Shape::new_from_path(&coords, Affine::identity(), Rgba::new(0, 0, 0, 255))
+    }
 }

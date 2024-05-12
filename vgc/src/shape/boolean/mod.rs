@@ -295,7 +295,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
         }
     }
 
-    // assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
+    assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
 
     (intersections_a, intersections_b)
 }
@@ -606,14 +606,30 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     or_common_intersection(ag, bg);
 
     let mut status_entry = true;
-    let coord = &ag.data[ag.start].coord;
+    let start_index = {
+        // Find the first p non intersection point
+        let mut current_index = ag.start;
+        let mut count = 0;
+        while ag.data[current_index].intersect != IntersectionType::None {
+            current_index = ag.data[current_index].next.unwrap();
+            current_index = ag.data[current_index].next.unwrap();
+            current_index = ag.data[current_index].next.unwrap();
+            count += 3;
+            if count > ag.data.len() {
+                panic!("Infinite loop");
+            }
+        }
+        current_index
+    };
+    let coord = &ag.data[start_index].coord;
     let con = b.contains(coord);
     if con {
         status_entry = false;
     }
 
-    let mut current_index = ag.start;
-    while ag.data[current_index].next.is_some() && ag.data[current_index].next.unwrap() != ag.start
+    let mut current_index = start_index;
+    while ag.data[current_index].next.is_some()
+        && ag.data[current_index].next.unwrap() != start_index
     {
         let next_index = ag.data[current_index].next.unwrap();
         let next = &mut ag.data[next_index];
@@ -625,13 +641,29 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     }
 
     status_entry = true;
-    let con = a.contains(&bg.data[bg.start].coord);
+    let start_index = {
+        // Find the first p non intersection point
+        let mut current_index = bg.start;
+        let mut count = 0;
+        while bg.data[current_index].intersect != IntersectionType::None {
+            current_index = bg.data[current_index].next.unwrap();
+            current_index = bg.data[current_index].next.unwrap();
+            current_index = bg.data[current_index].next.unwrap();
+            count += 3;
+            if count > bg.data.len() {
+                panic!("Infinite loop");
+            }
+        }
+        current_index
+    };
+    let con = a.contains(&bg.data[start_index].coord);
     if con {
         status_entry = false;
     }
 
-    let mut current_index = bg.start;
-    while bg.data[current_index].next.is_some() && bg.data[current_index].next.unwrap() != bg.start
+    let mut current_index = start_index;
+    while bg.data[current_index].next.is_some()
+        && bg.data[current_index].next.unwrap() != start_index
     {
         let next_index = bg.data[current_index].next.unwrap();
         let next = &mut bg.data[next_index];

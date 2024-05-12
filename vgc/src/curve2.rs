@@ -209,7 +209,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
     while todo.len() > 0 {
         max_todo = max_todo.max(todo.len());
         // println!("i: {} todo: {}", i, todo.len());
-        if i > 30_000 {
+        if i > 70_000 {
             return Err("Max iteration reached, stopping the intersection calculation. We may be in an infinite loop because of overlapping curves.".to_string());
         }
         i += 1;
@@ -348,8 +348,6 @@ fn own_intersect(a: &Rect, b: &Rect) -> bool {
 }
 
 pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: f32) -> Vec<f32> {
-    let mut vec = Vec::new();
-
     let p0y = p0.y() as f64;
     let cp0y = cp0.y() as f64;
     let cp1y = cp1.y() as f64;
@@ -366,16 +364,27 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
         && f64::abs(coeff2) < f64::EPSILON
         && f64::abs(coeff1) < f64::EPSILON
     {
-        return vec;
+        if p0y == y && p1y == y {
+            if p0.x() < p1.x() {
+                return vec![0.0];
+            } else {
+                return vec![1.0];
+            }
+        }
+        return Vec::new();
     }
 
     let poly = Poly::new_from_coeffs(&vec![coeff0, coeff1, coeff2, coeff3]);
 
     let croots = poly.complex_roots();
 
+    let mut vec = Vec::new();
     for root in croots {
         //For the even-odd rule, we don't care if root is at 0.0 or 1.0, because it need to add 2 intersections
-        if 0.0 < root.0 && root.0 < 1.0 && f64::abs(root.1) < (f32::EPSILON as f64) {
+        if 0.0 < (root.0 as f32)
+            && (root.0 as f32) < 1.0
+            && f64::abs(root.1) < (f32::EPSILON as f64)
+        {
             if vec
                 .iter()
                 .any(|&x| f32::abs(x - root.0 as f32) < f32::EPSILON)

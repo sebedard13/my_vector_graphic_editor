@@ -95,6 +95,7 @@ export class CanvasComponent implements AfterViewInit {
             } else {
                 this.renderSub?.unsubscribe();
                 console.error("Wasm vgc crashed, stopping rendering");
+                alert("Wasm vgc crashed, stopping rendering");
             }
         }
 

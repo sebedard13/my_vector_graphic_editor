@@ -1,8 +1,6 @@
 use std::ptr;
 
-use super::{
-    create_shape, find_intersecions, mark_entry_exit_points, GreinerShape,
-};
+use super::{create_shape, find_intersecions, mark_entry_exit_points, GreinerShape};
 use crate::{curve::Curve, shape::Shape};
 
 pub enum ShapeDifference {
@@ -694,6 +692,60 @@ mod test {
         };
 
         assert_eq!(merged.len(), 1);
+
+        let steps = 6;
+        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
+            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
+                let coord = &Coord::new(x + 0.001, y - 0.002);
+                assert_eq!(
+                    merged[0].contains(&coord),
+                    a.contains(&coord) && !b.contains(&coord),
+                    "Contains failed at ({}, {})",
+                    x,
+                    y
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn bugg2() {
+        let a = Shape::quick_from_string(
+            "M -0.45359507 -0.45359507 C -0.45359507 -0.45359507 0 0 0 0 
+        C 0 0 1 1 1 1 C 1 1 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 
+        C -1 -1 -0.7198505 -0.7198505 -0.7198505 -0.7198505 
+        C -0.69678396 -0.7486032 -0.6671195 -0.7658949 -0.6346667 -0.7660109 
+        C -0.575112 -0.765798 -0.5249474 -0.70774376 -0.50771606 -0.62716335 
+        C -0.47476742 -0.5908155 -0.4534313 -0.5322852 -0.453326 -0.46599996 
+        C -0.45333263 -0.4618332 -0.45342314 -0.45769712 -0.45359507 -0.45359507 Z",
+        );
+        let b = Shape::quick_from_string("M -0.84374976 -0.84374976 C -0.84374976 -0.84374976 -1 -1 -1 -1 
+        C -1 -1 -1 1 -1 1 C -1 1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -0.45359507 -0.45359507 -0.45359507 -0.45359507 
+        C -0.45342314 -0.45769712 -0.45333263 -0.4618332 -0.453326 -0.46599996 
+        C -0.4534313 -0.5322852 -0.47476742 -0.5908155 -0.50771606 -0.62716335
+         C -0.5249475 -0.7077439 -0.57511204 -0.765798 -0.6346667 -0.7660109 
+         C -0.6378605 -0.76599944 -0.6410273 -0.76582164 -0.64416337 -0.76548296 
+         C -0.6652278 -0.8342496 -0.711435 -0.88181823 -0.7653334 -0.88201094 
+         C -0.79469514 -0.881906 -0.8217743 -0.8677416 -0.84374976 -0.84374976 Z");
+
+        let intersections = super::find_intersecions(&a, &b);
+
+        let mut ag = super::create_shape(&a, intersections.0);
+        let mut bg = super::create_shape(&b, intersections.1);
+
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        ag.print_coords_table();
+        bg.print_coords_table();
+
+        let merged = shape_difference(&a, &b);
+
+        let merged = match merged {
+            ShapeDifference::New(merged) => merged,
+            _ => panic!("Should be a new shape"),
+        };
+
+        assert_eq!(merged.len(), 1);
+        println!("{}", merged[0].path());
 
         let steps = 6;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
