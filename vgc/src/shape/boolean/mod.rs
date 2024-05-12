@@ -302,6 +302,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
 /// A Shape should be closed so we should have an even number of intersections between two shapes.
 /// If not, it is maybe a bug in the intersection calculation or a precision problem.
 /// In this case, we remove the closest intersection point to the others and update the neighbor index.
+#[allow(dead_code)] // Maybe useful
 fn assert_intersections_even_count(
     a: &Shape,
     intersections_a: &mut Vec<CoordOfIntersection>,
@@ -502,11 +503,12 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     compress_coord_ptr(&mut result, start_a);
 
-    let mut shape = GreinerShape::new(result, start_a, intersections.len());
+    let shape = GreinerShape::new(result, start_a, intersections.len());
     //remove_uncessary_common(&mut shape);
     shape
 }
 
+#[allow(dead_code)] // Maybe useful
 fn remove_uncessary_common(shape: &mut GreinerShape) {
     let mut i = 0;
     let mut current_index = shape.start;
