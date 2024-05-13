@@ -13,7 +13,7 @@ mod union;
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, is_line},
-    curve2::{intersection, IntersectionResult},
+    curve2::{coord_equal, intersection, IntersectionResult},
     shape::Shape,
 };
 use common::{dbg_str, types::Coord};
@@ -251,6 +251,14 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 IntersectionResult::None => {}
                 IntersectionResult::Pts(intersection_points) => {
                     for point in intersection_points {
+                        //continue if point is already in the list
+                        if intersections_a
+                            .iter()
+                            .any(|x| coord_equal(&x.coord, &point.coord))
+                        {
+                            continue;
+                        }
+
                         let mut point_a =
                             CoordOfIntersection::from_intersection(point.coord, point.t1, i);
 
@@ -624,6 +632,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     };
     let coord = &ag.data[start_index].coord;
     let con = b.contains(coord);
+    println!("a start index: {}, con: {}", start_index, con);
     if con {
         status_entry = false;
     }
@@ -658,6 +667,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
         current_index
     };
     let con = a.contains(&bg.data[start_index].coord);
+    println!("b start index: {}, con: {}", start_index, con);
     if con {
         status_entry = false;
     }

@@ -204,12 +204,42 @@ fn intersection_simple(
 
 fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
+
+    if coord_equal(&todo[0].c1_p0, &todo[0].c2_p0) {
+        res.push(IntersectionPoint {
+            coord: todo[0].c1_p0,
+            t1: 0.0,
+            t2: 0.0,
+        });
+    }
+    if coord_equal(&todo[0].c1_p1, &todo[0].c2_p1) {
+        res.push(IntersectionPoint {
+            coord: todo[0].c1_p1,
+            t1: 1.0,
+            t2: 1.0,
+        });
+    }
+    if coord_equal(&todo[0].c1_p0, &todo[0].c2_p1) {
+        res.push(IntersectionPoint {
+            coord: todo[0].c1_p0,
+            t1: 0.0,
+            t2: 1.0,
+        });
+    }
+    if coord_equal(&todo[0].c1_p1, &todo[0].c2_p0) {
+        res.push(IntersectionPoint {
+            coord: todo[0].c1_p1,
+            t1: 1.0,
+            t2: 0.0,
+        });
+    }
+
     let mut max_todo = 0;
     let mut i = 0;
     while todo.len() > 0 {
         max_todo = max_todo.max(todo.len());
         // println!("i: {} todo: {}", i, todo.len());
-        if i > 70_000 {
+        if i > 50_000 {
             return Err("Max iteration reached, stopping the intersection calculation. We may be in an infinite loop because of overlapping curves.".to_string());
         }
         i += 1;
@@ -747,5 +777,62 @@ mod tests {
         );
 
         assert_eq!(res.len(), 1);
+    }
+
+    #[test]
+    fn bugg3() {
+        //-0.7606782 -0.88851035 -0.7836163 -0.9487264 -0.8267758 -0.9891847 -0.8764745 -0.98936236
+        //-0.8764745 -0.98936236 C -0.90502703 -0.98926026 -0.9314211 -0.975863 -0.9530624 -0.9530624
+
+        let cu10 = vec![
+            Coord::new(-0.7606782, -0.88851035),
+            Coord::new(-0.7836163, -0.9487264),
+            Coord::new(-0.8267758, -0.9891847),
+            Coord::new(-0.8764745, -0.98936236),
+        ];
+
+        let cu11 = vec![
+            Coord::new(-0.8764745, -0.98936236),
+            Coord::new(-0.90502703, -0.98926026),
+            Coord::new(-0.9314211, -0.975863),
+            Coord::new(-0.9530624, -0.9530624),
+        ];
+
+        //-0.7431338 -0.78935134 C -0.74330974 -0.9000367 -0.80268425 -0.98909855 -0.8764745 -0.98936236
+        //-0.8764745 -0.98936236 C -0.90502703 -0.98926026 -0.9314211 -0.975863 -0.9530624 -0.9530624
+
+        let cu20 = vec![
+            Coord::new(-0.7431338, -0.78935134),
+            Coord::new(-0.74330974, -0.9000367),
+            Coord::new(-0.80268425, -0.98909855),
+            Coord::new(-0.8764745, -0.98936236),
+        ];
+
+        let cu21 = vec![
+            Coord::new(-0.8764745, -0.98936236),
+            Coord::new(-0.90502703, -0.98926026),
+            Coord::new(-0.9314211, -0.975863),
+            Coord::new(-0.9530624, -0.9530624),
+        ];
+
+        let res1020 = intersection(
+            &cu10[0], &cu10[1], &cu10[2], &cu10[3], &cu20[0], &cu20[1], &cu20[2], &cu20[3],
+        );
+        assert!(matches!(res1020, IntersectionResult::ASmallerAndInsideB));
+
+        let res1021 = intersection(
+            &cu10[0], &cu10[1], &cu10[2], &cu10[3], &cu21[0], &cu21[1], &cu21[2], &cu21[3],
+        );
+        assert!(matches!(res1021, IntersectionResult::Pts(_)));
+
+        let res1120 = intersection(
+            &cu11[0], &cu11[1], &cu11[2], &cu11[3], &cu20[0], &cu20[1], &cu20[2], &cu20[3],
+        );
+        assert!(matches!(res1120, IntersectionResult::Pts(_)));
+
+        let res1121 = intersection(
+            &cu11[0], &cu11[1], &cu11[2], &cu11[3], &cu21[0], &cu21[1], &cu21[2], &cu21[3],
+        );
+        assert!(matches!(res1121, IntersectionResult::ASmallerAndInsideB));
     }
 }
