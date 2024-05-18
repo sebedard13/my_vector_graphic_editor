@@ -23,6 +23,11 @@ export class MoveCoordService extends Functionality {
     }
 
     activate(): void {
+        if (this.subscription !== null) {
+            console.warn("MoveCoordService already activated");
+            return;
+        }
+
         this.subscription = this.eventsService.mouseMove$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons === 1) {
@@ -38,6 +43,7 @@ export class MoveCoordService extends Functionality {
 
     desactivate(): void {
         this.subscription?.unsubscribe();
+        this.subscription = null;
     }
 
     isActivated(): boolean {

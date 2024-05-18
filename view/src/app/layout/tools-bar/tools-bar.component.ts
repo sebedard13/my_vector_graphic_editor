@@ -43,7 +43,6 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
         this.activeButton = this.buttons[startIndex];
         this.elementRef.nativeElement.querySelector("#btn-id-" + startIndex).click();
 
-        this.activeButton.functionality?.activate();
         this.eventService.keydown$
             .pipe(
                 takeUntilDestroyed(this.destroyRef),
@@ -58,6 +57,8 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
     }
 
     onclick(button: Button) {
+        console.log(button);
+
         this.activeButton.functionality?.desactivate();
         button.functionality?.activate();
         this.activeButton = button;
