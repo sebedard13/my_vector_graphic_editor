@@ -398,9 +398,9 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
 // false if bottom right equal
 fn own_intersect(a: &Rect, b: &Rect) -> bool {
     a.top_left.x() <= b.bottom_right.x()
-        && a.bottom_right.x() > b.top_left.x()
+        && a.bottom_right.x() >= b.top_left.x()
         && a.top_left.y() <= b.bottom_right.y()
-        && a.bottom_right.y() > b.top_left.y()
+        && a.bottom_right.y() >= b.top_left.y()
 }
 
 pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: f32) -> Vec<f32> {
