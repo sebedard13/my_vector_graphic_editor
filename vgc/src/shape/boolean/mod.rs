@@ -13,7 +13,7 @@ mod union;
 use crate::{
     coord::CoordPtr,
     curve::{add_smooth_result, is_line},
-    curve2::{coord_equal, intersection, IntersectionResult},
+    curve2::{intersection, IntersectionResult},
     shape::Shape,
 };
 use common::{dbg_str, types::Coord};
@@ -131,8 +131,8 @@ impl GreinerShape {
             "Index", "x", "y", "In.sect", "Next", "Prev", "Neigh.", "Entry"
         );
         for (i, c) in self.data.iter().enumerate() {
-            let x = format!("{:.2}", c.coord.x());
-            let y = format!("{:.2}", c.coord.y());
+            let x = format!("{:.4}", c.coord.x());
+            let y = format!("{:.4}", c.coord.y());
             let neighbor = format!("{:?}", c.neighbor);
             let int = format!("{}", c.intersect);
 
@@ -252,10 +252,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 IntersectionResult::Pts(intersection_points) => {
                     for point in intersection_points {
                         //continue if point is already in the list
-                        if intersections_a
-                            .iter()
-                            .any(|x| coord_equal(&x.coord, &point.coord))
-                        {
+                        if intersections_a.iter().any(|x| &x.coord == &point.coord) {
                             continue;
                         }
 
@@ -632,7 +629,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
     };
     let coord = &ag.data[start_index].coord;
     let con = b.contains(coord);
-    println!("a start index: {}, con: {}", start_index, con);
+    //println!("a start index: {}, con: {}", start_index, con);
     if con {
         status_entry = false;
     }
@@ -667,7 +664,7 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
         current_index
     };
     let con = a.contains(&bg.data[start_index].coord);
-    println!("b start index: {}, con: {}", start_index, con);
+    //println!("b start index: {}, con: {}", start_index, con);
     if con {
         status_entry = false;
     }
@@ -791,9 +788,9 @@ mod test {
             } else if intersections.0[i].intersect.is_intersection() {
                 inteersection_count += 1;
                 assert!(
-                    intersections.0[i].t == 0.654658138 || intersections.0[i].t == 0.508218467,
+                    intersections.0[i].t == 0.654658318 || intersections.0[i].t == 0.508217812,
                     "t should be 0.654658138 or 0.508218467, but was {}",
-                    intersections.0[0].t
+                    intersections.0[i].t
                 );
             }
         }

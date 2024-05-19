@@ -457,7 +457,7 @@ mod test {
         let intersections = super::find_intersecions(&a, &b);
         assert_eq!(intersections.0.len(), 2);
 
-        assert_eq!(intersections.0[1].t, 0.299266011);
+        assert_eq!(intersections.0[1].t, 0.29926586);
 
         let mut ag = super::create_shape(&a, intersections.0);
         let mut bg = super::create_shape(&b, intersections.1);

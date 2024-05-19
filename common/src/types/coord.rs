@@ -1,4 +1,7 @@
-use crate::pures::{Affine, Vec2};
+use crate::{
+    pures::{Affine, Vec2},
+    PRECISION,
+};
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Div, Mul, Neg, Sub};
@@ -72,8 +75,7 @@ impl Coord {
 
 impl PartialEq for Coord {
     fn eq(&self, other: &Coord) -> bool {
-        f32::abs(self.c.x - other.c.x) <= f32::EPSILON
-            && f32::abs(self.c.y - other.c.y) <= f32::EPSILON
+        f32::abs(self.c.x - other.c.x) <= PRECISION && f32::abs(self.c.y - other.c.y) <= PRECISION
     }
 }
 

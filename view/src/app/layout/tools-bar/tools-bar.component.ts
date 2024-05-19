@@ -57,8 +57,6 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
     }
 
     onclick(button: Button) {
-        console.log(button);
-
         this.activeButton.functionality?.desactivate();
         button.functionality?.activate();
         this.activeButton = button;

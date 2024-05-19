@@ -226,7 +226,7 @@ mod test {
         let merged = &merged[0];
         assert_eq!(merged.curves.len(), 6);
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x, y);
@@ -432,7 +432,7 @@ mod test {
 
         assert_eq!(merged.len(), 1);
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -556,8 +556,8 @@ mod test {
         let mut bg = super::create_shape(&b, intersections.1);
 
         super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
+        //ag.print_coords_table();
+        //bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -568,7 +568,7 @@ mod test {
 
         assert_eq!(merged.len(), 1);
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -692,8 +692,8 @@ mod test {
         let mut bg = super::create_shape(&b, intersections.1);
 
         super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
+        //ag.print_coords_table();
+        //bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -704,7 +704,7 @@ mod test {
 
         assert_eq!(merged.len(), 1);
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -745,8 +745,8 @@ mod test {
         let mut bg = super::create_shape(&b, intersections.1);
 
         super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
+        //ag.print_coords_table();
+        //bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -756,9 +756,9 @@ mod test {
         };
 
         assert_eq!(merged.len(), 1);
-        println!("{}", merged[0].path());
+       // println!("{}", merged[0].path());
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -784,8 +784,8 @@ mod test {
         let mut bg = super::create_shape(&b, intersections.1);
 
         super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
+        //ag.print_coords_table();
+       // bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -795,9 +795,9 @@ mod test {
         };
 
         assert_eq!(merged.len(), 1);
-        println!("{}", merged[0].path());
+        //println!("{}", merged[0].path());
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -813,18 +813,16 @@ mod test {
     }
 
     #[test]
-    fn bugg4(){
-        let a = Shape::quick_from_string("M -0.4286464 -0.4286464 C -0.4286464 -0.4286464 0 0 0 0 C 0 0 1 1 1 1 C 1 1 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 C -1 -1 -0.72777134 -0.72777134 -0.72777134 -0.72777134 C -0.70948786 -0.741921 -0.6887212 -0.7499321 -0.66666675 -0.75001097 C -0.63001215 -0.74987996 -0.5969145 -0.7278378 -0.57286334 -0.69211847 C -0.5669162 -0.69334495 -0.560842 -0.6939889 -0.55466676 -0.694011 C -0.4808765 -0.69374716 -0.42150196 -0.6046853 -0.42132604 -0.49399996 C -0.42136246 -0.47109056 -0.4239349 -0.44910747 -0.4286464 -0.4286464 Z");
-        let b = Shape::quick_from_string("M -0.6973167 -0.74464357 C -0.7080303 -0.74085784 -0.71823835 -0.73514897 -0.72777134 -0.72777134 C -0.72777134 -0.72777134 -1 -1 -1 -1 C -1 -1 -1 1 -1 1 C -1 1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -0.4286464 -0.4286464 -0.4286464 -0.4286464 C -0.4239349 -0.44910747 -0.42136246 -0.47109056 -0.42132604 -0.49399996 C -0.42141214 -0.5481734 -0.4356792 -0.597167 -0.45887658 -0.6331049 C -0.46285018 -0.73858243 -0.5206945 -0.821756 -0.592 -0.8220109 C -0.6349202 -0.82185745 -0.67296314 -0.7916621 -0.6973167 -0.74464357 Z");
-    
+    fn bugg4() {
+        let a = Shape::quick_from_string("M -0.27740008 -0.36726904 C -0.24063542 -0.3354444 -0.21502545 -0.27811226 -0.21116556 -0.21116556 C -0.21116556 -0.21116556 0 0 0 0 C 0 0 1 1 1 1 C 1 1 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 C -1 -1 -0.6365884 -0.6365884 -0.6365884 -0.6365884 C -0.6136078 -0.66489893 -0.5841743 -0.68189585 -0.55200005 -0.6820109 C -0.4782098 -0.6817471 -0.41883525 -0.5926852 -0.41865933 -0.48199987 C -0.41868675 -0.4647375 -0.4201541 -0.44800115 -0.42289132 -0.4320454 C -0.40982494 -0.43846637 -0.39585844 -0.44195896 -0.38133335 -0.4420109 C -0.3392175 -0.44186032 -0.3017977 -0.4127832 -0.27740008 -0.36726904 Z");
+        let b = Shape::quick_from_string("M -0.44310337 -0.597401 C -0.46721092 -0.64853907 -0.5069147 -0.6818497 -0.55200005 -0.6820109 C -0.5841743 -0.68189585 -0.6136078 -0.66489893 -0.6365884 -0.6365884 C -0.6365884 -0.6365884 -1 -1 -1 -1 C -1 -1 -1 1 -1 1 C -1 1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -0.21116556 -0.21116556 -0.21116556 -0.21116556 C -0.21502545 -0.27811217 -0.24063537 -0.33544427 -0.27740008 -0.36726904 C -0.28916234 -0.38921174 -0.30395132 -0.40733403 -0.32083404 -0.4202364 C -0.3279281 -0.51536286 -0.37904608 -0.5899601 -0.44310337 -0.597401 Z");
+
         let intersections = super::find_intersecions(&a, &b);
 
         let mut ag = super::create_shape(&a, intersections.0);
         let mut bg = super::create_shape(&b, intersections.1);
 
         super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
 
@@ -834,9 +832,8 @@ mod test {
         };
 
         assert_eq!(merged.len(), 1);
-        println!("{}", merged[0].path());
 
-        let steps = 6;
+        let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
             for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
                 let coord = &Coord::new(x + 0.001, y - 0.002);
@@ -850,5 +847,4 @@ mod test {
             }
         }
     }
-
 }

@@ -3,11 +3,13 @@ use std::vec;
 use common::{
     dbg_str,
     types::{Coord, Rect},
+    PRECISION,
 };
 use polynomen::Poly;
 
 use crate::curve::{add_smooth_result, cubic_bezier};
 
+#[allow(dead_code)]
 pub fn bounding_box(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Rect {
     let extremities = extremites(&p0, &cp0, &cp1, &p1);
 
@@ -27,22 +29,75 @@ pub fn bounding_box(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Rect {
     }
 }
 
+/// Returns the bounding box of the curve without calculating the extremities
+/// This is faster and more stable than `bounding_box` but less precise
+pub fn quick_bounding_box(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Rect {
+    let mut min = Coord::new(f32::MAX, f32::MAX);
+    let mut max = Coord::new(f32::MIN, f32::MIN);
+
+    for c in &[p0, cp0, cp1, p1] {
+        min = Coord::min(&min, c);
+        max = Coord::max(&max, c);
+    }
+
+    Rect {
+        top_left: min,
+        bottom_right: max,
+    }
+}
+
 /// Returns t extremities of the curve in the order of t smallest to t largest
 pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> {
     let mut vec = Vec::new();
     vec.push(0.0);
     vec.push(1.0);
 
+    let p0x = p0.x() as f64;
+    let p0y = p0.y() as f64;
+    let cp0x = cp0.x() as f64;
+    let cp0y = cp0.y() as f64;
+    let cp1x = cp1.x() as f64;
+    let cp1y = cp1.y() as f64;
+    let p1x = p1.x() as f64;
+    let p1y = p1.y() as f64;
+
     // for first derivative
-    let d1a = 3.0 * (-p0 + 3.0 * cp0 - 3.0 * cp1 + p1);
-    let d1b = 6.0 * (p0 - 2.0 * cp0 + cp1);
-    let d1c = 3.0 * (cp0 - p0);
+    let d1ax = 3.0 * (-p0x + 3.0 * cp0x - 3.0 * cp1x + p1x);
+    let d1ay = 3.0 * (-p0y + 3.0 * cp0y - 3.0 * cp1y + p1y);
+    let d1bx = 6.0 * (p0x - 2.0 * cp0x + cp1x);
+    let d1by = 6.0 * (p0y - 2.0 * cp0y + cp1y);
+    let d1cx = 3.0 * (cp0x - p0x);
+    let d1cy = 3.0 * (cp0y - p0y);
+
+    Poly::new_from_coeffs(&vec![d1cx / d1ax, d1bx / d1ax, 1.0])
+        .real_roots()
+        .and_then(|roots| {
+            for root in roots {
+                if root > 0.0 && root < 1.0 {
+                    vec.push(root);
+                }
+            }
+            Some(())
+        });
+
+    Poly::new_from_coeffs(&vec![d1cy / d1ay, d1by / d1ay, 1.0])
+        .real_roots()
+        .and_then(|roots| {
+            for root in roots {
+                if root > 0.0 && root < 1.0 {
+                    vec.push(root);
+                }
+            }
+            Some(())
+        });
 
     // for second derivative
-    let d2a = 6.0 * (-p0 + 3.0 * cp0 - 3.0 * cp1 + p1);
-    let d2b = 6.0 * (p0 - 2.0 * cp0 + cp1);
+    let d2ax = 6.0 * (-p0x + 3.0 * cp0x - 3.0 * cp1x + p1x);
+    let d2ay = 6.0 * (-p0y + 3.0 * cp0y - 3.0 * cp1y + p1y);
+    let d2bx = 6.0 * (p0x - 2.0 * cp0x + cp1x);
+    let d2by = 6.0 * (p0y - 2.0 * cp0y + cp1y);
 
-    Poly::new_from_coeffs(&vec![d1c.x() / d1a.x(), d1b.x() / d1a.x(), 1.0])
+    Poly::new_from_coeffs(&vec![d2bx / d2ax, 1.0])
         .real_roots()
         .and_then(|roots| {
             for root in roots {
@@ -53,29 +108,7 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
             Some(())
         });
 
-    Poly::new_from_coeffs(&vec![d1c.y() / d1a.y(), d1b.y() / d1a.y(), 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
-            }
-            Some(())
-        });
-
-    Poly::new_from_coeffs(&vec![d2b.x() / d2a.x(), 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
-            }
-            Some(())
-        });
-
-    Poly::new_from_coeffs(&vec![d2b.y() / d2a.y(), 1.0])
+    Poly::new_from_coeffs(&vec![d2by / d2ay, 1.0])
         .real_roots()
         .and_then(|roots| {
             for root in roots {
@@ -87,7 +120,7 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
         });
 
     vec.sort_by(|a, b| a.partial_cmp(b).expect("No Nan value possible"));
-    vec
+    vec.into_iter().map(|x| x as f32).collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]
@@ -143,8 +176,6 @@ pub fn intersection(
     IntersectionResult::Pts(res)
 }
 
-const PRECISION: f32 = 4.0;
-
 fn intersection_simple(
     c1_p0: &Coord,
     c1_cp0: &Coord,
@@ -183,19 +214,19 @@ fn intersection_simple(
     };
     //Set the t value to 0.0 or 1.0 if the intersection is at the extremities
     for r in &mut res {
-        if coord_equal(&r.coord, c1_p0) {
+        if &r.coord == c1_p0 {
             r.t1 = 0.0;
         }
 
-        if coord_equal(&r.coord, c1_p1) {
+        if &r.coord == c1_p1 {
             r.t1 = 1.0;
         }
 
-        if coord_equal(&r.coord, c2_p0) {
+        if &r.coord == c2_p0 {
             r.t2 = 0.0;
         }
 
-        if coord_equal(&r.coord, c2_p1) {
+        if &r.coord == c2_p1 {
             r.t2 = 1.0;
         }
     }
@@ -205,28 +236,28 @@ fn intersection_simple(
 fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
 
-    if coord_equal(&todo[0].c1_p0, &todo[0].c2_p0) {
+    if &todo[0].c1_p0 == &todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 0.0,
         });
     }
-    if coord_equal(&todo[0].c1_p1, &todo[0].c2_p1) {
+    if &todo[0].c1_p1 == &todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
             t2: 1.0,
         });
     }
-    if coord_equal(&todo[0].c1_p0, &todo[0].c2_p1) {
+    if &todo[0].c1_p0 == &todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 1.0,
         });
     }
-    if coord_equal(&todo[0].c1_p1, &todo[0].c2_p0) {
+    if &todo[0].c1_p1 == &todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
@@ -245,8 +276,8 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
         i += 1;
 
         let cu = todo.pop().expect("No empty todo");
-        let c1_rect = bounding_box(&cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1);
-        let c2_rect = bounding_box(&cu.c2_p0, &cu.c2_cp0, &cu.c2_cp1, &cu.c2_p1);
+        let c1_rect = quick_bounding_box(&cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1);
+        let c2_rect = quick_bounding_box(&cu.c2_p0, &cu.c2_cp0, &cu.c2_cp1, &cu.c2_p1);
 
         if !own_intersect(&c1_rect, &c2_rect) {
             continue;
@@ -255,7 +286,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
         let max = Rect::max(&c1_rect, &c2_rect);
 
         let max_iter = 30; //30 and 0.5 are over kill for precision, but it's better to have too much than not enough
-        let min_diago = f32::EPSILON * PRECISION * f32::EPSILON * PRECISION * 0.5;
+        let min_diago = PRECISION * PRECISION * 0.5;
         if max.approx_diagonal() < min_diago || cu.level > max_iter {
             let rtn = IntersectionPoint {
                 coord: cubic_bezier(cu.t1, &cu.c1_p0, &cu.c1_cp0, &cu.c1_cp1, &cu.c1_p1),
@@ -265,7 +296,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
 
             let mut is_present = false;
             for r in &res {
-                if coord_equal(&rtn.coord, &r.coord) {
+                if &rtn.coord == &r.coord {
                     is_present = true;
                     break;
                 }
@@ -361,11 +392,6 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
     Ok(res)
 }
 
-pub fn coord_equal(a: &Coord, b: &Coord) -> bool {
-    f32::abs(a.x() - b.x()) <= f32::EPSILON * PRECISION
-        && f32::abs(a.y() - b.y()) <= f32::EPSILON * PRECISION
-}
-
 //Intersection between two rectangles
 // true if inside each other
 // true if top left equal
@@ -447,7 +473,6 @@ pub fn curves_overlap(
     let ts = vec![
         0.006263, 0.108011, 0.278309, 0.548986, 0.85558, 0.935159, 0.977084,
     ];
-    let diff_check = f32::EPSILON * PRECISION * 100.0;
 
     let end_value = ts[ts.len() - 1];
     for t in &ts {
@@ -457,7 +482,7 @@ pub fn curves_overlap(
         let mut one_equal = false;
         for t2 in intesections {
             let c2 = cubic_bezier(t2, c2_p0, c2_cp0, c2_cp1, c2_p1);
-            if f32::abs(c1.x() - c2.x()) < diff_check {
+            if c1 == c2 {
                 one_equal = true;
                 break;
             }
@@ -480,7 +505,7 @@ pub fn curves_overlap(
         for t2 in intesections {
             let c1 = cubic_bezier(t2, c1_p0, c1_cp0, c1_cp1, c1_p1);
 
-            if f32::abs(c1.x() - c2.x()) < diff_check {
+            if c1 == c2 {
                 one_equal = true;
                 break;
             }
@@ -556,17 +581,15 @@ mod tests {
         );
 
         assert_eq!(res.len(), 1);
-        assert_approx_eq!(Coord, res[0].coord, Coord::new(0.0, 0.0));
-        assert_approx_eq!(f32, res[0].t1, 0.5);
-        assert_approx_eq!(f32, res[0].t2, 0.5);
+        assert_eq!(res[0].coord, Coord::new(0.0, 0.0));
+        assert_approx_eq!(f32, res[0].t1, 0.5, epsilon = 0.000003);
+        assert_approx_eq!(f32, res[0].t2, 0.5, epsilon = 0.000003);
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[0].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[0].coord
         );
@@ -595,24 +618,20 @@ mod tests {
         assert_eq!(res.len(), 2);
         assert!(res[0].t1 != res[1].t1);
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[0].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[0].coord
         );
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[1].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[1].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[1].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[1].coord
         );
@@ -641,35 +660,29 @@ mod tests {
         assert_eq!(res.len(), 3);
         assert!(res[0].t1 != res[1].t1 && res[0].t1 != res[2].t1);
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[0].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[0].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[0].coord
         );
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[1].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[1].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[1].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[1].coord
         );
 
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[2].t1, &c1_p0, &c1_cp0, &c1_cp1, &c1_p1),
             res[2].coord
         );
-        assert_approx_eq!(
-            Coord,
+        assert_eq!(
             cubic_bezier(res[2].t2, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1),
             res[2].coord
         );
@@ -834,5 +847,44 @@ mod tests {
             &cu11[0], &cu11[1], &cu11[2], &cu11[3], &cu21[0], &cu21[1], &cu21[2], &cu21[3],
         );
         assert!(matches!(res1121, IntersectionResult::ASmallerAndInsideB));
+    }
+
+    #[test]
+    fn given_curve_intersect_at_point_when_intersect_then_pts() {
+        //-0.592 -0.8220109 -0.6349202 -0.82185745 -0.67296314 -0.7916621 -0.6973167 -0.74464357
+        let cu11 = vec![
+            Coord::new(-0.592, -0.8220109),
+            Coord::new(-0.6349202, -0.82185745),
+            Coord::new(-0.67296314, -0.7916621),
+            Coord::new(-0.6973167, -0.74464357),
+        ];
+
+        //-0.72777134 -0.72777134 C -0.70948786 -0.741921 -0.6887212 -0.7499321 -0.66666675 -0.75001097
+
+        let cu20 = vec![
+            Coord::new(-0.72777134, -0.72777134),
+            Coord::new(-0.70948786, -0.741921),
+            Coord::new(-0.6887212, -0.7499321),
+            Coord::new(-0.66666675, -0.75001097),
+        ];
+
+        let res1120 = intersection(
+            &cu11[0], &cu11[1], &cu11[2], &cu11[3], &cu20[0], &cu20[1], &cu20[2], &cu20[3],
+        );
+        assert!(matches!(res1120, IntersectionResult::Pts(_)));
+    }
+
+    #[test]
+    fn given_small_curve_when_extremites_then_3_pts() {
+        //-0.592 -0.8220109 -0.6349202 -0.82185745 -0.67296314 -0.7916621 -0.6973167 -0.74464357
+        let cu11 = vec![
+            Coord::new(-0.697316706, -0.744643509),
+            Coord::new(-0.697316646, -0.744643569),
+            Coord::new(-0.697316646, -0.744643569),
+            Coord::new(-0.697316586, -0.744643509),
+        ];
+
+        let vec = extremites(&cu11[0], &cu11[1], &cu11[2], &cu11[3]);
+        assert_eq!(vec.len(), 3);
     }
 }
