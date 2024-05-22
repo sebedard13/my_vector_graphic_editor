@@ -10,10 +10,9 @@ use common::{
     dbg_str,
     pures::{Affine, Vec2},
     types::{Coord, ScreenRect},
-    Rgba,
 };
 use log::{info, warn};
-use vgc::{coord::coordptr_new, shape::Shape, Vgc};
+use vgc::Vgc;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 use web_sys::CanvasRenderingContext2d;
 
@@ -68,28 +67,22 @@ impl CanvasContent {
 
 impl Default for CanvasContent {
     fn default() -> Self {
-        let mut vgc_data = Vgc::new(Rgba::white());
+        let mut vgc_data = vgc::generate_from_line(vec![
+            vec![
+                Coord::new(-1.0, -0.9),
+                Coord::new(-1.0, 1.0),
+                Coord::new(0.9, 1.0),
+            ],
+            vec![
+                Coord::new(1.0, 0.9),
+                Coord::new(-0.9, -1.0),
+                Coord::new(1.0, -1.0),
+            ],
+        ]);
 
-        let c0 = coordptr_new(-1.0, -1.0);
-
-        let c2 = coordptr_new(1.0, 1.0);
-        let c3 = coordptr_new(0.0, 0.0);
-
-        let mut shape0 = Shape::new(Coord::new(-1.0, 1.0), Rgba::new(128, 0, 0, 255));
-        let mut shape1 = Shape::new(Coord::new(1.0, -1.0), Rgba::new(0, 0, 0, 255));
-
-        shape0.push_coord(shape0.start.clone(), c0.clone(), c0.clone());
-        shape0.push_coord(c0.clone(), c3.clone(), c3.clone());
-        shape0.push_coord(c3.clone(), c2.clone(), c2.clone());
-        shape0.push_coord(c2.clone(), shape0.start.clone(), shape0.start.clone());
-
-        shape1.push_coord(shape1.start.clone(), c2.clone(), c2.clone());
-        shape1.push_coord(c2.clone(), c3.clone(), c3.clone());
-        shape1.push_coord(c3.clone(), c0.clone(), c0.clone());
-        shape1.push_coord(c0.clone(), shape1.start.clone(), shape1.start.clone());
-
-        vgc_data.push_shape(shape0);
-        vgc_data.push_shape(shape1);
+        let shape = vgc_data.get_shape_mut(0).expect("Valid");
+        shape.color.r = 128;
+        shape.color.g = 0;
 
         let camera = Camera::new(vgc_data.max_rect().center(), 750.0, 500.0);
         Self { camera, vgc_data }

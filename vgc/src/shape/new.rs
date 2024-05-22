@@ -26,10 +26,17 @@ impl Shape {
         let mut shape = Shape::new(start, fill);
 
         for i in (1..coords.len()).step_by(3) {
+            let p1 = {
+                if i + 2 == coords.len() - 1 {
+                    shape.start.clone()
+                } else {
+                    Rc::new(RefCell::new(coords[i + 2].transform(&transform)))
+                }
+            };
             shape.push_coord(
                 Rc::new(RefCell::new(coords[i].transform(&transform))),
                 Rc::new(RefCell::new(coords[i + 1].transform(&transform))),
-                Rc::new(RefCell::new(coords[i + 2].transform(&transform))),
+                p1,
             );
         }
 

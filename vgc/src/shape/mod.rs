@@ -228,9 +228,10 @@ impl Shape {
         self.curves.insert(curve_index, new_curve);
     }
 
-    pub fn remove_start(&mut self) {}
-
     pub fn remove_curve(&mut self, curve_index: usize) {
+        
+
+
         if self.is_closed() && self.curves.len() - 1 == curve_index {
             let curve = self.curves.remove(0);
             self.curves[curve_index - 1].cp1 = curve.cp1;
@@ -245,6 +246,31 @@ impl Shape {
 
         if let Some(curve) = self.curves.get_mut(curve_index) {
             curve.cp0 = cp0;
+        }
+    }
+
+    pub fn remove_coord(&mut self, coordptr: CoordPtr) {
+        for i in 0..self.curves.len() {
+            let curve = &mut self.curves[i];
+            log::debug!("curve: {:?}, ptr {:?}", curve, coordptr);
+            if Rc::ptr_eq(&curve.p1, &coordptr) {
+                self.remove_curve(i);
+                return;
+            }
+        }
+
+        let mut last_p1 = self.start.clone();
+        for i in 0..self.curves.len() {
+            let curve = &mut self.curves[i];
+            if Rc::ptr_eq(&curve.cp0, &coordptr) {
+                curve.cp0 = last_p1.clone();
+                return;
+            }
+            if Rc::ptr_eq(&curve.cp1, &coordptr) {
+                curve.cp1 = curve.p1.clone();
+                return;
+            }
+            last_p1 = curve.p1.clone();
         }
     }
 

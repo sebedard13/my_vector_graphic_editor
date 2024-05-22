@@ -1,10 +1,11 @@
+use crate::user_selection::SelectedShape;
 use crate::{camera::Camera, user_selection::Selected, CanvasContent};
 use common::types::{Coord, ScreenLength2d};
 use common::{dbg_str, Rgba};
 use common::{math::point_in_radius, types::ScreenCoord};
 use js_sys::Uint8Array;
 use postcard::{from_bytes, to_allocvec};
-use vgc::shape::boolean::{ShapeDifference, ShapeUnion};
+use vgc::shape::boolean::ShapeUnion;
 use vgc::shape::Shape;
 use vgc::Vgc;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -40,7 +41,7 @@ pub fn move_coords_of(
 
 #[wasm_bindgen]
 pub fn add_or_remove_coord(
-    selected: &Selected,
+    selected: &mut Selected,
     canvas_content: &mut CanvasContent,
     mouse_position: ScreenCoord,
 ) {
@@ -48,33 +49,12 @@ pub fn add_or_remove_coord(
     let camera = &mut canvas_content.camera;
     let pos = camera.project(mouse_position);
 
-    // if click is on a point, remove it
-    let mut to_do: Vec<(usize, usize)> = Vec::new();
-
-    for (shape_index, shape) in vgc_data.shapes.iter().enumerate() {
-        for (curve_index, curve) in shape.curves.iter().enumerate() {
-            let coord = curve.p1.borrow();
-            if point_in_radius(
-                &coord.c,
-                &pos.c,
-                &camera
-                    .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
-                    .c,
-            ) {
-                to_do.push((shape_index, curve_index));
-            }
-        }
-    }
-    if !to_do.is_empty() {
-        for (shape_index, curve_index) in to_do {
-            let shape = vgc_data.get_shape_mut(shape_index).unwrap();
-            shape.remove_curve(curve_index);
-
-            if shape.is_empty() {
-                vgc_data.remove_shape(shape_index);
-            }
-        }
-
+    log::debug!("hover_coord: {:?}", selected.hover_coord);
+    if selected.hover_coord.is_some() {
+        let hover_coord = selected.hover_coord.take().unwrap();
+        let shape = vgc_data.get_shape_mut(hover_coord.shape_index).unwrap();
+        shape.remove_coord(hover_coord.coord);
+        selected.hover_coord = None;
         return;
     }
 
@@ -158,86 +138,43 @@ pub fn draw_shape(
     let radius = camera.transform_to_length2d_no_scale(ScreenLength2d::new(50.0, 50.0));
 
     let pos = camera.project(mouse_position);
-    // if click create a new shape on point and ready to new point
-    let mut shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
-    let mut index: Option<usize> = None;
 
-    //for selected shape try to union the new shape
-    for shape_selected in &selected.shapes {
-        let result = {
-            let selected_shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
-            log::debug!(
-                "{}",
-                dbg_str!(
-                    "start Union A: {} \nB: {}",
-                    selected_shape.path(),
-                    shape.path()
-                )
-            );
-            selected_shape.union(&shape)
-        };
-        log::info!("{}", dbg_str!("Union good"));
-        match result {
-            ShapeUnion::New(new_shape) => {
-                vgc_data.replace_shape(shape_selected.shape_index, new_shape);
-                match index {
-                    Some(index) => {
-                        vgc_data.remove_shape(index);
-                    }
-                    None => {}
-                }
-
-                shape = vgc_data
-                    .get_shape(shape_selected.shape_index)
-                    .unwrap()
-                    .clone();
-                index = Some(shape_selected.shape_index);
-            }
-            ShapeUnion::A => {}
-            ShapeUnion::B => {
-                vgc_data.replace_shape(shape_selected.shape_index, shape);
-                shape = vgc_data
-                    .get_shape(shape_selected.shape_index)
-                    .unwrap()
-                    .clone();
-                index = Some(shape_selected.shape_index);
-            }
-            ShapeUnion::None => {}
-        }
+    let shape = Shape::new_circle(pos, radius.c, Rgba::new(0, 0, 0, 255));
+    if selected.shapes.is_empty() {
+        let id = vgc_data.push_shape(shape);
+        selected.shapes.push(SelectedShape::new(id));
+        return;
     }
 
-    //for unselected shape try to difference the new shape
-    for shape_index in 0..vgc_data.shapes.len() {
-        if !selected.shapes.iter().any(|s| s.shape_index == shape_index) {
-            let selected_shape = vgc_data.get_shape(shape_index).unwrap();
-            log::info!(
-                "{}",
-                dbg_str!(
-                    "Difference with A: {} \nB: {}",
-                    selected_shape.path(),
-                    shape.path()
-                )
-            );
-            let result = selected_shape.difference(&shape);
-            match result {
-                ShapeDifference::New(mut new_shapes) => {
-                    log::debug!("{}", dbg_str!("Difference New shape"));
-                    vgc_data.replace_shape(shape_index, new_shapes.swap_remove(0));
-                    for new_shape in new_shapes {
-                        vgc_data.push_shape(new_shape);
-                    }
-                }
-                ShapeDifference::EraseA => {
-                    log::debug!("{}", dbg_str!("Difference erase A"));
-                    vgc_data.remove_shape(shape_index);
-                }
-                ShapeDifference::A => {}
-                ShapeDifference::AWithBHole => {
-                    log::error!("{}", dbg_str!("AWithBHole"));
-                    //todo!("Add an hole to A");
-                }
-            }
+    if selected.shapes.len() > 1 {
+        selected.shapes.pop();
+    }
+
+    //for selected shape try to union the new shape
+    let shape_selected = &selected.shapes[0];
+
+    let result = {
+        let selected_shape = vgc_data.get_shape(shape_selected.shape_index).unwrap();
+        log::debug!(
+            "{}",
+            dbg_str!(
+                "start Union A: {} \nB: {}",
+                selected_shape.path(),
+                shape.path()
+            )
+        );
+        selected_shape.union(&shape)
+    };
+    log::info!("{}", dbg_str!("Union good"));
+    match result {
+        ShapeUnion::New(new_shape) => {
+            vgc_data.replace_shape(shape_selected.shape_index, new_shape);
         }
+        ShapeUnion::A => {}
+        ShapeUnion::B => {
+            vgc_data.replace_shape(shape_selected.shape_index, shape);
+        }
+        ShapeUnion::None => {}
     }
 }
 

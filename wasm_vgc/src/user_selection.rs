@@ -1,4 +1,5 @@
 use std::f64::consts::PI;
+use std::rc::Rc;
 
 use common::types::{Coord, ScreenCoord, ScreenLength2d};
 use common::Rgba;
@@ -15,13 +16,26 @@ use crate::CanvasContent;
 pub struct Selected {
     #[wasm_bindgen(skip)]
     pub shapes: Vec<SelectedShape>,
+    #[wasm_bindgen(skip)]
+    pub hover_coord: Option< HoverCoord>,
 }
 
 #[derive(Debug, Default)]
 pub struct SelectedShape {
     pub shape_index: usize,
     pub coords: Vec<CoordPtr>,
-    pub hover_coord: Option<CoordPtr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct HoverCoord {
+    pub shape_index: usize,
+    pub coord: CoordPtr,
+}
+
+impl HoverCoord {
+    pub fn new(shape_index: usize, coord: CoordPtr) -> Self {
+        Self { shape_index, coord }
+    }
 }
 
 #[wasm_bindgen]
@@ -126,11 +140,11 @@ impl Selected {
                         .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
                         .c,
                 ) {
-                    shape_selected.hover_coord = Some(ref_coord_type.clone());
+                    self.hover_coord = Some(HoverCoord::new(shape_selected.shape_index, ref_coord_type.clone()));
                     continue 'shape_loop;
                 }
             }
-            shape_selected.hover_coord = None;
+            self.hover_coord = None;
         }
     }
 
@@ -264,13 +278,12 @@ impl SelectedShape {
         Self {
             shape_index,
             coords: Vec::new(),
-            hover_coord: None,
         }
     }
 
-    fn coord_state(&self, coord_ref: &CoordPtr) -> CoordState {
-        match &self.hover_coord {
-            Some(hover_coord) if hover_coord == coord_ref => CoordState::Hover,
+    fn coord_state(&self, selected: &Selected, coord_ref: &CoordPtr) -> CoordState {
+        match &selected.hover_coord {
+            Some(hover_coord) if Rc::ptr_eq(&hover_coord.coord, coord_ref) => CoordState::Hover,
             _ => match self.coords.iter().find(|coord| *coord == coord_ref) {
                 Some(_) => CoordState::Selected,
                 None => CoordState::None,
@@ -310,7 +323,7 @@ pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRen
 
         let refs_coord_type = shape.get_coords_of_shape_tmp();
         for ref_coord_type in refs_coord_type {
-            let coord_state = shape_selected.coord_state(&ref_coord_type);
+            let coord_state = shape_selected.coord_state(&selected, &ref_coord_type);
             let coord = ref_coord_type.borrow();
             let color = match coord_state {
                 CoordState::Hover => Rgba::new(0x0E, 0x90, 0xAA, 255),
