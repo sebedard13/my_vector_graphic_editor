@@ -265,6 +265,15 @@ impl Selected {
             }
         }
     }
+
+    pub fn remove_shape(&mut self, shape_index: usize) {
+        let shapes = &mut self.shapes;
+        let pos = shapes.iter().position(|shape_selected| shape_selected.shape_index == shape_index);
+
+        if let Some(index) = pos {
+            shapes.remove(index);
+        }
+    }
 }
 
 enum CoordState {

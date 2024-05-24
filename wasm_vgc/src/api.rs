@@ -55,6 +55,11 @@ pub fn add_or_remove_coord(
         let shape = vgc_data.get_shape_mut(hover_coord.shape_index).unwrap();
         shape.remove_coord(hover_coord.coord);
         selected.hover_coord = None;
+
+        if shape.is_empty() {
+            vgc_data.remove_shape(hover_coord.shape_index);
+            selected.remove_shape(hover_coord.shape_index);
+        }
         return;
     }
 
