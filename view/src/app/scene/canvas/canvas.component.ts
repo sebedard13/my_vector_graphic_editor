@@ -1,4 +1,11 @@
-import { Component, ElementRef, AfterViewInit, ViewChild, HostListener } from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    AfterViewInit,
+    ViewChild,
+    HostListener,
+    ChangeDetectionStrategy,
+} from "@angular/core";
 import { Subscription, animationFrames } from "rxjs";
 import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
@@ -10,6 +17,7 @@ import { CanvasContent, ScreenCoord, draw, draw_closest_pt, render } from "wasm-
     selector: "app-canvas",
     templateUrl: "./canvas.component.html",
     styleUrls: ["./canvas.component.scss"],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent implements AfterViewInit {
     @ViewChild("canvas") canvas!: ElementRef<HTMLCanvasElement>;

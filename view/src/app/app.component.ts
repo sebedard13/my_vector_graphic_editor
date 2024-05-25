@@ -1,4 +1,11 @@
-import { Component, ComponentRef, Type, ViewChild, ViewContainerRef } from "@angular/core";
+import {
+    ChangeDetectionStrategy,
+    Component,
+    ComponentRef,
+    Type,
+    ViewChild,
+    ViewContainerRef,
+} from "@angular/core";
 import { EventsService } from "./scene/events.service";
 import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
@@ -9,6 +16,7 @@ import { DebugService } from "./scene/debug.service";
     selector: "app-root",
     templateUrl: "./app.component.html",
     styleUrls: ["./app.component.scss"],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
     @ViewChild("modalContainer", { read: ViewContainerRef }) modalContainer!: ViewContainerRef;
