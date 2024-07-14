@@ -119,6 +119,7 @@ pub fn render(
     Ok(())
 }
 
+/// Render a canvas content covering the whole size given with the given width and height
 #[wasm_bindgen]
 pub fn render_cover(
     ctx: &CanvasRenderingContext2d,

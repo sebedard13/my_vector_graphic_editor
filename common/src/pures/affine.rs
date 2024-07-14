@@ -2,13 +2,17 @@ use std::{fmt::Display, ops::Mul};
 
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::forward_ref_binop;
 
 use super::Vec2;
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 /// Transformation matrix for 2D space

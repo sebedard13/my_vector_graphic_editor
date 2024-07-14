@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Rgba {
@@ -10,7 +14,7 @@ pub struct Rgba {
     pub b: u8,
     pub a: u8,
 }
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
         Rgba { r, g, b, a }

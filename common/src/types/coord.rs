@@ -5,6 +5,8 @@ use crate::{
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Div, Mul, Neg, Sub};
+#[cfg(feature = "ts")]
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::{forward_ref_binop, forward_ref_unop};
@@ -13,16 +15,18 @@ use crate::{forward_ref_binop, forward_ref_unop};
  * A coordinate in the 2D space of the canvas
  * Mostly 0.0 to 1.0, for a square canvas
  */
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, Copy, Default)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Coord {
     pub c: Vec2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Coord {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x: f32, y: f32) -> Coord {
         Coord { c: Vec2::new(x, y) }
     }

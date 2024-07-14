@@ -1,5 +1,7 @@
 use crate::pures::Vec2;
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 mod coord;
@@ -8,16 +10,17 @@ pub use coord::Coord;
 /**
  * A screen coordinate in pixels
  */
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenCoord {
     pub c: Vec2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenCoord {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { c: Vec2::new(x, y) }
     }
@@ -42,16 +45,18 @@ impl ScreenCoord {
 /**
  * A rectangle in the 2D space of the canvas
  */
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Rect {
     pub top_left: Coord,
     pub bottom_right: Coord,
 }
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Rect {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> Rect {
         Rect {
             top_left: Coord::new(x0, y0),
@@ -105,16 +110,17 @@ impl Rect {
 /**
  * A rectangle in the screen space
  */
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenRect {
     pub top_left: ScreenCoord,
     pub bottom_right: ScreenCoord,
 }
-#[wasm_bindgen]
 impl ScreenRect {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> ScreenRect {
         ScreenRect {
             top_left: ScreenCoord::new(x0, y0),
@@ -142,30 +148,34 @@ impl ScreenRect {
     }
 }
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenLength2d {
     pub c: Vec2,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenLength2d {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x: f32, y: f32) -> ScreenLength2d {
         ScreenLength2d { c: Vec2::new(x, y) }
     }
 }
 
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+#[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct Length2d {
     pub c: Vec2,
 }
-#[wasm_bindgen]
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Length2d {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
     pub fn new(x: f32, y: f32) -> Length2d {
         Length2d { c: Vec2::new(x, y) }
     }

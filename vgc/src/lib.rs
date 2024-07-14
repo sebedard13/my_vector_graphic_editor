@@ -16,7 +16,6 @@ pub use render::VgcRenderer;
 pub mod coord;
 mod curve;
 mod curve2;
-mod db;
 
 pub mod render;
 
