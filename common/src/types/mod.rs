@@ -1,7 +1,7 @@
 use crate::pures::Vec2;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 mod coord;
@@ -12,6 +12,7 @@ pub use coord::Coord;
  */
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 #[cfg_attr(feature = "ts", derive(Tsify))]
+#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
 #[derive(Clone, Debug, PartialEq, Copy)]
 #[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
 pub struct ScreenCoord {
@@ -20,7 +21,10 @@ pub struct ScreenCoord {
 
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenCoord {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { c: Vec2::new(x, y) }
     }
@@ -56,7 +60,10 @@ pub struct Rect {
 }
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Rect {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> Rect {
         Rect {
             top_left: Coord::new(x0, y0),
@@ -119,8 +126,12 @@ pub struct ScreenRect {
     pub top_left: ScreenCoord,
     pub bottom_right: ScreenCoord,
 }
+#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenRect {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> ScreenRect {
         ScreenRect {
             top_left: ScreenCoord::new(x0, y0),
@@ -159,7 +170,10 @@ pub struct ScreenLength2d {
 
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenLength2d {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x: f32, y: f32) -> ScreenLength2d {
         ScreenLength2d { c: Vec2::new(x, y) }
     }
@@ -175,7 +189,10 @@ pub struct Length2d {
 }
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Length2d {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x: f32, y: f32) -> Length2d {
         Length2d { c: Vec2::new(x, y) }
     }

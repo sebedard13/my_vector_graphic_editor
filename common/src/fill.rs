@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
@@ -126,5 +126,27 @@ impl From<[u8; 4]> for Rgba {
             b: value[2],
             a: value[3],
         }
+    }
+}
+
+use wasm_bindgen::convert::*;
+use wasm_bindgen::describe::*;
+
+#[cfg(feature = "ts")]
+impl WasmDescribeVector for Rgba {
+    fn describe_vector() {
+        inform(VECTOR);
+        Rgba::describe();
+    }
+}
+
+impl VectorIntoWasmAbi for Rgba {
+    type Abi = <
+        wasm_bindgen::__rt::std::boxed::Box<[wasm_bindgen::JsValue]>
+        as wasm_bindgen::convert::IntoWasmAbi
+        >::Abi;
+
+    fn vector_into_abi(vector: wasm_bindgen::__rt::std::boxed::Box<[Rgba]>) -> Self::Abi {
+        wasm_bindgen::convert::js_value_vector_into_abi(vector)
     }
 }

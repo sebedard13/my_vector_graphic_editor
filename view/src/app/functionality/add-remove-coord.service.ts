@@ -2,9 +2,9 @@ import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../scene/events.service";
 import { Subscription } from "rxjs";
-import { ScreenCoord, add_or_remove_coord } from "wasm-vgc";
 import { ScenesService } from "../scene/scenes.service";
 import { SelectionService } from "../scene/selection.service";
+import { ScreenCoord } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -24,9 +24,8 @@ export class AddRemoveCoordService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    add_or_remove_coord(
+                    scene.canvasContent.add_or_remove_coord(
                         this.selectionService.selection,
-                        scene.canvasContent,
                         new ScreenCoord(event.offsetX, event.offsetY),
                     );
                 }

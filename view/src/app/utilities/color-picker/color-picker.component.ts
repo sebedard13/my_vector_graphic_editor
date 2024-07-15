@@ -10,7 +10,7 @@ import {
 import { BehaviorSubject, fromEvent } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { SelectionService } from "src/app/scene/selection.service";
-import { Rgba } from "wasm-vgc";
+import { Rgba } from "../client/common";
 
 @Component({
     selector: "app-color-picker",
@@ -38,7 +38,7 @@ export class ColorPickerComponent implements AfterViewInit {
                 this.colorValue.next(this.lastColor);
                 this.colorIsValid.next(true);
             } else if (selected.length == 1) {
-                this.colorValue.next(selected[0].to_small_hex_string());
+                this.colorValue.next((selected[0]as Rgba).toCSSHex());
 
                 this.colorIsValid.next(true);
             } else {
@@ -56,7 +56,7 @@ export class ColorPickerComponent implements AfterViewInit {
                 const color = target.value;
 
                 this.lastColor = color;
-                this.selectionService.set_color(Rgba.from_small_hex_string(color));
+                this.selectionService.set_color(Rgba.fromCSSHex(color));
             });
 
         const ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {

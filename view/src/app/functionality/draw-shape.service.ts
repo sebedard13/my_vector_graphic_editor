@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../scene/events.service";
 import { Subscription } from "rxjs";
-import { ScreenCoord, draw_shape } from "wasm-vgc";
 import { ScenesService } from "../scene/scenes.service";
 import { SelectionService } from "../scene/selection.service";
 
@@ -24,11 +23,10 @@ export class DrawShapeService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    draw_shape(
+                    /*scene.canvasContent.draw_shape(
                         this.selectionService.selection,
-                        scene.canvasContent,
                         new ScreenCoord(event.offsetX, event.offsetY),
-                    );
+                    );*/
                 }
             });
         });

@@ -6,7 +6,7 @@ use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 #[cfg(feature = "ts")]
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::{forward_ref_binop, forward_ref_unop};
@@ -26,7 +26,10 @@ pub struct Coord {
 
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl Coord {
-    #[cfg_attr(feature = "bindgen ", wasm_bindgen(constructor))]
+    #[cfg_attr(
+        all(feature = "bindgen", not(feature = "ts")),
+        wasm_bindgen(constructor)
+    )]
     pub fn new(x: f32, y: f32) -> Coord {
         Coord { c: Vec2::new(x, y) }
     }

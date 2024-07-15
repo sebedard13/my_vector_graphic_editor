@@ -1,7 +1,7 @@
 use camera::Camera;
 use common::pures::Affine;
 
-use crate::{scene::shape, DbCoord, DrawingContext, Scene, Shape};
+use crate::{DbCoord, DrawingContext, Scene, Shape, UserSelection};
 
 pub mod api;
 pub mod camera;
@@ -13,9 +13,9 @@ pub struct SceneUserContext {
 }
 
 impl SceneUserContext {
-    pub fn new() -> Self {
+    pub fn new(width: f32, height: f32) -> Self {
         let scene = Scene::new();
-        let camera = Camera::new(scene.max_rect().center(), 500.0, 500.0);
+        let camera = Camera::new(scene.max_rect().center(), width, height);
         Self { scene, camera }
     }
 
@@ -49,7 +49,7 @@ impl Default for SceneUserContext {
         );
         scene.shape_insert(shape2);
 
-        let  camera = Camera::new(scene.max_rect().center(), 750.0, 500.0);
+        let camera = Camera::new(scene.max_rect().center(), 750.0, 500.0);
         Self { scene, camera }
     }
 }

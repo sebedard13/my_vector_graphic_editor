@@ -22,7 +22,7 @@ js-sys = { version = "0.3.66" }
 wasm-bindgen = { version = "0.2.89" }
 
 postcard = { version = "1.0.7", features = ["alloc"] }
-common = { path = "../common" }
+common = { path = "../common", features = ["serialization", "bindgen"] }
 vgc = { path = "../vgc" }
 
 

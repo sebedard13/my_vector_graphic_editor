@@ -2,8 +2,8 @@ import { ReplaySubject, Subject, Subscription, filter, map, shareReplay } from "
 import { EventsService } from "../scene/events.service";
 import { ScenesService } from "../scene/scenes.service";
 import { Injectable, inject } from "@angular/core";
-import { ScreenLength2d, ScreenCoord } from "wasm-vgc";
 import { Functionality } from "./functionality";
+import { ScreenCoord } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -60,7 +60,7 @@ export class CameraService extends Functionality {
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
                     scene.canvasContent.camera_pan_by(
-                        new ScreenLength2d(event.movementX, event.movementY),
+                        new ScreenCoord(event.movementX, event.movementY),
                     );
                 });
             });

@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 polynomen = "1.1.0"
-common = { path = "../common", default-features = false, features = ["tsify"] }
+common = { path = "../common", default-features = false, features = ["ts"] }
 log = "0.4.21"
 
 [dev-dependencies]

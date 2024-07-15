@@ -109,4 +109,9 @@ impl Scene {
     pub fn max_rect(&self) -> Rect {
         Rect::new(-1.0, -1.0, 1.0, 1.0)
     }
+
+    pub fn debug_string(&self) -> String {
+        //TODO
+        String::new()
+    }
 }

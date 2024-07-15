@@ -13,5 +13,6 @@ pub use scene::shape::curve::Curve;
 pub use scene::shape::Shape;
 pub use scene::Scene;
 
-pub use user_context::SceneUserContext;
+pub use user_context::user_selection::SelectedLevel;
 pub use user_context::user_selection::UserSelection;
+pub use user_context::SceneUserContext;

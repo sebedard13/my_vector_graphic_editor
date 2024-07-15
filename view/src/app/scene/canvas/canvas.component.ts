@@ -11,7 +11,7 @@ import { EventsService } from "src/app/scene/events.service";
 import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scene/scenes.service";
 import { SelectionService } from "src/app/scene/selection.service";
-import { CanvasContent, ScreenCoord, draw, draw_closest_pt, render } from "wasm-vgc";
+import { SceneClient } from "wasm-client";
 
 @Component({
     selector: "app-canvas",
@@ -82,19 +82,19 @@ export class CanvasComponent implements AfterViewInit {
         });
     }
 
-    public render(canvasContent: CanvasContent, mouseCoords: { x: number; y: number } | null) {
+    public render(canvasContent: SceneClient, mouseCoords: { x: number; y: number } | null) {
         try {
-            render(this.ctx, canvasContent);
+            canvasContent.render_main(this.ctx);
 
-            draw(this.selectionService.selection, canvasContent, this.ctx);
-            if (mouseCoords != null) {
+            //draw(this.selectionService.selection, canvasContent, this.ctx);
+            /*if (mouseCoords != null) {
                 draw_closest_pt(
                     this.selectionService.selection,
                     canvasContent,
                     this.ctx,
                     new ScreenCoord(mouseCoords.x, mouseCoords.y),
                 );
-            }
+            }*/
         } catch (e) {
             //Wasm vgc mostly crash and is irrecoverable
             if (this.renderError < 3) {

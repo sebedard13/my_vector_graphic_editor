@@ -1,10 +1,10 @@
 import { Injectable, inject } from "@angular/core";
 import { EventsService } from "../scene/events.service";
-import { ScreenCoord, ScreenLength2d, move_coords_of } from "wasm-vgc";
 import { ScenesService } from "../scene/scenes.service";
 import { Subscription, filter } from "rxjs";
 import { SelectionService } from "../scene/selection.service";
 import { Functionality } from "./functionality";
+import { newScreenCoord, newScreenLength2d } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -31,10 +31,9 @@ export class MoveCoordService extends Functionality {
         const movePoint = this.eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
                 if (event.buttons === 1) {
-                    move_coords_of(
+                    scene.canvasContent.move_coords_of(
                         this.selectionService.selection,
-                        scene.canvasContent,
-                        new ScreenLength2d(event.movementX, event.movementY),
+                        newScreenLength2d(event.movementX, event.movementY),
                     );
                 }
             });
@@ -46,13 +45,13 @@ export class MoveCoordService extends Functionality {
                 this.scenesService.currentSceneNow((scene) => {
                     if (event.shiftKey) {
                         const point = scene.canvasContent.camera_project(
-                            new ScreenCoord(event.offsetX, event.offsetY),
+                            newScreenCoord(event.offsetX, event.offsetY),
                         );
                         this.selectionService.selection.add_selection(scene.canvasContent, point);
                         this.selectionService.selectionHasChanged.next();
                     } else {
                         const point = scene.canvasContent.camera_project(
-                            new ScreenCoord(event.offsetX, event.offsetY),
+                            newScreenCoord(event.offsetX, event.offsetY),
                         );
                         this.selectionService.selection.change_selection(
                             scene.canvasContent,

@@ -3,7 +3,7 @@ use std::{fmt::Display, ops::Mul};
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::forward_ref_binop;

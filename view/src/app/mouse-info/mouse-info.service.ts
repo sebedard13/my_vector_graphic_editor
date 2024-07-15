@@ -1,7 +1,7 @@
 import { Injectable, Signal, WritableSignal, computed, signal } from "@angular/core";
 import { EventsService } from "../scene/events.service";
 import { ScenesService } from "../scene/scenes.service";
-import { ScreenCoord, Coord } from "wasm-vgc";
+import { Coord, ScreenCoord } from "../utilities/client/common";
 
 type Point = { x: number; y: number };
 
@@ -28,9 +28,8 @@ export class MouseInfoService {
 
             const coord = scene.canvasContent.camera_project(
                 new ScreenCoord(mousePos.x, mousePos.y),
-            );
-            const rtn = { x: coord.x(), y: coord.y() };
-            coord.free();
+            ) as Coord;
+            const rtn = { x: coord.c.x, y: coord.c.y };
             return rtn;
         });
 
@@ -43,9 +42,8 @@ export class MouseInfoService {
             const mousePos = this.mouseCanvasPosSignal();
             const screenCoord = scene.canvasContent.camera_unproject_to_canvas(
                 new Coord(mousePos.x, mousePos.y),
-            );
-            const rtn = { x: screenCoord.x(), y: screenCoord.y() };
-            screenCoord.free();
+            ) as ScreenCoord;
+            const rtn = { x: screenCoord.x, y: screenCoord.y };
             return rtn;
         });
 
