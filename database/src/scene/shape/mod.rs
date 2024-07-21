@@ -15,6 +15,7 @@ use crate::{
 
 use super::{LayerType, LayerValue};
 
+pub mod boolean;
 pub mod coord;
 pub mod cubic_path;
 pub mod curve;
@@ -112,7 +113,7 @@ impl Shape {
         Shape {
             id: LayerId::null(),
             path: Vec::new(),
-            color: Rgba::black(),
+            color: Rgba::transparent(),
         }
     }
 
@@ -217,6 +218,38 @@ impl Shape {
     pub fn is_empty(&self) -> bool {
         self.path.is_empty()
     }
+
+    ///Creates a new shape from a string of path coordinates.
+    /// # Example
+    /// ```
+    /// use database::Shape;
+    /// let shape = Shape::quick_from_string("M 0 0 C 1.000 1.000 2 2 0 0 Z");
+    /// assert_eq!(shape.curves_len(), 1);
+    /// assert_eq! (shape.curve_select(0).unwrap().cp0.coord().x(), 1.0);
+    /// ```
+    pub fn quick_from_string(string: &str) -> Self {
+        let coords = string_to_coords(string);
+        Shape::new_from_path(coords, Affine::identity())
+    }
+}
+
+fn string_to_coords(string: &str) -> Vec<DbCoord> {
+    let mut coords = vec![];
+    let mut x = 0.0;
+    let mut i = 0;
+    for current in string.split_whitespace() {
+        if current == "M" || current == "L" || current == "C" || current == "Z" {
+            continue;
+        }
+        if i % 2 == 0 {
+            x = current.parse::<f32>().unwrap();
+        } else {
+            coords.push(DbCoord::new(x, current.parse::<f32>().unwrap()));
+        }
+        i += 1;
+    }
+
+    coords
 }
 
 #[cfg(test)]

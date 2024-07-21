@@ -88,6 +88,13 @@ impl Scene {
         }
     }
 
+    pub fn layer_move_top(&mut self, index: LayerId) {
+        let index = self.layers.iter().position(|l| l.id == index).unwrap();
+        if index > 0 {
+            self.layers[0..(index + 1)].rotate_right(1);
+        }
+    }
+
     pub fn layer_move_down(&mut self, index: LayerId) {
         let index = self.layers.iter().position(|l| l.id == index).unwrap();
         if index < self.layers.len() - 1 {
@@ -113,5 +120,28 @@ impl Scene {
     pub fn debug_string(&self) -> String {
         //TODO
         String::new()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{LayerId, Scene, Shape};
+
+    #[test]
+    pub fn given_3_layers_when_move_top_then_id_correct() {
+        let mut scene = Scene::new();
+        let id1 = scene.shape_insert(Shape::new());
+        let id2 = scene.shape_insert(Shape::new());
+        let id3 = scene.shape_insert(Shape::new());
+
+        scene.layer_move_top(id3);
+
+        let layer_ids: Vec<LayerId> = scene.layers.iter().map(|l| l.id).collect();
+        assert_eq!(layer_ids, vec![id3, id1, id2]);
+
+        scene.layer_move_top(id1);
+
+        let layer_ids: Vec<LayerId> = scene.layers.iter().map(|l| l.id).collect();
+        assert_eq!(layer_ids, vec![id1, id3, id2]);
     }
 }

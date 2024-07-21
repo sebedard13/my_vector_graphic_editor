@@ -17,6 +17,11 @@ impl<'a> CanvasContext2DRender<'a> {
 
 impl<'a> DrawingContext for CanvasContext2DRender<'a> {
     fn create(&mut self) -> Result<(), String> {
+        self.context
+            .set_fill_style(&String::from("rgba(0, 0, 0, 0)").into());
+        self.context
+            .set_stroke_style(&String::from("rgba(0, 0, 0, 0)").into());
+        self.context.set_line_width(0.0);
         Ok(())
     }
 

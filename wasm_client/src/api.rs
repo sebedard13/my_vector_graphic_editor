@@ -6,8 +6,9 @@ use crate::{SceneClient, UserSelectionClient};
 
 #[wasm_bindgen]
 impl SceneClient {
-    pub fn set_color_of(&mut self, selected: &UserSelectionClient, color: Rgba) {
-        self.scene_context.set_color_of(&selected.selection, color);
+    pub fn set_color_of(&mut self, selected: &mut UserSelectionClient, color: Rgba) {
+        self.scene_context
+            .set_color_of(&mut selected.selection, color);
     }
 
     pub fn move_coords_of(
@@ -30,6 +31,10 @@ impl SceneClient {
 
     pub fn toggle_handle(&mut self, selected: &UserSelectionClient) {
         self.scene_context.toggle_handle(&selected.selection);
+    }
+
+    pub fn draw_shape(&mut self, selected: &mut UserSelectionClient) {
+        self.scene_context.draw_shape(&mut selected.selection);
     }
 
     pub fn save(&self) -> Vec<u8> {

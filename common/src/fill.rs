@@ -134,6 +134,12 @@ impl From<[u8; 4]> for Rgba {
     }
 }
 
+impl Default for Rgba {
+    fn default() -> Self {
+        Rgba::black()
+    }
+}
+
 use wasm_bindgen::convert::*;
 use wasm_bindgen::describe::*;
 

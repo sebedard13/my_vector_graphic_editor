@@ -11,6 +11,7 @@ pub struct UserSelection {
     pub shapes: Vec<SelectedShape>,
     pub mouse_position: Option<Coord>,
     pub hover_coord: Option<HoverCoord>,
+    pub color: Rgba,
 }
 
 #[derive(Debug, Default)]
