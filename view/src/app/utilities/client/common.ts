@@ -86,6 +86,6 @@ export class Rgba implements RgbaCl {
     }
 
     public toCSSHex(): string {
-        return `#${this.r.toString(16)}${this.g.toString(16)}${this.b.toString(16)}`;
+        return `#${this.r.toString(16).padStart(2, "0")}${this.g.toString(16).padStart(2, "0")}${this.b.toString(16).padStart(2, "0")}`;
     }
 }

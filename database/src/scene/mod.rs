@@ -13,7 +13,7 @@ enum LayerType {
     Folder,
 }
 
-trait LayerValue: Any {
+pub trait LayerValue: Any {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn render(&self, renderer: &mut dyn render::DrawingContext) -> Result<(), String>;

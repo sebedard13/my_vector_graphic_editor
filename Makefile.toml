@@ -32,7 +32,7 @@ run_task = [
 [tasks.serve]
 workspace = false
 description = "Serve angular webapp and watch for changes"
-run_task = [{ name = ["install", "serve_watch"], parallel = false }]
+run_task = [{ name = ["serve_watch"], parallel = false }]
 
 
 [tasks.lint]

@@ -3,6 +3,7 @@ use crate::{
     PRECISION,
 };
 use float_cmp::{ApproxEq, F32Margin};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::ops::{Add, Div, Mul, Neg, Sub};
 #[cfg(feature = "ts")]

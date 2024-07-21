@@ -10,6 +10,8 @@ pub trait DrawingContext {
     fn get_transform(&self) -> Result<Affine, String>;
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String>;
+    
+    fn set_stroke(&mut self, color: &Rgba, size: f64) -> Result<(), String>;
 
     fn start_shape(&mut self, start_point: &Coord) -> Result<(), String>;
 
@@ -29,6 +31,48 @@ impl Scene {
             region.value.render(renderer)?;
         }
 
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+pub struct MockDrawingContext {}
+
+#[cfg(test)]
+impl DrawingContext for MockDrawingContext {
+    fn create(&mut self) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn fill_background(&mut self, _color: &Rgba) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn get_transform(&self) -> Result<Affine, String> {
+        Ok(Affine::identity())
+    }
+
+    fn set_fill(&mut self, _color: &Rgba) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn set_stroke(&mut self, color: &Rgba, size: f64) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn start_shape(&mut self, _start_point: &Coord) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn move_curve(&mut self, _cp0: &Coord, _cp1: &Coord, _p1: &Coord) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn close_shape(&mut self) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn end(&mut self) -> Result<(), String> {
         Ok(())
     }
 }

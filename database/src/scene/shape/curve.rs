@@ -16,11 +16,11 @@ impl<'a> Curve<'a> {
     }
 
     pub fn right_handle_free(&self) -> bool {
-        self.cp0.id != self.p0.id
+        self.cp1.id != self.p1.id
     }
 
     pub fn left_handle_free(&self) -> bool {
-        self.cp1.id != self.p1.id
+        self.cp0.id != self.p0.id
     }
 }
 

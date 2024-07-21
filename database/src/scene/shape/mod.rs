@@ -2,14 +2,15 @@ use std::any::Any;
 
 use common::{
     pures::{Affine, Vec2},
-    types::Coord,
+    types::{Coord, Length2d},
     Rgba,
 };
 use coord::DbCoord;
 
 use crate::{
+    impl_layer_value,
     scene::{Layer, LayerId, Scene},
-    impl_layer_value, DrawingContext,
+    DrawingContext,
 };
 
 use super::{LayerType, LayerValue};
@@ -36,10 +37,10 @@ impl_layer_value!(
             .collect();
         renderer.set_fill(&self.color)?;
         renderer.start_shape(&coords[0])?;
-        for i in 1..coords.len() {
-            let cp0 = coords[i - 1];
-            let cp1 = coords[i];
-            let p1 = coords[i + 1];
+        for i in (1..(coords.len() - 1)).step_by(3) {
+            let cp0 = coords[i];
+            let cp1 = coords[i + 1];
+            let p1 = coords[i + 2];
             renderer.move_curve(&cp0, &cp1, &p1)?;
         }
         renderer.close_shape()?;
@@ -109,14 +110,15 @@ impl Scene {
 impl Shape {
     pub fn new() -> Self {
         Shape {
-            id: LayerId::new(),
+            id: LayerId::null(),
             path: Vec::new(),
             color: Rgba::black(),
         }
     }
 
     //List of coordinates of curves. The first coordinate is the start of the curve.
-    pub fn new_from_path(coords: &Vec<coord::DbCoord>, transform: Affine) -> Self {
+    pub fn new_from_path(coords: Vec<coord::DbCoord>, transform: Affine) -> Self {
+        assert_eq!((coords.len() - 1) % 3, 0);
         let mut shape = Shape::new();
 
         for i in 0..coords.len() {
@@ -126,8 +128,29 @@ impl Shape {
         shape
     }
 
-    pub fn new_circle(center: Coord, radius: Vec2) -> Self {
-        let transform = Affine::identity().scale(radius).translate(center.c);
+    //List of coordinates of lines. It will close the shape.
+    pub fn new_from_lines(coords: Vec<coord::DbCoord>, transform: Affine) -> Self {
+        let mut shape = Shape::new();
+        if coords.is_empty() {
+            return shape;
+        }
+
+        shape.path.push(coords[0].transform(&transform));
+        shape.path.push(coords[0].transform(&transform));
+        for i in 1..coords.len() {
+            shape.path.push(coords[i].transform(&transform));
+            shape.path.push(coords[i].transform(&transform));
+            shape.path.push(coords[i].transform(&transform));
+        }
+
+        shape.path.push(coords[0].transform(&transform));
+        shape.path.push(coords[0].transform(&transform));
+
+        shape
+    }
+
+    pub fn new_circle(center: Coord, radius: Length2d) -> Self {
+        let transform = Affine::identity().scale(radius.c).translate(center.c);
 
         //https://spencermortensen.com/articles/bezier-circle/
         let a = 1.000_055_19;
@@ -152,7 +175,7 @@ impl Shape {
             start,
         ];
 
-        Shape::new_from_path(&coords, transform)
+        Shape::new_from_path(coords, transform)
     }
 
     pub fn path(&self) -> String {
@@ -193,5 +216,20 @@ impl Shape {
 
     pub fn is_empty(&self) -> bool {
         self.path.is_empty()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::scene::render::MockDrawingContext;
+
+    use super::*;
+
+    #[test]
+    fn test_shape_render() {
+        let shape = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(1.0, 1.0));
+        let mut renderer = MockDrawingContext {};
+
+        shape.render(&mut renderer).expect("Render should be ok");
     }
 }

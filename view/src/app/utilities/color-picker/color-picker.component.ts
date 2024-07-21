@@ -38,7 +38,8 @@ export class ColorPickerComponent implements AfterViewInit {
                 this.colorValue.next(this.lastColor);
                 this.colorIsValid.next(true);
             } else if (selected.length == 1) {
-                this.colorValue.next((selected[0]as Rgba).toCSSHex());
+                const rgba = new Rgba(selected[0].r, selected[0].g, selected[0].b, selected[0].a);
+                this.colorValue.next(rgba.toCSSHex());
 
                 this.colorIsValid.next(true);
             } else {

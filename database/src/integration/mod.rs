@@ -1,4 +1,8 @@
-use common::{pures::Vec2, types::Coord, Rgba};
+use common::{
+    pures::Vec2,
+    types::{Coord, Length2d},
+    Rgba,
+};
 
 use crate::scene::{shape::Shape, Scene};
 
@@ -16,8 +20,14 @@ fn test_shape_insert() {
 fn test_shape_select() {
     let mut db = Scene::new();
 
-    let selected_id = db.shape_insert(Shape::new_circle(Coord::new(0.0, 0.0), Vec2::new(1.0, 1.0)));
-    db.shape_insert(Shape::new_circle(Coord::new(0.2, 0.2), Vec2::new(0.7, 0.7)));
+    let selected_id = db.shape_insert(Shape::new_circle(
+        Coord::new(0.0, 0.0),
+        Length2d::new(1.0, 1.0),
+    ));
+    db.shape_insert(Shape::new_circle(
+        Coord::new(0.2, 0.2),
+        Length2d::new(0.7, 0.7),
+    ));
 
     let result = db.shape_select_contains_mut(&Coord::new(-0.3, -0.3));
     assert_eq!(result.is_some(), true);
@@ -28,12 +38,20 @@ fn test_shape_select() {
 fn test_shape_select_with_move() {
     let mut db = Scene::new();
 
-    let postition_id =
-        db.shape_insert(Shape::new_circle(Coord::new(0.0, 0.0), Vec2::new(1.0, 1.0)));
+    let postition_id = db.shape_insert(Shape::new_circle(
+        Coord::new(0.0, 0.0),
+        Length2d::new(1.0, 1.0),
+    ));
     for _ in 0..10 {
-        db.shape_insert(Shape::new_circle(Coord::new(0.2, 0.2), Vec2::new(0.7, 0.7)));
+        db.shape_insert(Shape::new_circle(
+            Coord::new(0.2, 0.2),
+            Length2d::new(0.7, 0.7),
+        ));
     }
-    let object_id = db.shape_insert(Shape::new_circle(Coord::new(0.0, 0.0), Vec2::new(1.0, 1.0)));
+    let object_id = db.shape_insert(Shape::new_circle(
+        Coord::new(0.0, 0.0),
+        Length2d::new(1.0, 1.0),
+    ));
 
     let result = db.shape_select_contains_mut(&Coord::new(-0.3, -0.3));
     assert_eq!(result.is_some(), true);

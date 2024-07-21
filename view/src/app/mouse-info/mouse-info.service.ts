@@ -43,7 +43,7 @@ export class MouseInfoService {
             const screenCoord = scene.canvasContent.camera_unproject_to_canvas(
                 new Coord(mousePos.x, mousePos.y),
             ) as ScreenCoord;
-            const rtn = { x: screenCoord.x, y: screenCoord.y };
+            const rtn = { x: screenCoord.c.x, y: screenCoord.c.y };
             return rtn;
         });
 

@@ -1,3 +1,4 @@
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use tsify_next::Tsify;
@@ -26,6 +27,10 @@ impl Rgba {
 
     pub fn white() -> Rgba {
         Rgba::new(255, 255, 255, 255)
+    }
+
+    pub fn transparent() -> Rgba {
+        Rgba::new(0, 0, 0, 0)
     }
 
     ///

@@ -6,7 +6,7 @@ use crate::canvas_context_2d_render::CanvasContext2DRender;
 use common::{
     dbg_str,
     pures::{Affine, Vec2},
-    types::{Coord, ScreenRect},
+    types::{Coord, ScreenCoord, ScreenRect},
     Rgba,
 };
 use database::{SceneUserContext, SelectedLevel, UserSelection};
@@ -55,7 +55,11 @@ impl SceneClient {
         Self { scene_context }
     }
 
-    pub fn render_main(&self, ctx: &CanvasRenderingContext2d) -> Result<(), JsValue> {
+    pub fn render_main(
+        &self,
+        user_selection: &UserSelectionClient,
+        ctx: &CanvasRenderingContext2d,
+    ) -> Result<(), JsValue> {
         let transform = self.scene_context.camera.get_transform();
         let mut render = CanvasContext2DRender::new(ctx, transform);
 
@@ -70,7 +74,16 @@ impl SceneClient {
 
         self.scene_context
             .scene_render(&mut render)
-            .map_err(|e| JsValue::from_str(&e))
+            .map_err(|e| JsValue::from_str(&e))?;
+
+        self.scene_context
+            .draw(&user_selection.selection, &mut render)
+            .map_err(|e| JsValue::from_str(&e))?;
+        self.scene_context
+            .draw_closest_pt(&user_selection.selection, &mut render)
+            .map_err(|e| JsValue::from_str(&e))?;
+
+        Ok(())
     }
 
     pub fn render_cover(
@@ -103,7 +116,8 @@ impl SceneClient {
 
 #[wasm_bindgen]
 pub struct UserSelectionClient {
-    selection: UserSelection,
+    #[wasm_bindgen(skip)]
+    pub selection: UserSelection,
 }
 
 #[macro_export]
@@ -150,6 +164,12 @@ impl From<SelectedLevelClient> for SelectedLevel {
 
 #[wasm_bindgen]
 impl UserSelectionClient {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> UserSelectionClient {
+        let selection = UserSelection::new();
+        Self { selection }
+    }
+
     pub fn get_selected_level(&self) -> SelectedLevelClient {
         self.selection.get_selected_level().into()
     }
@@ -176,6 +196,10 @@ impl UserSelectionClient {
     pub fn add_selection(&mut self, canvas_context: &SceneClient, cursor_position: Coord) {
         self.selection
             .add_selection(&canvas_context.scene_context, cursor_position)
+    }
+
+    pub fn set_mouse_position(&mut self, position: Option<Coord>) {
+        self.selection.mouse_position = position
     }
 }
 //------------------------------------------------------------------------------

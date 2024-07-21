@@ -24,10 +24,13 @@ impl SceneUserContext {
                 .shape_select_mut(selected_shape.shape_index)
                 .expect("not 404");
             for coord_id in &selected_shape.coords {
-                let coord = shape.coord_select_mut(*coord_id).expect("not 404");
-                let res_vec2 = coord.coord.c + movement.c;
-                coord.coord.set_x(res_vec2.x);
-                coord.coord.set_y(res_vec2.y);
+                let (coord_id, coord) = {
+                    let coord = shape.coord_select_mut(*coord_id).expect("not 404");
+                    let res_vec2 = coord.coord().c + movement.c;
+                    (coord.id, Coord::new(res_vec2.x, res_vec2.y))
+                };
+
+                shape.coord_set(coord_id, coord);
             }
         }
     }
@@ -95,6 +98,7 @@ impl SceneUserContext {
             let shape = vgc_data
                 .shape_select_mut(hover_coord.shape_index)
                 .expect("Not 404");
+            log::debug!("hover_coord: {:?}, {:?}", shape, hover_coord);
             let curve_index = shape
                 .curve_select_of_coord_id(hover_coord.id)
                 .expect("Not 404");

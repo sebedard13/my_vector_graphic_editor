@@ -1,4 +1,5 @@
 use crate::pures::Vec2;
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use tsify_next::Tsify;

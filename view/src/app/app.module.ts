@@ -32,5 +32,3 @@ import { FormsModule } from "@angular/forms";
     bootstrap: [AppComponent],
 })
 export class AppModule {}
-
-platformBrowser().bootstrapModule(AppModule, { ngZone: "noop" });

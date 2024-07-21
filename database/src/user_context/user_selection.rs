@@ -9,6 +9,7 @@ use crate::user_context::SceneUserContext;
 #[derive(Debug, Default)]
 pub struct UserSelection {
     pub shapes: Vec<SelectedShape>,
+    pub mouse_position: Option<Coord>,
     pub hover_coord: Option<HoverCoord>,
 }
 
@@ -124,7 +125,7 @@ impl UserSelection {
             for db_coord in db_coords {
                 if point_in_radius(
                     &cursor_position.c,
-                    &db_coord.coord.c,
+                    &db_coord.coord().c,
                     &canvas_context
                         .camera
                         .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
@@ -177,7 +178,7 @@ impl UserSelection {
                     .unwrap();
                 let coords = &shape.path;
                 for db_coord in coords {
-                    let coord = db_coord.coord;
+                    let coord = db_coord.coord();
                     if point_in_radius(
                         &start_press.c,
                         &coord.c,
@@ -203,7 +204,7 @@ impl UserSelection {
                 .unwrap();
             let db_coords = &shape.path;
             for db_coord in db_coords {
-                let coord = db_coord.coord;
+                let coord = db_coord.coord();
                 if point_in_radius(
                     &start_press.c,
                     &coord.c,
@@ -267,7 +268,7 @@ impl UserSelection {
     }
 }
 
-enum CoordState {
+pub enum CoordState {
     Hover,
     Selected,
     None,
@@ -281,147 +282,13 @@ impl SelectedShape {
         }
     }
 
-    fn coord_state(&self, selected: &UserSelection, coord_ref: &CoordId) -> CoordState {
+    pub fn coord_state(&self, selected: &UserSelection, coord_ref: CoordId) -> CoordState {
         match &selected.hover_coord {
-            Some(hover_coord) if hover_coord.id == *coord_ref => CoordState::Hover,
-            _ => match self.coords.iter().find(|coord| *coord == coord_ref) {
+            Some(hover_coord) if hover_coord.id == coord_ref => CoordState::Hover,
+            _ => match self.coords.iter().find(|coord| **coord == coord_ref) {
                 Some(_) => CoordState::Selected,
                 None => CoordState::None,
             },
         }
     }
 }
-
-// pub fn draw(selected: &Selected, canvas_context: &CanvasContent, ctx: &CanvasRenderingContext2d) {
-//     for shape_selected in &selected.shapes {
-//         let shape = canvas_context
-//             .vgc_data
-//             .shape_select(shape_selected.shape_index)
-//             .unwrap();
-
-//         ctx.set_line_width(2.0);
-//         ctx.set_stroke_style(&Rgba::new(0x3A, 0xD1, 0xEF, 255).to_css_string().into());
-
-//         //Draw line between cp and p
-//         shape.visit_full_curves(|_, p0, cp0, cp1, p1| {
-//             ctx.begin_path();
-//             let from = canvas_context.camera.unproject(p0.clone());
-
-//             ctx.move_to(from.c.x as f64, from.c.y as f64);
-//             let to = canvas_context.camera.unproject(cp0.clone());
-//             ctx.line_to(to.c.x as f64, to.c.y as f64);
-//             ctx.stroke();
-
-//             ctx.begin_path();
-//             let from = canvas_context.camera.unproject(cp1.clone());
-//             ctx.move_to(from.c.x as f64, from.c.y as f64);
-//             let to = canvas_context.camera.unproject(p1.clone());
-//             ctx.line_to(to.c.x as f64, to.c.y as f64);
-//             ctx.stroke();
-//         });
-
-//         let refs_coord_type = shape.get_coords_of_shape_tmp();
-//         for ref_coord_type in refs_coord_type {
-//             let coord_state = shape_selected.coord_state(&selected, &ref_coord_type);
-//             let coord = ref_coord_type.borrow();
-//             let color = match coord_state {
-//                 CoordState::Hover => Rgba::new(0x0E, 0x90, 0xAA, 255),
-//                 CoordState::Selected => Rgba::new(0x3A, 0xD1, 0xEF, 255),
-//                 CoordState::None => Rgba::new(0xA1, 0xE9, 0xF7, 255),
-//             };
-//             let center = canvas_context.camera.unproject(coord.clone());
-
-//             ctx.begin_path();
-//             ctx.set_fill_style(&color.to_css_string().into());
-//             ctx.ellipse(
-//                 center.c.x as f64,
-//                 center.c.y as f64,
-//                 5.0,
-//                 5.0,
-//                 PI / 4.0,
-//                 0.0,
-//                 2.0 * PI,
-//             )
-//             .expect("valid");
-//             ctx.fill();
-//         }
-
-//         ctx.begin_path();
-//         let start_coord = shape.start.borrow();
-//         let start_coord = canvas_context.camera.unproject(start_coord.clone());
-//         ctx.move_to(start_coord.c.x.into(), start_coord.c.y.into());
-
-//         shape.visit_full_curves(move |_, _, cp0, cp1, p1| {
-//             let cp0 = canvas_context.camera.unproject(cp0.clone());
-//             let cp1 = canvas_context.camera.unproject(cp1.clone());
-//             let p1 = canvas_context.camera.unproject(p1.clone());
-
-//             ctx.bezier_curve_to(
-//                 cp0.c.x.into(),
-//                 cp0.c.y.into(),
-//                 cp1.c.x.into(),
-//                 cp1.c.y.into(),
-//                 p1.c.x.into(),
-//                 p1.c.y.into(),
-//             );
-//         });
-
-//         ctx.set_line_width(1.0);
-//         ctx.set_stroke_style(&Rgba::new(0x3A, 0xD1, 0xEF, 0x80).to_css_string().into());
-//         ctx.stroke();
-//     }
-// }
-
-// pub fn draw_closest_pt(
-//     selected: &Selected,
-//     canvas_context: &CanvasContent,
-//     ctx: &CanvasRenderingContext2d,
-//     mouse_pos: ScreenCoord,
-// ) {
-//     let mut min_distance = std::f32::MAX;
-//     let mut min_coord = Coord::new(0.0, 0.0);
-//     let pos = canvas_context.camera.project(mouse_pos.clone());
-
-//     for shape_selected in &selected.shapes {
-//         let shape = canvas_context
-//             .vgc_data
-//             .shape_select(shape_selected.shape_index)
-//             .unwrap();
-
-//         let (_, _, distance, coord) = shape.closest_curve(&pos);
-
-//         if distance < min_distance {
-//             min_distance = distance;
-//             min_coord = coord;
-//         }
-//     }
-
-//     if !point_in_radius(
-//         &pos.c,
-//         &min_coord.c,
-//         &canvas_context
-//             .camera
-//             .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
-//             .c,
-//     ) {
-//         return;
-//     }
-
-//     let color = Rgba::new(0x0E, 0x90, 0xAA, 255);
-
-//     let center = canvas_context.camera.unproject(min_coord);
-
-//     ctx.begin_path();
-//     ctx.set_fill_style(&color.to_css_string().into());
-//     ctx.ellipse(
-//         center.c.x as f64,
-//         center.c.y as f64,
-//         3.0,
-//         3.0,
-//         PI / 4.0,
-//         0.0,
-//         2.0 * PI,
-//     )
-//     .expect("valid");
-//     ctx.fill();
-// }

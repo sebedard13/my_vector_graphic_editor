@@ -19,37 +19,45 @@ impl Shape {
         self.path.iter_mut().find(|c| c.id == index)
     }
 
+    pub fn coord_set(&mut self, index: CoordId, coord: Coord) {
+        self.path
+            .iter_mut()
+            .filter(|c| c.id == index)
+            .for_each(|c| c.coord = coord);
+    }
+
     pub(crate) fn coord_index_select(&self, index: CoordId) -> Option<(usize, CoordType)> {
-        self.path.iter().enumerate().find_map(|(i, c)| {
+        for (i, c) in self.path.iter().enumerate() {
             if c.id == index {
                 if i == 0 {
                     return Some((i, CoordType::P0));
+                } else if i % 3 == 1 {
+                    return Some((i, CoordType::CP0));
+                } else if i % 3 == 2 {
+                    if self.path[i + 1].id == index {
+                        return Some((i + 1, CoordType::P1));
+                    }
+                    return Some((i, CoordType::CP1));
+                } else {
+                    return Some((i, CoordType::P1));
                 }
-                let coord_type = match (i - 1) % 3 {
-                    0 => CoordType::CP0,
-                    1 => CoordType::CP1,
-                    2 => CoordType::P1,
-                    _ => unreachable!(),
-                };
-                Some((i, coord_type))
-            } else {
-                None
             }
-        })
+        }
+        None
     }
 
     pub fn coord_delete(&mut self, index: CoordId) -> Result<(), String> {
         let (index, coord_type) = self.coord_index_select(index).ok_or("Coord not found")?;
         match coord_type {
             CoordType::P0 => {
+                assert_eq!(index, 0);
                 if self.is_closed() {
                     let len = self.path.len();
                     if len == 4 {
                         self.path.clear();
                         return Ok(());
                     }
-                    let index = if index == 0 { len - 1 } else { index };
-                    self.path.swap(len - 1, index); // keep CPl of P1
+                    self.path.swap(len - 2, 2); // keep CPl of P1
 
                     self.path.remove(index); // P0
                     self.path.remove(index); // CPr
@@ -110,7 +118,7 @@ impl Shape {
 #[derive(Debug, Clone, Copy)]
 pub struct DbCoord {
     pub id: CoordId,
-    pub coord: Coord,
+    pub(in super::super) coord: Coord,
 }
 
 impl DbCoord {
@@ -126,6 +134,10 @@ impl DbCoord {
             id: self.id,
             coord: self.coord.transform(transform),
         }
+    }
+
+    pub fn coord(&self) -> Coord {
+        self.coord
     }
 }
 
@@ -203,6 +215,23 @@ mod tests {
         shape.coord_delete(shape.path[0].id).unwrap();
 
         assert_eq!(shape.path.len(), 0);
+    }
+
+    #[test]
+    fn given_a_shape_line_closed_when_delete_coord_p0_then_0_elment() {
+        let mut shape = Shape::new_from_lines(
+            vec![
+                DbCoord::new(0.0, 0.0),
+                DbCoord::new(0.0, 0.0),
+                DbCoord::new(0.0, 0.0),
+            ],
+            Affine::identity(),
+        );
+        shape.path[3].id = shape.path[0].id;
+
+        shape.coord_delete(shape.path[0].id).unwrap();
+
+        assert_eq!(shape.path.len(), 7);
     }
 
     #[test]

@@ -44,6 +44,12 @@ impl<'a> DrawingContext for CanvasContext2DRender<'a> {
         Ok(())
     }
 
+    fn set_stroke(&mut self, color: &Rgba, size: f64) -> Result<(), String> {
+        self.context.set_stroke_style(&color.to_css_string().into());
+        self.context.set_line_width(size);
+        Ok(())
+    }
+
     fn start_shape(&mut self, start_point: &Coord) -> Result<(), String> {
         self.context.begin_path();
         self.context
@@ -67,6 +73,7 @@ impl<'a> DrawingContext for CanvasContext2DRender<'a> {
         self.context.close_path();
         self.context
             .fill_with_canvas_winding_rule(CanvasWindingRule::Evenodd);
+        self.context.stroke();
         Ok(())
     }
 

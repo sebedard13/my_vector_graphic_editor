@@ -14,4 +14,4 @@ tsify-next = { version = "0.5.3", features = ["js"], optional = true }
 default = ["serialization", "bindgen"]
 serialization = ["serde"]
 bindgen = []
-ts = ["tsify-next"]
+ts = ["tsify-next", "serialization"]

@@ -8,7 +8,6 @@ import {
 } from "@angular/core";
 import { Subscription, animationFrames } from "rxjs";
 import { EventsService } from "src/app/scene/events.service";
-import { MouseInfoService } from "src/app/mouse-info/mouse-info.service";
 import { ScenesService } from "src/app/scene/scenes.service";
 import { SelectionService } from "src/app/scene/selection.service";
 import { SceneClient } from "wasm-client";
@@ -28,7 +27,6 @@ export class CanvasComponent implements AfterViewInit {
     private renderSub: Subscription | undefined;
 
     constructor(
-        private mouseInfo: MouseInfoService,
         private scenesService: ScenesService,
         private selectionService: SelectionService,
         private eventService: EventsService,
@@ -71,30 +69,15 @@ export class CanvasComponent implements AfterViewInit {
         this.resizeObserver.observe(this.canvas.nativeElement.parentElement!);
 
         this.renderSub = animationFrames().subscribe((_) => {
-            let mouseInfo: { x: number; y: number } | null = null;
-            if (this.mouseInfo.mouseInCanvas()) {
-                mouseInfo = this.mouseInfo.mouseCanvasPosSignal();
-            }
-
             this.scenesService.currentSceneNow((scene) => {
-                this.render(scene.canvasContent, mouseInfo);
+                this.render(scene.canvasContent);
             });
         });
     }
 
-    public render(canvasContent: SceneClient, mouseCoords: { x: number; y: number } | null) {
+    public render(canvasContent: SceneClient) {
         try {
-            canvasContent.render_main(this.ctx);
-
-            //draw(this.selectionService.selection, canvasContent, this.ctx);
-            /*if (mouseCoords != null) {
-                draw_closest_pt(
-                    this.selectionService.selection,
-                    canvasContent,
-                    this.ctx,
-                    new ScreenCoord(mouseCoords.x, mouseCoords.y),
-                );
-            }*/
+            canvasContent.render_main(this.selectionService.selection, this.ctx);
         } catch (e) {
             //Wasm vgc mostly crash and is irrecoverable
             if (this.renderError < 3) {

@@ -38,8 +38,13 @@ export class SelectionService {
                 } as ScreenCoord);
 
                 //selection
+                this.selection.set_mouse_position(pt);
                 this.selection.change_hover(scene.canvasContent, pt);
             });
+        });
+
+        eventsService.mouseLeave$.subscribe(() => {
+            this.selection.set_mouse_position(undefined);
         });
 
         eventsService.keydown$.pipe(filter((event) => event.key == "Escape")).subscribe(() => {

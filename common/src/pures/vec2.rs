@@ -1,4 +1,5 @@
 use float_cmp::{ApproxEq, F32Margin};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Div, Mul, Neg, Sub};

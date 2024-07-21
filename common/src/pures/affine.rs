@@ -1,6 +1,7 @@
 use std::{fmt::Display, ops::Mul};
 
 use float_cmp::{ApproxEq, F32Margin};
+#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use tsify_next::Tsify;

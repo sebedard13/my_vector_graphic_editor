@@ -1,6 +1,5 @@
 /*
 Implementation of boolean operations on shapes.
-For Shape A and B
 Union : A OR B
 Intersection : A AND B
 Difference : A NOT B
