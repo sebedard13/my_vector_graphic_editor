@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use common::{
-    pures::{Affine, Vec2},
+    pures::Affine,
     types::{Coord, Length2d},
     Rgba,
 };

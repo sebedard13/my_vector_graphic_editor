@@ -1,5 +1,4 @@
 use common::{
-    pures::Vec2,
     types::{Coord, Length2d},
     Rgba,
 };

@@ -1,6 +1,6 @@
 use common::{
     math::point_in_radius,
-    types::{Coord, ScreenCoord, ScreenLength2d},
+    types::{Coord, ScreenLength2d},
     Rgba,
 };
 
@@ -55,10 +55,8 @@ impl SceneUserContext {
 
                 let radius = ScreenLength2d::new(5.0, 5.0);
 
-                let mut circle = Shape::new_circle(
-                    db_coord.coord(),
-                    self.camera.transform_to_length2d(radius),
-                );
+                let mut circle =
+                    Shape::new_circle(db_coord.coord(), self.camera.transform_to_length2d(radius));
                 circle.color = color;
                 circle.render(ctx)?;
             }
@@ -95,7 +93,6 @@ impl SceneUserContext {
             return Ok(());
         }
         let pos = pos.unwrap();
-
 
         for shape_selected in &selected.shapes {
             let shape = self

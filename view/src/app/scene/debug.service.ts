@@ -12,7 +12,7 @@ export class DebugService {
         eventsService: EventsService,
         private sceneService: ScenesService,
     ) {
-        if (environment.logLevel){
+        if (environment.logLevel) {
             set_logger(environment.logLevel);
         }
 

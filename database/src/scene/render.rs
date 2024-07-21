@@ -10,7 +10,7 @@ pub trait DrawingContext {
     fn get_transform(&self) -> Result<Affine, String>;
 
     fn set_fill(&mut self, color: &Rgba) -> Result<(), String>;
-    
+
     fn set_stroke(&mut self, color: &Rgba, size: f64) -> Result<(), String>;
 
     fn start_shape(&mut self, start_point: &Coord) -> Result<(), String>;
@@ -56,7 +56,7 @@ impl DrawingContext for MockDrawingContext {
         Ok(())
     }
 
-    fn set_stroke(&mut self, color: &Rgba, size: f64) -> Result<(), String> {
+    fn set_stroke(&mut self, _color: &Rgba, _size: f64) -> Result<(), String> {
         Ok(())
     }
 

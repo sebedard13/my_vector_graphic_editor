@@ -1,5 +1,6 @@
 use super::{
-    create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape, IntersectionType
+    create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
+    IntersectionType,
 };
 use crate::{curve::Curve, shape::Shape};
 

@@ -229,9 +229,6 @@ impl Shape {
     }
 
     pub fn remove_curve(&mut self, curve_index: usize) {
-        
-
-
         if self.is_closed() && self.curves.len() - 1 == curve_index {
             let curve = self.curves.remove(0);
             self.curves[curve_index - 1].cp1 = curve.cp1;

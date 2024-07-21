@@ -161,7 +161,6 @@ mod tests {
             ],
             Affine::identity(),
         );
-       
 
         shape.curve_insert_smooth(0, 0.5);
 
@@ -172,7 +171,10 @@ mod tests {
             }
         }
 
-        assert_eq!(ids.len(), 4, "There should be 4 coord because every thhing is a line");
+        assert_eq!(
+            ids.len(),
+            4,
+            "There should be 4 coord because every thhing is a line"
+        );
     }
 }
-

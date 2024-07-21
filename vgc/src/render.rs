@@ -30,7 +30,6 @@ where
     let m = &transform;
 
     for region in &canvas.shapes {
-
         renderer.set_fill(&region.color)?;
 
         renderer.start_shape(&region.start.borrow().transform(m))?;

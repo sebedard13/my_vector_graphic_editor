@@ -6,7 +6,7 @@ use crate::canvas_context_2d_render::CanvasContext2DRender;
 use common::{
     dbg_str,
     pures::{Affine, Vec2},
-    types::{Coord, ScreenCoord, ScreenRect},
+    types::{Coord, ScreenRect},
     Rgba,
 };
 use database::{SceneUserContext, SelectedLevel, UserSelection};

@@ -1,7 +1,7 @@
 use camera::Camera;
 use common::pures::Affine;
 
-use crate::{DbCoord, DrawingContext, Scene, Shape, UserSelection};
+use crate::{DbCoord, DrawingContext, Scene, Shape};
 
 pub mod api;
 pub mod camera;

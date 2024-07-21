@@ -37,7 +37,7 @@ impl SceneClient {
         unimplemented!()
     }
 
-    pub fn load(data: Uint8Array) -> Self {
+    pub fn load(_data: Uint8Array) -> Self {
         //self.scene.load(data)
         unimplemented!()
     }

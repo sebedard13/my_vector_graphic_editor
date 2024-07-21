@@ -17,7 +17,7 @@ pub struct Selected {
     #[wasm_bindgen(skip)]
     pub shapes: Vec<SelectedShape>,
     #[wasm_bindgen(skip)]
-    pub hover_coord: Option< HoverCoord>,
+    pub hover_coord: Option<HoverCoord>,
 }
 
 #[derive(Debug, Default)]
@@ -140,7 +140,10 @@ impl Selected {
                         .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
                         .c,
                 ) {
-                    self.hover_coord = Some(HoverCoord::new(shape_selected.shape_index, ref_coord_type.clone()));
+                    self.hover_coord = Some(HoverCoord::new(
+                        shape_selected.shape_index,
+                        ref_coord_type.clone(),
+                    ));
                     continue 'shape_loop;
                 }
             }
@@ -268,7 +271,9 @@ impl Selected {
 
     pub fn remove_shape(&mut self, shape_index: usize) {
         let shapes = &mut self.shapes;
-        let pos = shapes.iter().position(|shape_selected| shape_selected.shape_index == shape_index);
+        let pos = shapes
+            .iter()
+            .position(|shape_selected| shape_selected.shape_index == shape_index);
 
         if let Some(index) = pos {
             shapes.remove(index);

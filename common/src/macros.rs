@@ -1,5 +1,3 @@
-
-
 // implements binary operators "&T op U", "T op &U", "&T op &U"
 // based on "T op U" where T and U are expected to be `Copy`able
 #[macro_export]
@@ -34,7 +32,6 @@ macro_rules! forward_ref_binop {
     };
 }
 
-
 // implements the unary operator "op &T"
 // based on "op T" where T is expected to be `Copy`able
 #[macro_export]
@@ -48,7 +45,7 @@ macro_rules! forward_ref_unop {
                 $imp::$method(*self)
             }
         }
-    }
+    };
 }
 
 // implements "T op= &U", based on "T op= U"
@@ -64,5 +61,5 @@ macro_rules! forward_ref_op_assign {
                 $imp::$method(self, *other);
             }
         }
-    }
+    };
 }

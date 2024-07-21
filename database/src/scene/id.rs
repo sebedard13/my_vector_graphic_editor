@@ -12,6 +12,7 @@ macro_rules! create_struct_id {
                 $name { id: 0 }
             }
 
+            #[allow(dead_code)]
             pub(crate) fn new() -> Self {
                 $name {
                     id: ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst),

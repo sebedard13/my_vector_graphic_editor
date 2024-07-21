@@ -129,7 +129,7 @@ export class ScenesService {
     }
 
     public currentSceneNow(callback: (scene: Scene) => void) {
-        const scene = this.currentScene()
+        const scene = this.currentScene();
         if (!scene) {
             return;
         }

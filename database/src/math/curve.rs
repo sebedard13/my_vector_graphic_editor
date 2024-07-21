@@ -192,7 +192,7 @@ pub fn add_smooth_result(
     (cp0_rtn, cp1l_rtn, p1_rtn, cp1r_rtn, cp2_rtn)
 }
 
-pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
+pub fn math_is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
     let mut vec_line = p1.c - p0.c;
     let mut vec_cp0 = cp0.c - p0.c;
     let mut vec_cp1 = cp1.c - p0.c;
@@ -212,7 +212,7 @@ mod test {
 
     use float_cmp::assert_approx_eq;
 
-    use crate::math::curve::is_line;
+    use crate::math::curve::math_is_line;
 
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
     use common::{pures::Vec2, types::Coord};
@@ -407,14 +407,14 @@ mod test {
         let cp1 = Coord::new(1.0, 1.0);
         let p1 = Coord::new(1.0, 1.0);
 
-        assert!(is_line(&p0, &cp0, &cp1, &p1));
+        assert!(math_is_line(&p0, &cp0, &cp1, &p1));
 
         let p0 = Coord::new(0.0, 0.0);
         let cp0 = Coord::new(0.2, 0.2);
         let cp1 = Coord::new(0.7, 0.7);
         let p1 = Coord::new(1.0, 1.0);
 
-        assert!(is_line(&p0, &cp0, &cp1, &p1));
+        assert!(math_is_line(&p0, &cp0, &cp1, &p1));
     }
 
     #[test]
@@ -424,6 +424,6 @@ mod test {
         let cp1 = Coord::new(0.7, 0.27);
         let p1 = Coord::new(1.0, 1.0);
 
-        assert!(!is_line(&p0, &cp0, &cp1, &p1));
+        assert!(!math_is_line(&p0, &cp0, &cp1, &p1));
     }
 }
