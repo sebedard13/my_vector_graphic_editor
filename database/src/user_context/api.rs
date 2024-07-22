@@ -167,44 +167,21 @@ impl SceneUserContext {
     }
 }
 
-// pub fn load_from_arraybuffer(array: Uint8Array) -> CanvasContent {
-//     let vec = array.to_vec();
-//     let main_slice = vec.as_slice();
-//     let first_4_bytes = main_slice.get(0..4).unwrap();
-//     let length = u32::from_le_bytes([
-//         first_4_bytes[0],
-//         first_4_bytes[1],
-//         first_4_bytes[2],
-//         first_4_bytes[3],
-//     ]) as usize;
+impl SceneUserContext {
+    pub fn load(vec: Vec<u8>) -> Result<SceneUserContext, String> {
+        let main_slice = vec.as_slice();
+        let scene_user_context_data = postcard::from_bytes::<SceneUserContext>(main_slice);
+        if scene_user_context_data.is_err() {
+            let error = scene_user_context_data.unwrap_err();
+            log::error!("Error: {:?}", error);
+            return Err("Deserialization should be valid".to_string());
+        }
 
-//     let slice = main_slice.get(4..(4 + length)).unwrap();
+        return Ok(scene_user_context_data.unwrap());
+    }
 
-//     let vgc_data = from_bytes::<Vgc>(slice).expect("Deserialization should be valid");
-
-//     let camera_slice = main_slice.get((4 + length)..(4 + length + 26)).unwrap();
-
-//     let mut camera = Camera::new(vgc_data.max_rect().center(), f32::NAN, f32::NAN);
-//     camera.deserialize(camera_slice);
-
-//     return CanvasContent { vgc_data, camera };
-// }
-
-// pub fn save_to_arraybuffer(canvas_content: &CanvasContent) -> Vec<u8> {
-//     let vec = to_allocvec::<Vgc>(&canvas_content.vgc_data).expect("Serialization should be valid");
-
-//     let length = (vec.len() as u32).to_le_bytes();
-
-//     let mut result = Vec::new();
-
-//     result.push(length[0]);
-//     result.push(length[1]);
-//     result.push(length[2]);
-//     result.push(length[3]);
-//     result.extend(vec);
-
-//     let camera_slice = canvas_content.camera.serialize();
-//     result.extend(camera_slice);
-
-//     return result;
-// }
+    pub fn save(&self) -> Result<Vec<u8>, String> {
+        let vec = postcard::to_allocvec(self).map_err(|_| "Serizalization should be valid")?;
+        return Ok(vec);
+    }
+}

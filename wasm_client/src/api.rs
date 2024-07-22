@@ -1,4 +1,5 @@
 use common::Rgba;
+use database::SceneUserContext;
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -38,12 +39,11 @@ impl SceneClient {
     }
 
     pub fn save(&self) -> Vec<u8> {
-        //self.scene.save()
-        unimplemented!()
+        self.scene_context.save().expect("failed to save")
     }
 
-    pub fn load(_data: Uint8Array) -> Self {
-        //self.scene.load(data)
-        unimplemented!()
+    pub fn load(data: Uint8Array) -> Self {
+        let scene_context = SceneUserContext::load(data.to_vec()).expect("failed to load");
+        Self { scene_context }
     }
 }

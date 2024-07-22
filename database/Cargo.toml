@@ -7,6 +7,9 @@ edition = "2021"
 
 [dependencies]
 polynomen = "1.1.0"
+serde = { version = "1.0.130", features = ["derive"] }
+postcard = "1.0.8"
+
 common = { path = "../common", default-features = false, features = ["ts"] }
 log = "0.4.21"
 

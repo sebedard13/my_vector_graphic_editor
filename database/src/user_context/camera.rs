@@ -1,6 +1,7 @@
 use common::math::lerp;
 use common::pures::{Affine, Vec2};
 use common::types::{Coord, Length2d, Rect, ScreenCoord, ScreenLength2d, ScreenRect};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy)]
 pub struct CameraSettings {
@@ -33,6 +34,7 @@ impl CameraSettings {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize)]
 pub struct Camera {
     position: Coord,
     scaling: f32,
@@ -41,7 +43,10 @@ pub struct Camera {
     reflect_y: bool,
     base_scale: ScreenLength2d,
 
+    #[serde(skip)]
     home: Coord,
+    
+    #[serde(skip)]
     pub settings: CameraSettings,
 }
 

@@ -4,7 +4,7 @@ use common::{
     Rgba,
 };
 
-use crate::{scene::LayerValue, DrawingContext, SceneUserContext, Shape, UserSelection};
+use crate::{DrawingContext, SceneUserContext, Shape, UserSelection};
 
 use super::user_selection::CoordState;
 

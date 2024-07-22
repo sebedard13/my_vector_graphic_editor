@@ -1,55 +1,44 @@
-use std::any::Any;
-
 use common::{types::Rect, Rgba};
 use id::LayerId;
+use serde::{Deserialize, Serialize};
 
 pub mod id;
 pub mod render;
 #[macro_use]
 pub mod shape;
 
+#[derive(Debug, Serialize, Deserialize)]
 enum LayerType {
-    Shape,
+    Shape(shape::Shape),
     Folder,
 }
 
-pub trait LayerValue: Any {
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
-    fn render(&self, renderer: &mut dyn render::DrawingContext) -> Result<(), String>;
-}
-
-///Macro to implement the LayerValue trait  for a type.
-/// It implement as_any and as_any_mut and leave room for other functions.
-#[macro_export]
-macro_rules! impl_layer_value {
-    ($type:ty, $($functions:item)*) => {
-        impl LayerValue for $type {
-            fn as_any(&self) -> &dyn Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn Any {
-                self
-            }
-
-            $($functions)*
+impl LayerType {
+    pub fn render(&self, renderer: &mut dyn render::DrawingContext) -> Result<(), String> {
+        match self {
+            LayerType::Shape(shape) => shape.render(renderer),
+            LayerType::Folder => Ok(()),
         }
-    };
+    }
+
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
 struct Layer {
     pub id: LayerId,
-    layer_type: LayerType,
-    pub value: Box<dyn LayerValue>,
+    pub value: LayerType,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Scene {
     pub background: Rgba,
 
     //Index 0 is the foreground
     layers: Vec<Layer>,
 }
+
+
 
 impl Scene {
     pub fn new() -> Self {
@@ -59,19 +48,19 @@ impl Scene {
         }
     }
 
-    fn layer_select<T: 'static>(&self, index: LayerId) -> Option<&T> {
+    fn layer_select(&self, index: LayerId) -> Option<&LayerType> {
         let find_result = self.layers.iter().find(|l| l.id == index);
         if let Some(layer) = find_result {
-            return layer.value.as_any().downcast_ref::<T>();
+            return Some(&layer.value);
         }
 
         None
     }
 
-    fn layer_select_mut<T: 'static>(&mut self, index: LayerId) -> Option<&mut T> {
+    fn layer_select_mut(&mut self, index: LayerId) -> Option<&mut LayerType> {
         let find_result = self.layers.iter_mut().find(|l| l.id == index);
         if let Some(layer) = find_result {
-            return layer.value.as_any_mut().downcast_mut();
+            return Some(&mut layer.value);
         }
 
         None

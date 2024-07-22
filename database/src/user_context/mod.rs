@@ -1,5 +1,6 @@
 use camera::Camera;
 use common::{pures::Affine, Rgba};
+use serde::{Deserialize, Serialize};
 
 use crate::{DbCoord, DrawingContext, Scene, Shape};
 
@@ -8,6 +9,8 @@ pub mod camera;
 mod ui;
 pub mod user_selection;
 
+#[derive(Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct SceneUserContext {
     pub scene: Scene,
     pub camera: Camera,

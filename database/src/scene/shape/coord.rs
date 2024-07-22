@@ -2,6 +2,7 @@ use super::Shape;
 use crate::scene::id::CoordId;
 use common::pures::Affine;
 use common::types::Coord;
+use serde::{Deserialize, Serialize};
 
 pub enum CoordType {
     P0,
@@ -116,6 +117,7 @@ impl Shape {
 }
 
 #[derive(Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize)]
 pub struct DbCoord {
     pub id: CoordId,
     pub(in super::super) coord: Coord,

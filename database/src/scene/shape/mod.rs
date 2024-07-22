@@ -1,35 +1,32 @@
-use std::any::Any;
-
 use common::{
     pures::Affine,
     types::{Coord, Length2d},
     Rgba,
 };
 use coord::DbCoord;
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    impl_layer_value,
     scene::{Layer, LayerId, Scene},
     DrawingContext,
 };
 
-use super::{LayerType, LayerValue};
+use super::LayerType;
 
 pub mod boolean;
 pub mod coord;
 pub mod cubic_path;
 pub mod curve;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shape {
     pub id: LayerId,
     pub path: Vec<DbCoord>,
     pub color: Rgba,
 }
 
-impl_layer_value!(
-    Shape,
-    fn render(&self, renderer: &mut dyn DrawingContext) -> Result<(), String> {
+impl Shape {
+    pub fn render(&self, renderer: &mut dyn DrawingContext) -> Result<(), String> {
         let transform = renderer.get_transform()?;
         let coords: Vec<Coord> = self
             .path
@@ -48,7 +45,7 @@ impl_layer_value!(
         renderer.end()?;
         Ok(())
     }
-);
+}
 
 impl Scene {
     pub fn shape_insert(&mut self, mut shape: Shape) -> LayerId {
@@ -59,19 +56,26 @@ impl Scene {
         shape.curves_path_update_id();
         self.layers.push(Layer {
             id: shape.id,
-            layer_type: LayerType::Shape,
-            value: Box::new(shape),
+            value: LayerType::Shape(shape),
         });
 
         id
     }
 
     pub fn shape_select(&self, index: LayerId) -> Option<&Shape> {
-        self.layer_select::<Shape>(index)
+        if let Some(LayerType::Shape(value)) = self.layer_select(index) {
+            Some(value)
+        } else {
+            None
+        }
     }
 
     pub fn shape_select_mut(&mut self, index: LayerId) -> Option<&mut Shape> {
-        self.layer_select_mut::<Shape>(index)
+        if let Some(LayerType::Shape(value)) = self.layer_select_mut(index) {
+            Some(value)
+        } else {
+            None
+        }
     }
 
     pub fn shape_put(&mut self, shape: Shape) {
@@ -80,31 +84,43 @@ impl Scene {
             .iter()
             .position(|l| l.id == shape.id)
             .expect("Valid shape id");
-        self.layers[index].value = Box::new(shape);
+        self.layers[index].value = LayerType::Shape(shape);
     }
 
     pub fn shape_select_contains(&self, coord: &Coord) -> Option<&Shape> {
         let find_result = self.layers.iter().find(|l| {
-            if let Some(shape) = l.value.as_any().downcast_ref::<Shape>() {
+            if let LayerType::Shape(shape) = &l.value {
                 if shape.contains(coord) {
                     return true;
                 }
             }
             false
         });
-        find_result.and_then(|l| l.value.as_any().downcast_ref::<Shape>())
+        find_result.and_then(|l| {
+            if let LayerType::Shape(shape) = &l.value {
+                Some(shape)
+            } else {
+                None
+            }
+        })
     }
 
     pub fn shape_select_contains_mut(&mut self, coord: &Coord) -> Option<&mut Shape> {
         let find_result = self.layers.iter_mut().find(|l| {
-            if let Some(shape) = l.value.as_any().downcast_ref::<Shape>() {
+            if let LayerType::Shape(shape) = &l.value {
                 if shape.contains(coord) {
                     return true;
                 }
             }
             false
         });
-        find_result.and_then(|l| l.value.as_any_mut().downcast_mut::<Shape>())
+        find_result.and_then(|l| {
+            if let LayerType::Shape(shape) = &mut l.value {
+                Some(shape)
+            } else {
+                None
+            }
+        })
     }
 }
 

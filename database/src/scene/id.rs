@@ -1,8 +1,10 @@
 static ID_COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(1);
+use serde::{Deserialize, Serialize};
 
 macro_rules! create_struct_id {
     ($name:ident) => {
         #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Ord, PartialOrd, Default)]
+        #[derive(Serialize, Deserialize)]
         pub struct $name {
             id: usize,
         }
