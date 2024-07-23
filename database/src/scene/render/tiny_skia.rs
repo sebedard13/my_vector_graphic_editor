@@ -1,59 +1,6 @@
-use crate::Vgc;
-use common::pures::Vec2;
-use common::Rgba;
-use common::{pures::Affine, types::Coord};
-pub trait VgcRenderer {
-    fn create(&mut self) -> Result<(), String>;
-
-    fn fill_background(&mut self, color: &Rgba) -> Result<(), String>;
-
-    fn get_transform(&self) -> Result<Affine, String>;
-
-    fn set_fill(&mut self, color: &Rgba) -> Result<(), String>;
-
-    fn start_shape(&mut self, start_point: &Coord) -> Result<(), String>;
-
-    fn move_curve(&mut self, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Result<(), String>;
-
-    fn close_shape(&mut self) -> Result<(), String>;
-
-    fn end(&mut self) -> Result<(), String>;
-}
-
-pub fn render_true<T>(canvas: &Vgc, renderer: &mut T) -> Result<(), String>
-where
-    T: VgcRenderer,
-{
-    renderer.create()?;
-    renderer.fill_background(&canvas.background)?;
-    let transform = renderer.get_transform()?;
-    let m = &transform;
-
-    for region in &canvas.shapes {
-        renderer.set_fill(&region.color)?;
-
-        renderer.start_shape(&region.start.borrow().transform(m))?;
-
-        for curve in &region.curves {
-            renderer.move_curve(
-                &curve.cp0.borrow().transform(m),
-                &curve.cp1.borrow().transform(m),
-                &curve.p1.borrow().transform(m),
-            )?;
-        }
-        renderer.close_shape()?;
-    }
-
-    renderer.end()?;
-
-    Ok(())
-}
-
-#[cfg(feature = "tiny-skia_renderer")]
 use tiny_skia::{Paint, PathBuilder, Pixmap};
 
 #[derive(Default)]
-#[cfg(feature = "tiny-skia_renderer")]
 pub struct TinySkiaRenderer<'a> {
     transform: Affine,
     pixmap: Option<Pixmap>,
@@ -78,7 +25,6 @@ impl<'a> TinySkiaRenderer<'a> {
     }
 }
 
-#[cfg(feature = "tiny-skia_renderer")]
 impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
     fn create(&mut self) -> Result<(), String> {
         self.pixmap = Some(
@@ -149,7 +95,6 @@ impl<'a> VgcRenderer for TinySkiaRenderer<'a> {
 mod test {
 
     #[test]
-    #[cfg(feature = "tiny-skia_renderer")]
     fn test_tiny_skia_renderer() {
         use super::*;
         use crate::generate_from_push;

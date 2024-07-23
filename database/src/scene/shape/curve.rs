@@ -49,7 +49,23 @@ impl Shape {
     }
 
     pub fn is_closed(&self) -> bool {
-        self.path[0].id == self.path[self.path.len() - 1].id
+        self.path.first().map_or(false, |first| {
+            self.path.last().map_or(false, |last| first.id == last.id)
+        })
+    }
+
+    pub fn close(&mut self) {
+        if !self.is_closed() {
+            if let Some(first) = self.path.first() {
+                let first_coord = first.clone();
+                if let Some(last) = self.path.last() {
+                    let last_coord = last.clone();
+                    self.path.push(last_coord);
+                    self.path.push(first_coord);
+                    self.path.push(first_coord);
+                }
+            }
+        }
     }
 }
 

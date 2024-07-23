@@ -16,3 +16,10 @@ pub use scene::Scene;
 pub use user_context::user_selection::SelectedLevel;
 pub use user_context::user_selection::UserSelection;
 pub use user_context::SceneUserContext;
+
+
+/// Maximum size of the image, if we want to have detail for each pixel
+/// This is a limit because of f32 precision with 2^-23 for the smallest value
+/// See decision.md for more information
+#[allow(dead_code)]
+static MAX_DETAIL_SIZE: u32 = 52000000;

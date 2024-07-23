@@ -20,9 +20,7 @@ impl LayerType {
             LayerType::Folder => Ok(()),
         }
     }
-
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Layer {
@@ -37,8 +35,6 @@ pub struct Scene {
     //Index 0 is the foreground
     layers: Vec<Layer>,
 }
-
-
 
 impl Scene {
     pub fn new() -> Self {
@@ -107,8 +103,19 @@ impl Scene {
     }
 
     pub fn debug_string(&self) -> String {
-        //TODO
-        String::new()
+        let mut result = String::new();
+        for layer in &self.layers {
+            match &layer.value {
+                LayerType::Shape(shape) => {
+                    let path = format!("{}\n", shape.path());
+                    result.push_str(&path);
+                }
+                LayerType::Folder => {
+                    result.push_str("Folder\n");
+                }
+            }
+        }
+        result
     }
 }
 

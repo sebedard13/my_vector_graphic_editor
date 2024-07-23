@@ -2,6 +2,9 @@ use common::{pures::Affine, types::Coord, Rgba};
 
 use crate::Scene;
 
+#[cfg(feature = "tiny-skia_renderer")]
+mod tiny_skia;
+
 pub trait DrawingContext {
     fn create(&mut self) -> Result<(), String>;
 
@@ -76,3 +79,4 @@ impl DrawingContext for MockDrawingContext {
         Ok(())
     }
 }
+

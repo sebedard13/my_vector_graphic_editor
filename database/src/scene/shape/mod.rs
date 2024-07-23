@@ -122,6 +122,21 @@ impl Scene {
             }
         })
     }
+
+    // pub fn shapes_closest(&self, coord: &Coord) -> Vec<(usize, usize, f32, Coord)> {
+    //     let mut vec = Vec::new();
+    //     for (shape_index, shape) in self.shapes.iter().enumerate() {
+    //         let (curve_index, _, distance, coord) = shape.closest_curve(coord);
+
+    //         vec.push((shape_index, curve_index, distance, coord));
+    //     }
+    //     vec.sort_by(|(_, _, distance1, _), (_, _, distance2, _)| {
+    //         distance1
+    //             .partial_cmp(distance2)
+    //             .expect("No Nan value possible")
+    //     });
+    //     vec
+    // }
 }
 
 impl Shape {
