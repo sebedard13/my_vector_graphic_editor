@@ -18,7 +18,7 @@ export class SelectionService {
         private scenesService: ScenesService,
         eventsService: EventsService,
     ) {
-        this.scenesService.currentSceneChange$.subscribe(() => {
+        this.scenesService.currentScene$.subscribe(() => {
             this.selection.free();
             this.selection = new UserSelectionClient();
             this.selectionHasChanged.next();
@@ -26,20 +26,20 @@ export class SelectionService {
 
         this.selectionHasChanged.asObservable().subscribe(() => {
             this.scenesService.currentSceneNow((scene) => {
-                const selectedColors = this.selection.get_selected_colors(scene.canvasContent);
+                const selectedColors = this.selection.get_selected_colors(scene.sceneClient);
                 this.selectedColor$.next(selectedColors);
             });
         });
 
         eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
-                const pt = scene.canvasContent.camera_project({
+                const pt = scene.sceneClient.camera_project({
                     c: { x: event.offsetX, y: event.offsetY },
                 } as ScreenCoord);
 
                 //selection
                 this.selection.set_mouse_position(pt);
-                this.selection.change_hover(scene.canvasContent, pt);
+                this.selection.change_hover(scene.sceneClient, pt);
             });
         });
 
@@ -55,7 +55,7 @@ export class SelectionService {
 
     public set_color(color: Rgba) {
         this.scenesService.currentSceneNow((scene) => {
-            scene.canvasContent.set_color_of(this.selection, color);
+            scene.sceneClient.set_color_of(this.selection, color);
             this.selectionHasChanged.next();
         });
     }

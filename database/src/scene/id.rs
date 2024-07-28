@@ -24,6 +24,16 @@ macro_rules! create_struct_id {
             pub(crate) fn update(&mut self) {
                 self.id = ID_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             }
+
+            pub fn value(&self) -> usize {
+                self.id
+            }
+        }
+
+        impl From<usize> for $name {
+            fn from(id: usize) -> Self {
+                $name { id }
+            }
         }
     };
 }

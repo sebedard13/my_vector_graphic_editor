@@ -38,9 +38,9 @@ export class CanvasComponent implements AfterViewInit {
         this.canvas.nativeElement.width = width;
         this.canvas.nativeElement.height = height;
 
-        this.scenesService.currentSceneChange$.subscribe(() => {
+        this.scenesService.currentScene$.subscribe(() => {
             this.scenesService.currentSceneNow((scene) => {
-                scene.canvasContent.camera_set_pixel_region(
+                scene.sceneClient.camera_set_pixel_region(
                     this.canvas.nativeElement.width,
                     this.canvas.nativeElement.height,
                 );
@@ -58,7 +58,7 @@ export class CanvasComponent implements AfterViewInit {
                 this.canvas.nativeElement.height = this.canvas.nativeElement.offsetHeight;
 
                 this.scenesService.currentSceneNow((scene) => {
-                    scene.canvasContent.camera_set_pixel_region(
+                    scene.sceneClient.camera_set_pixel_region(
                         this.canvas.nativeElement.width,
                         this.canvas.nativeElement.height,
                     );
@@ -70,7 +70,7 @@ export class CanvasComponent implements AfterViewInit {
 
         this.renderSub = animationFrames().subscribe((_) => {
             this.scenesService.currentSceneNow((scene) => {
-                this.render(scene.canvasContent);
+                this.render(scene.sceneClient);
             });
         });
     }

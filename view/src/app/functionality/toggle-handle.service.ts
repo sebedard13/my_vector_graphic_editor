@@ -23,7 +23,7 @@ export class ToggleHandleService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    scene.canvasContent.toggle_handle(this.selectionService.selection);
+                    scene.sceneClient.toggle_handle(this.selectionService.selection);
                 }
             });
         });

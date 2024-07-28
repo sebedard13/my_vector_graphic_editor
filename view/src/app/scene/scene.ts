@@ -1,16 +1,16 @@
 import { SceneClient } from "wasm-client";
 
 export class Scene {
-    canvasContent: SceneClient;
+    sceneClient: SceneClient;
     metadata: Metadata;
 
-    constructor(canvasContent: SceneClient) {
-        this.canvasContent = canvasContent;
+    constructor(sceneClient: SceneClient) {
+        this.sceneClient = sceneClient;
         this.metadata = new Metadata();
     }
 
     free(): void {
-        this.canvasContent.free();
+        this.sceneClient.free();
     }
 }
 

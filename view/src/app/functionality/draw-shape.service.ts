@@ -23,7 +23,7 @@ export class DrawShapeService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    scene.canvasContent.draw_shape(this.selectionService.selection);
+                    scene.sceneClient.draw_shape(this.selectionService.selection);
                 }
             });
         });

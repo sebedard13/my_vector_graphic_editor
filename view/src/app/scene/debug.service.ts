@@ -19,7 +19,7 @@ export class DebugService {
         eventsService.keydown$.subscribe((event) => {
             if (event.key === "d" && event.ctrlKey) {
                 this.sceneService.currentSceneNow((scene) => {
-                    console.log(scene.canvasContent.debug_string());
+                    console.log(scene.sceneClient.debug_string());
                 });
             }
         });

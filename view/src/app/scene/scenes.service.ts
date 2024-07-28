@@ -13,9 +13,9 @@ export class ScenesService {
 
     public scenes$: Observable<Scene[]> = this.scenesSubject.asObservable();
 
-    public currentSceneChange$: Observable<void> = this.indexCurrentSceneSubject.pipe(
-        map(() => {}),
-    );
+    public currentScene$: Observable<Scene | null> = this.indexCurrentSceneSubject.pipe(map(() => {
+        return this.currentScene();
+    }));
 
     public hasScenes$: Observable<boolean> = this.scenes$.pipe(map((scenes) => scenes.length > 0));
     public scenesList$: Observable<{ scene: Scene; isCurrent: boolean }[]>;
@@ -107,7 +107,7 @@ export class ScenesService {
 
     public saveSceneToFile(): void {
         this.currentSceneNow((scene) => {
-            const array = scene.canvasContent.save();
+            const array = scene.sceneClient.save();
             const url = URL.createObjectURL(new Blob([array]));
 
             const a = document.createElement("a");

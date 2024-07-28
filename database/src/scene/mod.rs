@@ -6,6 +6,7 @@ pub mod id;
 pub mod render;
 #[macro_use]
 pub mod shape;
+pub mod tree_view;
 
 #[derive(Debug, Serialize, Deserialize)]
 enum LayerType {
@@ -20,11 +21,19 @@ impl LayerType {
             LayerType::Folder => Ok(()),
         }
     }
+
+    pub fn type_string(&self) -> String {
+        match self {
+            LayerType::Shape(_) => "Shape".to_string(),
+            LayerType::Folder => "Folder".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Layer {
     pub id: LayerId,
+    pub name: String,
     pub value: LayerType,
 }
 
@@ -87,15 +96,16 @@ impl Scene {
         }
     }
 
-    pub fn layer_move_at(&mut self, id_to_move: LayerId, id_position: LayerId) {
-        let index_to_move = self.layers.iter().position(|l| l.id == id_to_move).unwrap();
+    pub fn layer_move_at(&mut self, id_to_move: LayerId, id_position: LayerId) -> Result<(), String> {
+        let index_to_move = self.layers.iter().position(|l| l.id == id_to_move).ok_or("id_to_move not found")?;
         let index_position = self
             .layers
             .iter()
             .position(|l| l.id == id_position)
-            .unwrap();
+            .ok_or("id_position not found")?;
         let layer = self.layers.remove(index_to_move);
         self.layers.insert(index_position, layer);
+        Ok(())
     }
 
     pub fn max_rect(&self) -> Rect {

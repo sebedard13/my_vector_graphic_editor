@@ -1,0 +1,50 @@
+<cdk-tree
+    [dataSource]="dataSource"
+    [treeControl]="treeControl"
+    cdkDropList
+    (cdkDropListDropped)="drop($event)"
+    [trackBy]="trackByFn"
+>
+    <!-- This is the tree node template for leaf nodes -->
+    <cdk-tree-node
+        *cdkTreeNodeDef="let node"
+        [style.padding-left]="'calc(' + node.level + ' * var(--tree-padding))'"
+        [style.display]="shouldRender(node) ? 'flex' : 'none'"
+        class="layer space-between row bg"
+        cdkDrag
+        [cdkDragData]="node"
+    >
+        <div class="drag-placeholder" *cdkDragPlaceholder></div>
+        <div class="row center-ai grow shrink">
+            <button
+                class="expand-button p-1"
+                cdkTreeNodeToggle
+                [attr.aria-label]="'Toggle ' + node.name"
+                (click)="node.isExpanded = !node.isExpanded"
+                [style.visibility]="node.expandable ? 'visible' : 'hidden'"
+            >
+                <fa-icon [icon]="treeControl.isExpanded(node) ? Icon.open : Icon.close"></fa-icon>
+            </button>
+            <div>
+                <div class="thumbnail center">
+                    <img
+                        src="https://live.mdnplay.dev/en-US/docs/Web/CSS/aspect-ratio/plumeria.jpg"
+                        alt=""
+                    />
+                </div>
+            </div>
+
+            <div class="name mx-2 grow shrink">
+                {{ node.name }}
+            </div>
+        </div>
+        <div class="row layer-actions">
+            <button class="show-layer p-1 flex center" (click)="node.hideLayer = !node.hideLayer">
+                <fa-icon [icon]="node.hideLayer ? Icon.hideLayer : Icon.showLayer"></fa-icon>
+            </button>
+            <button class="edit-layer p-1 flex center" (click)="node.lockEdit = !node.lockEdit">
+                <fa-icon [icon]="node.lockEdit ? Icon.lockEditLayer : Icon.canEditLayer"></fa-icon>
+            </button>
+        </div>
+    </cdk-tree-node>
+</cdk-tree>

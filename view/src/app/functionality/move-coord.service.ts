@@ -31,7 +31,7 @@ export class MoveCoordService extends Functionality {
         const movePoint = this.eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
                 if (event.buttons === 1) {
-                    scene.canvasContent.move_coords_of(
+                    scene.sceneClient.move_coords_of(
                         this.selectionService.selection,
                         new ScreenLength2d(event.movementX, event.movementY),
                     );
@@ -44,19 +44,16 @@ export class MoveCoordService extends Functionality {
             .subscribe((event) => {
                 this.scenesService.currentSceneNow((scene) => {
                     if (event.shiftKey) {
-                        const point = scene.canvasContent.camera_project(
+                        const point = scene.sceneClient.camera_project(
                             new ScreenCoord(event.offsetX, event.offsetY),
                         );
-                        this.selectionService.selection.add_selection(scene.canvasContent, point);
+                        this.selectionService.selection.add_selection(scene.sceneClient, point);
                         this.selectionService.selectionHasChanged.next();
                     } else {
-                        const point = scene.canvasContent.camera_project(
+                        const point = scene.sceneClient.camera_project(
                             new ScreenCoord(event.offsetX, event.offsetY),
                         );
-                        this.selectionService.selection.change_selection(
-                            scene.canvasContent,
-                            point,
-                        );
+                        this.selectionService.selection.change_selection(scene.sceneClient, point);
                         this.selectionService.selectionHasChanged.next();
                     }
                 });

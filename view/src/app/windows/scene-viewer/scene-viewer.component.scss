@@ -1,0 +1,73 @@
+:host {
+    --tree-padding: 16px;
+}
+
+.layer {
+    border-bottom: rgba(0, 0, 0, 0.4) 1px solid;
+}
+
+.layer {
+    font-size: 0.8em;
+    flex-grow: 0;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    max-width: 100%;
+
+    &:hover {
+        background-color: rgba(0, 0, 0, 0.4);
+        cursor: grab;
+    }
+
+    .expand-button {
+        font-size: 0.8em;
+
+        height: 100%;
+
+        fa-icon {
+            display: inline-block;
+            width: 11px;
+        }
+    }
+
+    .thumbnail {
+        width: 30px;
+        height: 30px;
+        background-color: rgba(0, 0, 0, 0.4);
+        user-select: none;
+        pointer-events: none;
+        img {
+            max-inline-size: 100%;
+            max-block-size: 100%;
+
+            aspect-ratio: 1/1 auto;
+        }
+    }
+    .name {
+        //max-width: 100px;
+        white-space: nowrap;
+        text-overflow: clip;
+        overflow: hidden;
+        line-height: 1.5;
+        flex-shrink: 1;
+        min-width: 0; /* or some value */
+    }
+
+    .layer-actions {
+        //flex-basis: 70px;
+
+        .show-layer fa-icon {
+            display: inline-block;
+            width: 18px;
+        }
+        .edit-layer fa-icon {
+            display: inline-block;
+            width: 18px;
+        }
+    }
+}
+
+.drag-placeholder {
+    width: 100%;
+    height: 20px;
+    border-bottom: solid 2px orange;
+}

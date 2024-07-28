@@ -57,6 +57,7 @@ impl Scene {
         self.layers.push(Layer {
             id: shape.id,
             value: LayerType::Shape(shape),
+            name: format!("Shape {}", id.value()),
         });
 
         id

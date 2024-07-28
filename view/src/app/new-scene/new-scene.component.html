@@ -1,12 +1,12 @@
-<div class="w-100 h-100 bg b p-4">
+<div class="bg b p-4">
     <div class="gap-3">
-        <div class="gap-1 w-100">
+        <div class="gap-1">
             <label for="file-name">File name</label>
             <input [(ngModel)]="name" type="text" name="file-name" id="file-name" />
         </div>
         <div class="row gap-2">
-            <div class="gap-2 w-100">
-                <div class="gap-1 w-100">
+            <div class="gap-2 grow">
+                <div class="gap-1">
                     <label for="width">Width</label>
                     <app-number-input
                         id="width"
@@ -15,7 +15,7 @@
                         [precisionShown]="0"
                     ></app-number-input>
                 </div>
-                <div class="gap-1 w-100">
+                <div class="gap-1">
                     <label for="height">Height</label>
                     <app-number-input
                         id="height"

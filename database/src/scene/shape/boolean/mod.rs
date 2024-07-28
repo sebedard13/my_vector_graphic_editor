@@ -678,7 +678,10 @@ fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShap
 
 #[cfg(test)]
 mod test {
-    use common::{pures::Affine, types::{Coord, Length2d}};
+    use common::{
+        pures::Affine,
+        types::{Coord, Length2d},
+    };
 
     use super::{create_shape, mark_entry_exit_points};
     use crate::{scene::shape::Shape, DbCoord};
@@ -720,7 +723,7 @@ mod test {
 
     #[test]
     fn given_bug_diff_when_difference() {
-        // A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z wasm_vgc_bg.js:1982:12
+        // A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z wasm_client_bg.js:1982:12
         //B:  C -0.5066913 -0.54993117 -0.50866926 -0.53057325 -0.5123266 -0.5123266 Z
 
         let coords_a = vec![

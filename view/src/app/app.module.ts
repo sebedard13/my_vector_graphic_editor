@@ -14,6 +14,7 @@ import { SceneViewComponent } from "./scene/scene-view/scene-view.component";
 import { NewSceneComponent } from "./new-scene/new-scene.component";
 import { NumberInputComponent } from "./utilities/number-input/number-input.component";
 import { FormsModule } from "@angular/forms";
+import { SceneViewerComponent } from "./windows/scene-viewer/scene-viewer.component";
 
 @NgModule({
     declarations: [
@@ -27,7 +28,7 @@ import { FormsModule } from "@angular/forms";
         NewSceneComponent,
         NumberInputComponent,
     ],
-    imports: [BrowserModule, AppRoutingModule, FontAwesomeModule, FormsModule],
+    imports: [BrowserModule, AppRoutingModule, FontAwesomeModule, FormsModule, SceneViewerComponent],
     providers: [EventsService, provideExperimentalZonelessChangeDetection()],
     bootstrap: [AppComponent],
 })

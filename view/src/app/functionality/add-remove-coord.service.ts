@@ -24,7 +24,7 @@ export class AddRemoveCoordService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    scene.canvasContent.add_or_remove_coord(
+                    scene.sceneClient.add_or_remove_coord(
                         this.selectionService.selection,
                         new ScreenCoord(event.offsetX, event.offsetY),
                     );

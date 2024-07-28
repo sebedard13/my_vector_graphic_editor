@@ -13,11 +13,11 @@ export class RenderService {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;
 
-            const rect = scene.canvasContent.get_render_rect() as ScreenRect;
+            const rect = scene.sceneClient.get_render_rect() as ScreenRect;
             canvas.width = rect.width();
             canvas.height = rect.height();
 
-            scene.canvasContent.render_cover(ctx, rect.width(), rect.height());
+            scene.sceneClient.render_cover(ctx, rect.width(), rect.height());
 
             const a = document.createElement("a");
             a.href = canvas.toDataURL("image/png");

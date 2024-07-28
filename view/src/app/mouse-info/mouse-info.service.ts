@@ -26,7 +26,7 @@ export class MouseInfoService {
 
             const mousePos = this.mousePosSignal();
 
-            const coord = scene.canvasContent.camera_project(
+            const coord = scene.sceneClient.camera_project(
                 new ScreenCoord(mousePos.x, mousePos.y),
             ) as Coord;
             const rtn = { x: coord.c.x, y: coord.c.y };
@@ -40,7 +40,7 @@ export class MouseInfoService {
             }
 
             const mousePos = this.mouseCanvasPosSignal();
-            const screenCoord = scene.canvasContent.camera_unproject_to_canvas(
+            const screenCoord = scene.sceneClient.camera_unproject_to_canvas(
                 new Coord(mousePos.x, mousePos.y),
             ) as ScreenCoord;
             const rtn = { x: screenCoord.c.x, y: screenCoord.c.y };

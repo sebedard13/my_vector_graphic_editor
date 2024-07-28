@@ -2,7 +2,7 @@
 [tasks.wasm_build]
 workspace = false
 description = "Build wasm"
-script = ["cd wasm_vgc", "wasm-pack build"]
+script = ["cd wasm_client", "wasm-pack build"]
 
 [tasks.view_npm_install]
 workspace = false

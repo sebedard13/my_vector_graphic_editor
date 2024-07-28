@@ -12,5 +12,8 @@ serde = { version = "1.0.130", features = ["derive"] }
 common = { path = "../common", default-features = false, features = ["ts"] }
 log = "0.4.21"
 
+wasm-bindgen = { version = "0.2.89" }
+tsify-next = { version = "0.5.3", features = ["js"] }
+
 [dev-dependencies]
 float-cmp = "0.9.0"

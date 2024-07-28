@@ -1,5 +1,5 @@
 use common::Rgba;
-use database::SceneUserContext;
+use database::{SceneUserContext, TreeViewModel};
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -45,5 +45,15 @@ impl SceneClient {
     pub fn load(data: Uint8Array) -> Self {
         let scene_context = SceneUserContext::load(data.to_vec()).expect("failed to load");
         Self { scene_context }
+    }
+
+    pub fn get_tree_view(&self) -> Vec<TreeViewModel> {
+        self.scene_context.scene.get_tree_view()
+    }
+
+    pub fn move_layer(&mut self, id_to_move: usize, id_position: usize) -> Result<(), String> {
+        self.scene_context
+            .scene
+            .layer_move_at(id_to_move.into(), id_position.into())
     }
 }
