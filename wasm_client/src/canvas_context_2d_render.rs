@@ -1,17 +1,26 @@
-use common::pures::Affine;
 use common::types::Coord;
 use common::Rgba;
+use common::{pures::Affine, types::ScreenRect};
 use database::DrawingContext;
 use web_sys::{CanvasRenderingContext2d, CanvasWindingRule};
 
 pub struct CanvasContext2DRender<'a> {
     context: &'a CanvasRenderingContext2d,
     transform: Affine,
+    max_view: ScreenRect,
 }
 
 impl<'a> CanvasContext2DRender<'a> {
-    pub fn new(context: &'a CanvasRenderingContext2d, transform: Affine) -> Self {
-        Self { context, transform }
+    pub fn new(
+        context: &'a CanvasRenderingContext2d,
+        transform: Affine,
+        max_view: ScreenRect,
+    ) -> Self {
+        Self {
+            context,
+            transform,
+            max_view,
+        }
     }
 }
 
@@ -23,6 +32,14 @@ impl<'a> DrawingContext for CanvasContext2DRender<'a> {
             .set_stroke_style(&String::from("rgba(0, 0, 0, 0)").into());
         self.context.set_line_width(0.0);
         Ok(())
+    }
+
+    fn get_transform(&self) -> Result<Affine, String> {
+        Ok(self.transform)
+    }
+
+    fn get_max_view(&self) -> Result<ScreenRect, String> {
+        Ok(self.max_view)
     }
 
     fn fill_background(&mut self, color: &Rgba) -> Result<(), String> {
@@ -74,6 +91,11 @@ impl<'a> DrawingContext for CanvasContext2DRender<'a> {
         Ok(())
     }
 
+    fn move_line(&mut self, p: &Coord) -> Result<(), String> {
+        self.context.line_to(p.x() as f64, p.y() as f64);
+        Ok(())
+    }
+
     fn close_shape(&mut self) -> Result<(), String> {
         self.context.close_path();
         self.context
@@ -84,9 +106,5 @@ impl<'a> DrawingContext for CanvasContext2DRender<'a> {
 
     fn end(&mut self) -> Result<(), String> {
         Ok(())
-    }
-
-    fn get_transform(&self) -> Result<Affine, String> {
-        Ok(self.transform)
     }
 }

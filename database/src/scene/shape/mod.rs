@@ -179,6 +179,7 @@ impl Shape {
         shape.path.push(coords[0].transform(&transform));
         shape.path.push(coords[0].transform(&transform));
 
+        shape.close();
         shape
     }
 
@@ -293,7 +294,7 @@ mod test {
     #[test]
     fn test_shape_render() {
         let shape = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(1.0, 1.0));
-        let mut renderer = MockDrawingContext {};
+        let mut renderer = MockDrawingContext::default();
 
         shape.render(&mut renderer).expect("Render should be ok");
     }

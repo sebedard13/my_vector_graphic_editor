@@ -29,19 +29,11 @@
         }
     }
 
-    .thumbnail {
+    app-layer-thumbnail {
         width: 30px;
         height: 30px;
-        background-color: rgba(0, 0, 0, 0.4);
-        user-select: none;
-        pointer-events: none;
-        img {
-            max-inline-size: 100%;
-            max-block-size: 100%;
-
-            aspect-ratio: 1/1 auto;
-        }
     }
+
     .name {
         //max-width: 100px;
         white-space: nowrap;

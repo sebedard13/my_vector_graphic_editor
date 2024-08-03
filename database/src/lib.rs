@@ -8,6 +8,7 @@ mod integration;
 pub use scene::id::CoordId;
 pub use scene::id::LayerId;
 pub use scene::render::DrawingContext;
+pub use scene::render::RenderOption;
 pub use scene::shape::coord::DbCoord;
 pub use scene::shape::curve::Curve;
 pub use scene::shape::Shape;

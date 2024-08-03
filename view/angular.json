@@ -9,7 +9,7 @@
                 "@schematics/angular:component": {
                     "style": "scss",
                     "changeDetection": "OnPush",
-                    "standalone": false,
+                    "standalone": true,
                     "skipTests": true
                 },
                 "@schematics/angular:service": {

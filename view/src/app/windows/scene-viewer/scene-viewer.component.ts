@@ -10,33 +10,44 @@ import {
     faLockOpen,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
+import { CdkDragDrop, CdkDropList, CdkDrag, CdkDragPlaceholder } from "@angular/cdk/drag-drop";
 import {
-    CdkDragDrop,
-    CdkDropList,
-    CdkDrag,
-    CdkDragPlaceholder,
-} from "@angular/cdk/drag-drop";
-import { BehaviorSubject, filter, map, shareReplay, switchMap, timer } from "rxjs";
+    BehaviorSubject,
+    distinctUntilChanged,
+    filter,
+    map,
+    shareReplay,
+    switchMap,
+    timer,
+} from "rxjs";
 import { ScenesService } from "src/app/scene/scenes.service";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { TreeViewModel } from "wasm-client";
+import { LayerThumbnailComponent } from "./layer-thumbnail/layer-thumbnail.component";
 
 /** Flat node with expandable and level information */
-interface LocalTreeViewModel {
+export interface LocalTreeViewModel {
     expandable?: boolean;
     isExpanded?: boolean;
     lockEdit?: boolean;
     hideLayer?: boolean;
 }
 
-type MergedTreeViewModel = TreeViewModel & LocalTreeViewModel;
+export type MergedTreeViewModel = TreeViewModel & LocalTreeViewModel;
 @Component({
     selector: "app-scene-viewer",
     templateUrl: "./scene-viewer.component.html",
     styleUrl: "./scene-viewer.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
     standalone: true,
-    imports: [CdkTreeModule, FontAwesomeModule, CdkDropList, CdkDrag, CdkDragPlaceholder],
+    imports: [
+        CdkTreeModule,
+        FontAwesomeModule,
+        CdkDropList,
+        CdkDrag,
+        CdkDragPlaceholder,
+        LayerThumbnailComponent,
+    ],
 })
 export class SceneViewerComponent {
     protected Icon = {
@@ -66,11 +77,16 @@ export class SceneViewerComponent {
                 switchMap(() => this.scenes.currentScene$),
                 filter((scene) => scene !== null),
                 takeUntilDestroyed(inject(DestroyRef)),
+                map((scene) => scene.sceneClient.get_tree_view()),
+                distinctUntilChanged((a, b) => a.length === b.length),
             )
-            .subscribe((scene) => {
-                const treeView = scene.sceneClient.get_tree_view();
+            .subscribe((treeView) => {
                 this.treeData.next(treeView);
             });
+
+        // this.dataSource.connect().subscribe((data) => {
+        //     console.log(data);
+        // });
     }
 
     protected getParentNode(node: MergedTreeViewModel) {
@@ -116,6 +132,6 @@ export class SceneViewerComponent {
     }
 
     protected trackByFn(index: number, item: MergedTreeViewModel) {
-        return item.name;
+        return item.layer_id;
     }
 }

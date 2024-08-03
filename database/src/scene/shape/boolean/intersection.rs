@@ -22,13 +22,26 @@ pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
     let (intersections_a, intersections_b) = find_intersecions(a, b);
 
     if empty_intersection(&intersections_a) && empty_intersection(&intersections_b) {
-        if a.contains(&b.path[0].coord) {
-            return ShapeIntersection::B;
-        } else if b.contains(&a.path[0].coord) {
-            return ShapeIntersection::A;
-        } else {
-            return ShapeIntersection::None;
+        //may have common intersection
+
+        let mut common_curve_check = vec![false; a.curves_len()];
+        for i in 0..intersections_a.len() {
+            if intersections_a[i].intersect == IntersectionType::CommonIntersection {
+                common_curve_check[intersections_a[i].curve_index] = true;
+            }
         }
+
+        if let Some(index_curve_not_common) = find_index_false(&common_curve_check) {
+            if b.contains(&a.curve_select(index_curve_not_common).unwrap().p0.coord) {
+                return ShapeIntersection::A;
+            } else if a.contains(&b.path[0].coord) {
+                return ShapeIntersection::B;
+            } else {
+                return ShapeIntersection::None;
+            }
+        }
+
+        return ShapeIntersection::A;
     }
 
     let mut ag = create_shape(a, intersections_a);
@@ -42,8 +55,12 @@ pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
 }
 
 fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
+    if intersections.len() == 0 {
+        return true;
+    }
+
     for i in 0..intersections.len() {
-        if intersections[i].intersect.is_intersection() {
+        if intersections[i].intersect == IntersectionType::Intersection {
             return false;
         }
     }
@@ -62,6 +79,9 @@ fn find_index_false(v: &Vec<bool>) -> Option<usize> {
 fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
     let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
+
+    let max_visit_count = (ag.len()+bg.len())*2;
+    let mut visit_count = 0;
 
     while let Some(i) = find_index_false(&intersections_done) {
         let first_intersection = &ag.data[i];
@@ -92,7 +112,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect == IntersectionType::Intersection {
+                    if current.intersect.is_intersection() {
                         intersections_done[next] = true;
                         break;
                     }
@@ -113,7 +133,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect == IntersectionType::Intersection {
+                    if current.intersect.is_intersection() {
                         intersections_done[next] = true;
                         break;
                     }
@@ -137,6 +157,11 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
             {
                 break;
             }
+
+            visit_count += 3;
+            if visit_count > max_visit_count {
+                panic!("Infinite loop detected");
+            }
         }
         shapes.push(merged);
     }
@@ -152,7 +177,13 @@ mod test {
         types::{Coord, Length2d},
     };
 
-    use crate::{scene::shape::Shape, DbCoord};
+    use crate::{
+        scene::shape::{
+            boolean::{difference::shape_difference, find_intersecions, ShapeDifference},
+            Shape,
+        },
+        DbCoord,
+    };
 
     #[test]
     fn given_two_circle_when_intersection_then_new_1() {
@@ -307,5 +338,124 @@ mod test {
                 );
             }
         }
+    }
+
+    #[test]
+    fn given_shape_square_when_intersection_then_new() {
+        let a = Shape::quick_from_string("M -90 -90 C -90 -90 -90 -45 -90 -45 C -90 -45 -45 -45 -45 -45 C -45 -45 -45 -90 -45 -90 C -45 -90 -90 -90 -90 -90 Z");
+        let b = Shape::quick_from_string("M -95.5 -58.5 C -95.5 -58.5 -95.5 441.5 -95.5 441.5 C -95.5 441.5 654.5 441.5 654.5 441.5 C 654.5 441.5 654.5 -58.5 654.5 -58.5 C 654.5 -58.5 -95.5 -58.5 -95.5 -58.5 Z");
+
+        let (inters_a, _) = find_intersecions(&a, &b);
+
+        assert_eq!(inters_a.len(), 2);
+
+        let merged = shape_intersection(&a, &b);
+        let merged = match merged {
+            ShapeIntersection::New(merged) => merged,
+            _ => panic!("Should be a new shape"),
+        };
+
+        assert_eq!(merged.len(), 1);
+        assert_eq!(merged[0].curves_len(), 4);
+
+        let steps = 7;
+        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
+            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
+                let coord = &DbCoord::new(x, y);
+                assert_eq!(
+                    merged[0].contains(&coord.coord),
+                    a.contains(&coord.coord) && b.contains(&coord.coord),
+                    "Contains failed at ({}, {})",
+                    x,
+                    y
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn given_shapes_with_common_side_then_intersection() {
+        let max_view = Shape::quick_from_string(
+            "M 0 0 C 0 0
+            559 0 559 0 C 559 0 
+            559 383 559 383 C 559 383 
+            0 383 0 383 C 0 383 
+            0 0 0 0 Z",
+        );
+
+        let shape = Shape::quick_from_string(
+            "M 90 0 C 90 0 
+            90 45 90 45 C 90 45 
+            135 45 135 45 C 135 45
+            135 0 135 0 C 135 0
+            90 0 90 0 Z",
+        );
+
+        match shape.intersection(&max_view) {
+            ShapeIntersection::A => (),
+            _ => panic!("Should be ShapeIntersection::A"),
+        }
+    }
+
+    #[test]
+    fn given_shapes_with_common_side_and_intersection_when_intersection_then_new() {
+        let max_view = Shape::quick_from_string(
+            "M 0 0 C 0 0
+            559 0 559 0 C 559 0 
+            559 383 559 383 C 559 383 
+            0 383 0 383 C 0 383 
+            0 0 0 0 Z",
+        );
+
+        let shape = Shape::quick_from_string(
+            "M 540 0 C 540 0 
+            540 45 540 45 C 540 45 
+            585 45 585 45 C 585 45
+            585 0 585 0 C 585 0
+            540 0 540 0 Z",
+        );
+
+        match shape.intersection(&max_view) {
+            ShapeIntersection::New(new_shape) => {
+                assert_eq!(new_shape.len(), 1);
+                assert_eq!(new_shape[0].curves_len(), 4);
+            }
+            _ => panic!("Should be ShapeIntersection::New"),
+        }
+    }
+
+    #[test]
+    fn given_squares_2i_1ci_when_intersection_then_new() {
+        let a = Shape::quick_from_string("M 0 360 C 0 360 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 360 45 360 C 45 360 0 360 0 360 Z");
+        //max_view
+        let b = Shape::quick_from_string(
+            "M 0 0 C 0 0
+            559 0 559 0 C 559 0 
+            559 383 559 383 C 559 383 
+            0 383 0 383 C 0 383 
+            0 0 0 0 Z",
+        );
+
+        let intersections = super::find_intersecions(&a, &b);
+
+        let mut ag = super::create_shape(&a, intersections.0);
+        let mut bg = super::create_shape(&b, intersections.1);
+
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        ag.print_coords_table();
+        bg.print_coords_table();
+
+        let merged = shape_difference(&a, &b);
+      
+        let merged = match merged {
+            ShapeDifference::New(merged) => {
+                assert_eq!(merged.len(), 1);
+                println!("{:?}", merged[0].path());
+            },
+            _ => panic!("Should be a new shape"),
+        };
+/* 
+        assert_eq!(merged.len(), 1);
+        assert_eq!(merged[0].curves_len(), 4);*/
     }
 }

@@ -379,6 +379,9 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     intersections.sort();
     let mut iter = intersections.iter();
+    if iter.len() > 8 {
+        log::warn!("Too many intersections, maybe a bug in the intersection calculation or a precision problem");
+    }
     let mut current_intersection = iter.next();
 
     for (curve_index, curve) in shape.curves().enumerate() {

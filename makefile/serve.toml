@@ -4,7 +4,6 @@ script = ["cd wasm_client", "wasm-pack build --debug"]
 watch = { no_git_ignore = false, watch = [
     "./wasm_client/",
     "./database/",
-    "./vgc/",
     "./common/",
 ] }
 

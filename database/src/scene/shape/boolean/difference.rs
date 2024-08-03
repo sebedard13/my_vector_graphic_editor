@@ -206,6 +206,7 @@ mod test {
         pures::Affine,
         types::{Coord, Length2d},
     };
+    use log::LevelFilter;
 
     use crate::{scene::shape::Shape, DbCoord};
 
@@ -701,6 +702,10 @@ mod test {
 
     #[test]
     fn bugg2() {
+        let _ = env_logger::builder()
+            .filter_level(LevelFilter::max())
+            .is_test(true)
+            .try_init();
         let a = Shape::quick_from_string(
             "M -0.45359507 -0.45359507 C -0.45359507 -0.45359507 0 0 0 0 
         C 0 0 1 1 1 1 C 1 1 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 
@@ -868,5 +873,37 @@ mod test {
                 );
             }
         }*/
+    }
+
+    #[test]
+    fn given_squares_2i_1ci_when_difference_then_new() {
+        let a = Shape::quick_from_string("M 0 360 C 0 360 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 360 45 360 C 45 360 0 360 0 360 Z");
+        //max_view
+        let b = Shape::quick_from_string(
+            "M 0 0 C 0 0
+            559 0 559 0 C 559 0 
+            559 383 559 383 C 559 383 
+            0 383 0 383 C 0 383 
+            0 0 0 0 Z",
+        );
+
+        let intersections = super::find_intersecions(&a, &b);
+
+        let mut ag = super::create_shape(&a, intersections.0);
+        let mut bg = super::create_shape(&b, intersections.1);
+
+        /*super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        ag.print_coords_table();
+        bg.print_coords_table();
+*/
+        let merged = shape_difference(&a, &b);
+      
+        match merged {
+            ShapeDifference::New(merged) => {
+                assert_eq!(merged.len(), 1);
+                assert_ne!("M 0 383 C 0 383 0 360 0 360 C 0 338.3812 0 0 0 0 C 0 0 559 0 559 0 C 559 0 559 383 559 383 C 559 383 45 383 45 383 C 45 383 45 405 45 405 C 45 405 0 405 0 405 C 0 405 0 383 0 383 Z", merged[0].path());
+            },
+            _ => panic!("Should be a new shape"),
+        };
     }
 }

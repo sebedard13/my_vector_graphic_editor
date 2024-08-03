@@ -1,5 +1,3 @@
-use std::vec;
-
 use common::{
     dbg_str,
     types::{Coord, Rect},
@@ -8,6 +6,8 @@ use common::{
 use polynomen::Poly;
 
 use crate::math::curve::{add_smooth_result, cubic_bezier};
+
+use super::line_intersection::line_intersection;
 
 #[allow(dead_code)]
 pub fn bounding_box(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Rect {
@@ -147,6 +147,7 @@ struct IntersectionToDo {
     level: i32,
 }
 
+#[derive(Debug)]
 pub enum IntersectionResult {
     ASmallerAndInsideB,
     BSmallerAndInsideA,
@@ -169,6 +170,11 @@ pub fn intersection(
         Overlap::BSmallerAndInsideA => return IntersectionResult::BSmallerAndInsideA,
         _ => {}
     }
+
+    if (c1_p0 == c1_cp0 && c1_cp1 == c1_p1) && (c2_p0 == c2_cp0 && c2_cp1 == c2_p1) {
+        return line_intersection(c1_p0, c2_p0, c2_p1, c1_p1);
+    }
+
     let res = intersection_simple(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1);
     if res.len() == 0 {
         return IntersectionResult::None;

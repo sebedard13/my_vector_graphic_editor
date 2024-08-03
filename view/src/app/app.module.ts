@@ -1,7 +1,6 @@
 import { NgModule, provideExperimentalZonelessChangeDetection } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 
-import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
 import { FontAwesomeModule } from "@fortawesome/angular-fontawesome";
 import { ToolsBarComponent } from "./layout/tools-bar/tools-bar.component";
@@ -28,7 +27,12 @@ import { SceneViewerComponent } from "./windows/scene-viewer/scene-viewer.compon
         NewSceneComponent,
         NumberInputComponent,
     ],
-    imports: [BrowserModule, AppRoutingModule, FontAwesomeModule, FormsModule, SceneViewerComponent],
+    imports: [
+        BrowserModule,
+        FontAwesomeModule,
+        FormsModule,
+        SceneViewerComponent,
+    ],
     providers: [EventsService, provideExperimentalZonelessChangeDetection()],
     bootstrap: [AppComponent],
 })
