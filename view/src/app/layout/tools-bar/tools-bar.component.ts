@@ -7,8 +7,8 @@ import {
     OnDestroy,
     inject,
 } from "@angular/core";
-import { Button, toolsbarSvgBtn } from "src/app/interface/buttons";
-import { EventsService } from "src/app/scene/events.service";
+import { Button, toolsbarSvgBtn } from "../../interface/buttons";
+import { EventsService } from "../../scene/events.service";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { filter } from "rxjs";
 @Component({

@@ -7,9 +7,9 @@ import {
     ChangeDetectionStrategy,
 } from "@angular/core";
 import { Subscription, animationFrames } from "rxjs";
-import { EventsService } from "src/app/scene/events.service";
-import { ScenesService } from "src/app/scene/scenes.service";
-import { SelectionService } from "src/app/scene/selection.service";
+import { EventsService } from "../../scene/events.service";
+import { ScenesService } from "../../scene/scenes.service";
+import { SelectionService } from "../../scene/selection.service";
 import { SceneClient } from "wasm-client";
 
 @Component({

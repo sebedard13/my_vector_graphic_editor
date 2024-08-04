@@ -29,6 +29,7 @@
     "wasm-client": "file:../wasm_client/pkg"
   },
   "devDependencies": {
+    "@analogjs/vitest-angular": "^1.6.4",
     "@angular-devkit/build-angular": "^18.0.1",
     "@angular-eslint/builder": "^18.0.0",
     "@angular-eslint/eslint-plugin": "^18.0.0",
@@ -39,9 +40,15 @@
     "@angular/compiler-cli": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^6.18.0",
     "@typescript-eslint/parser": "^6.18.0",
+    "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.56.0",
     "eslint-plugin-unused-imports": "^3.0.0",
+    "jsdom": "^24.1.1",
     "prettier": "^3.1.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vite-plugin-top-level-await": "^1.4.2",
+    "vite-plugin-wasm": "^3.3.0",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^1.6.0"
   }
 }
