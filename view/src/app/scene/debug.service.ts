@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { EventsService } from "./events.service";
 import { ScenesService } from "./scenes.service";
-import { environment } from "src/environments/environment";
+import { environment } from "../../environments/environment";
 import { set_logger } from "wasm-client";
 
 @Injectable({

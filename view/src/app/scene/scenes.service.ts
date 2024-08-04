@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable, combineLatest, map, mergeMap, of } from "rxjs";
-import { environment } from "src/environments/environment";
+import { environment } from "../../environments/environment";
 import { SceneClient } from "wasm-client";
 import { Scene } from "./scene";
 
@@ -13,9 +13,11 @@ export class ScenesService {
 
     public scenes$: Observable<Scene[]> = this.scenesSubject.asObservable();
 
-    public currentScene$: Observable<Scene | null> = this.indexCurrentSceneSubject.pipe(map(() => {
-        return this.currentScene();
-    }));
+    public currentScene$: Observable<Scene | null> = this.indexCurrentSceneSubject.pipe(
+        map(() => {
+            return this.currentScene();
+        }),
+    );
 
     public hasScenes$: Observable<boolean> = this.scenes$.pipe(map((scenes) => scenes.length > 0));
     public scenesList$: Observable<{ scene: Scene; isCurrent: boolean }[]>;
