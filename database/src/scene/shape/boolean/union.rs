@@ -17,26 +17,31 @@ pub enum ShapeUnion {
 
 #[allow(dead_code)]
 pub fn shape_union(a: &Shape, b: &Shape) -> ShapeUnion {
-    let (intersections_a, intersections_b) = find_intersecions(a, b);
+    match try_shape_union(a, b) {
+        Ok(value) => value,
+        Err(value) => {
+            log::error!("Error while trying to union a {} and b {}: {}", a.path(), b.path(), value);
+            ShapeUnion::None
+        },
+    }
+}
 
+fn try_shape_union(a: &Shape, b: &Shape) -> Result<ShapeUnion, anyhow::Error> {
+    let (intersections_a, intersections_b) = find_intersecions(a, b);
     if intersections_a.is_empty() && intersections_b.is_empty() {
         if a.contains(&b.path[0].coord) {
-            return ShapeUnion::A;
+            return Ok(ShapeUnion::A);
         } else if b.contains(&a.path[0].coord) {
-            return ShapeUnion::B;
+            return Ok(ShapeUnion::B);
         } else {
-            return ShapeUnion::None;
+            return Ok(ShapeUnion::None);
         }
     }
-
     let mut ag = create_shape(a, intersections_a);
     let mut bg = create_shape(b, intersections_b);
-
     mark_entry_exit_points(&mut ag, a, &mut bg, b);
-
     let merge_shape = do_union(&ag, &bg, a, b);
-
-    ShapeUnion::New(merge_shape)
+    Ok(ShapeUnion::New(merge_shape))
 }
 
 fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {

@@ -607,70 +607,44 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
 fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
     or_common_intersection(ag, bg);
 
+    mark_shape_entries(ag, b);
+    mark_shape_entries(bg, a);
+}
+
+fn mark_shape_entries(shape: &mut GreinerShape, other: &Shape) {
     let mut status_entry = true;
-    let start_index = {
-        // Find the first p non intersection point
-        let mut current_index = ag.start;
-        let mut count = 0;
-        while ag.data[current_index].intersect != IntersectionType::None {
-            current_index = ag.data[current_index].next.unwrap();
-            current_index = ag.data[current_index].next.unwrap();
-            current_index = ag.data[current_index].next.unwrap();
-            count += 3;
-            if count > ag.data.len() {
-                panic!("Infinite loop");
-            }
-        }
-        current_index
-    };
-    let coord = &ag.data[start_index].coord;
-    let con = b.contains(coord);
-    //println!("a start index: {}, con: {}", start_index, con);
+    let start_index = find_p_not_intersection(shape);
+    let coord = &shape.data[start_index].coord;
+    let con = other.contains(coord);
     if con {
         status_entry = false;
     }
 
-    let mut current_index = start_index;
-    while ag.data[current_index].next.is_some()
-        && ag.data[current_index].next.unwrap() != start_index
-    {
-        let next_index = ag.data[current_index].next.unwrap();
-        let next = &mut ag.data[next_index];
-        if next.intersect.is_intersection() {
-            next.entry = status_entry;
-            status_entry = !status_entry;
-        }
-        current_index = next_index;
-    }
+    run_mark_entry(shape, start_index, status_entry);
+}
 
-    status_entry = true;
-    let start_index = {
-        // Find the first p non intersection point
-        let mut current_index = bg.start;
-        let mut count = 0;
-        while bg.data[current_index].intersect != IntersectionType::None {
-            current_index = bg.data[current_index].next.unwrap();
-            current_index = bg.data[current_index].next.unwrap();
-            current_index = bg.data[current_index].next.unwrap();
-            count += 3;
-            if count > bg.data.len() {
-                panic!("Infinite loop");
-            }
+fn find_p_not_intersection(shape: &mut GreinerShape) -> usize {
+    let mut current_index = shape.start;
+    let mut count = 0;
+    while shape.data[current_index].intersect != IntersectionType::None {
+        current_index = shape.data[current_index].next.unwrap();
+        current_index = shape.data[current_index].next.unwrap();
+        current_index = shape.data[current_index].next.unwrap();
+        count += 3;
+        if count > shape.data.len() {
+            panic!("Infinite loop");
         }
-        current_index
-    };
-    let con = a.contains(&bg.data[start_index].coord);
-    //println!("b start index: {}, con: {}", start_index, con);
-    if con {
-        status_entry = false;
     }
+    current_index
+}
 
+fn run_mark_entry(shape: &mut GreinerShape, start_index: usize, mut status_entry: bool) {
     let mut current_index = start_index;
-    while bg.data[current_index].next.is_some()
-        && bg.data[current_index].next.unwrap() != start_index
+    while shape.data[current_index].next.is_some()
+        && shape.data[current_index].next.unwrap() != start_index
     {
-        let next_index = bg.data[current_index].next.unwrap();
-        let next = &mut bg.data[next_index];
+        let next_index = shape.data[current_index].next.unwrap();
+        let next = &mut shape.data[next_index];
         if next.intersect.is_intersection() {
             next.entry = status_entry;
             status_entry = !status_entry;

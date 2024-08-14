@@ -1,5 +1,7 @@
 use std::ptr;
 
+use anyhow::Error;
+
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
 };
@@ -22,15 +24,30 @@ pub enum ShapeDifference {
 
 #[allow(dead_code)]
 pub fn shape_difference(a: &Shape, b: &Shape) -> ShapeDifference {
+    match try_shape_difference(a, b) {
+        Ok(difference) => difference,
+        Err(e) => {
+            log::error!(
+                "Error in shape_difference a: {:?} b: {:?} error: {}",
+                a,
+                b,
+                e
+            );
+            ShapeDifference::A
+        }
+    }
+}
+
+fn try_shape_difference(a: &Shape, b: &Shape) -> Result<ShapeDifference, Error> {
     let (intersections_a, intersections_b) = find_intersecions(a, b);
 
     if empty_intersection(&intersections_a) && empty_intersection(&intersections_b) {
         if a.contains(&b.path[0].coord) {
-            return ShapeDifference::AWithBHole;
+            return Ok(ShapeDifference::AWithBHole);
         } else if b.contains(&a.path[0].coord) {
-            return ShapeDifference::EraseA;
+            return Ok(ShapeDifference::EraseA);
         } else {
-            return ShapeDifference::A;
+            return Ok(ShapeDifference::A);
         }
     }
 
@@ -41,7 +58,7 @@ pub fn shape_difference(a: &Shape, b: &Shape) -> ShapeDifference {
 
     let merged_shapes = do_difference(&ag, &bg, a, b);
 
-    ShapeDifference::New(merged_shapes)
+    Ok(ShapeDifference::New(merged_shapes))
 }
 
 fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
@@ -892,17 +909,49 @@ mod test {
         let mut ag = super::create_shape(&a, intersections.0);
         let mut bg = super::create_shape(&b, intersections.1);
 
-        /*super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
         ag.print_coords_table();
         bg.print_coords_table();
-*/
+
         let merged = shape_difference(&a, &b);
-      
+
         match merged {
             ShapeDifference::New(merged) => {
                 assert_eq!(merged.len(), 1);
                 assert_ne!("M 0 383 C 0 383 0 360 0 360 C 0 338.3812 0 0 0 0 C 0 0 559 0 559 0 C 559 0 559 383 559 383 C 559 383 45 383 45 383 C 45 383 45 405 45 405 C 45 405 0 405 0 405 C 0 405 0 383 0 383 Z", merged[0].path());
-            },
+            }
+            _ => panic!("Should be a new shape"),
+        };
+    }
+
+    #[test]
+    fn given_edgecase_common_i_when_difference_then_new() {
+        let a = Shape::quick_from_string(
+            "M 0 0 C 0 0 0 1 0 1 C 0 1 1 1 1 1 C 2 1 2 0 1 0 C 1 0 0 0 0 0 Z",
+        );
+        let b = Shape::quick_from_string(
+            "M -1 -1 C -1 -1 -1 1 -1 1 C -1 1 1 1 1 1 C 1 0 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 Z",
+        );
+
+        let intersections = super::find_intersecions(&a, &b);
+
+        let mut ag = super::create_shape(&a, intersections.0);
+        let mut bg = super::create_shape(&b, intersections.1);
+
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        ag.print_coords_table();
+        bg.print_coords_table();
+
+        let merged = shape_difference(&a, &b);
+
+        match merged {
+            ShapeDifference::New(merged) => {
+                assert_eq!(merged.len(), 1);
+                assert_eq!(
+                    merged[0].path(),
+                    "Mno 0 1 1 C 2 1 2 0 1 0 C 1 0 1 1 1 1 C 1 1 0 1 0 1 Z"
+                );
+            }
             _ => panic!("Should be a new shape"),
         };
     }

@@ -1,3 +1,5 @@
+use anyhow::Error;
+
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
     IntersectionType,
@@ -19,8 +21,22 @@ pub enum ShapeIntersection {
 
 #[allow(dead_code)]
 pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
-    let (intersections_a, intersections_b) = find_intersecions(a, b);
+    match try_shape_intersection(a, b) {
+        Ok(result) => result,
+        Err(e) => {
+            log::error!(
+                "Error while trying to intersect a {:?} and b {:?} : {:?}",
+                a.path(),
+                b.path(),
+                e
+            );
+            ShapeIntersection::None
+        }
+    }
+}
 
+fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Error> {
+    let (intersections_a, intersections_b) = find_intersecions(a, b);
     if empty_intersection(&intersections_a) && empty_intersection(&intersections_b) {
         //may have common intersection
 
@@ -33,25 +49,21 @@ pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
 
         if let Some(index_curve_not_common) = find_index_false(&common_curve_check) {
             if b.contains(&a.curve_select(index_curve_not_common).unwrap().p0.coord) {
-                return ShapeIntersection::A;
+                return Ok(ShapeIntersection::A);
             } else if a.contains(&b.path[0].coord) {
-                return ShapeIntersection::B;
+                return Ok(ShapeIntersection::B);
             } else {
-                return ShapeIntersection::None;
+                return Ok(ShapeIntersection::None);
             }
         }
 
-        return ShapeIntersection::A;
+        return Ok(ShapeIntersection::A);
     }
-
     let mut ag = create_shape(a, intersections_a);
     let mut bg = create_shape(b, intersections_b);
-
     mark_entry_exit_points(&mut ag, a, &mut bg, b);
-
     let merged_shapes = do_intersection(&ag, &bg, a, b);
-
-    ShapeIntersection::New(merged_shapes)
+    return Ok(ShapeIntersection::New(merged_shapes));
 }
 
 fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
@@ -80,7 +92,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
     let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
 
-    let max_visit_count = (ag.len()+bg.len())*2;
+    let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
 
     while let Some(i) = find_index_false(&intersections_done) {
@@ -446,16 +458,13 @@ mod test {
         bg.print_coords_table();
 
         let merged = shape_difference(&a, &b);
-      
-        let merged = match merged {
+
+        match merged {
             ShapeDifference::New(merged) => {
                 assert_eq!(merged.len(), 1);
                 println!("{:?}", merged[0].path());
-            },
+            }
             _ => panic!("Should be a new shape"),
         };
-/* 
-        assert_eq!(merged.len(), 1);
-        assert_eq!(merged[0].curves_len(), 4);*/
     }
 }
