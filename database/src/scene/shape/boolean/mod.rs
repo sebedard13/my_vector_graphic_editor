@@ -69,6 +69,16 @@ impl IntersectionType {
         }
     }
 
+    pub fn is_any_intersection(&self) -> bool {
+        match self {
+            IntersectionType::Intersection => true,
+            IntersectionType::CommonIntersection => true,
+            IntersectionType::UnspecifiedCommonIntersection => true,
+            IntersectionType::IntersectionCommon => true,
+            _ => false,
+        }
+    }
+
     pub fn is_common(&self) -> bool {
         match self {
             IntersectionType::Common => true,
@@ -721,22 +731,30 @@ mod test {
         let b = Shape::new_from_path(coords_b, Affine::identity());
 
         let intersections = find_intersecions(&a, &b);
+        let mut ag = create_shape(&a, intersections.0);
+        let mut bg = create_shape(&b, intersections.1);
+
+        mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+
         let mut common_count = 0;
         let mut inteersection_count = 0;
-        for i in 0..intersections.0.len() {
-            if intersections.0[i].intersect == super::IntersectionType::Common {
+        for i in 0..ag.intersections_len {
+            if ag.data[i].intersect.is_common() {
                 common_count += 1;
-            } else if intersections.0[i].intersect.is_intersection() {
+            }
+            if ag.data[i].intersect.is_any_intersection() {
                 inteersection_count += 1;
                 assert!(
-                    intersections.0[i].t == 0.654658318 || intersections.0[i].t == 0.508217812,
+                    ag.data[i].t == 0.654658318
+                        || ag.data[i].t == 0.508217812
+                        || ag.data[i].t == 0.0,
                     "t should be 0.654658138 or 0.508218467, but was {}",
-                    intersections.0[i].t
+                    ag.data[i].t
                 );
             }
         }
-        assert_eq!(inteersection_count, 2);
-        assert_eq!(common_count, 3);
+        assert_eq!(inteersection_count, 4);
+        assert_eq!(common_count, 5);
     }
 
     #[test]

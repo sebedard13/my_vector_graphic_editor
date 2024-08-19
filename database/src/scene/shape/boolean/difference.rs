@@ -131,7 +131,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     if current.intersect == IntersectionType::Intersection
                         || (current.intersect == IntersectionType::CommonIntersection
-                            && current.entry)
+                            && !current.entry)
                         || (current.intersect == IntersectionType::IntersectionCommon
                             && !current.entry)
                     {
@@ -160,7 +160,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     if current.intersect == IntersectionType::Intersection
                         || (current.intersect == IntersectionType::CommonIntersection
-                            && !current.entry)
+                            && current.entry)
                         || (current.intersect == IntersectionType::IntersectionCommon
                             && current.entry)
                     {
@@ -818,15 +818,6 @@ mod test {
         let a = Shape::quick_from_string("M -0.9530624 -0.9530624 C -0.9530624 -0.9530624 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -0.7462724 -0.7462724 -0.7462724 -0.7462724 C -0.7442392 -0.76013863 -0.7431573 -0.77455163 -0.7431338 -0.78935134 C -0.74330974 -0.9000367 -0.80268425 -0.98909855 -0.8764745 -0.98936236 C -0.90502703 -0.98926026 -0.9314211 -0.975863 -0.9530624 -0.9530624 Z");
         let b = Shape::quick_from_string("M -0.7606782 -0.88851035 C -0.7836163 -0.9487264 -0.8267758 -0.9891847 -0.8764745 -0.98936236 C -0.90502703 -0.98926026 -0.9314211 -0.975863 -0.9530624 -0.9530624 C -0.9530624 -0.9530624 -1 -1 -1 -1 C -1 -1 -1 -0.8646681 -1 -0.8646681 C -1.0062921 -0.8414452 -1.0097728 -0.8160262 -1.0098152 -0.78935134 C -1.0097728 -0.76267624 -1.0062921 -0.73725706 -1 -0.7140342 C -1 -0.7140342 -1 1 -1 1 C -1 1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -0.6278885 -0.6278885 -0.6278885 -0.6278885 C -0.62381715 -0.6470487 -0.6216068 -0.6674776 -0.6215731 -0.6887016 C -0.62174904 -0.799387 -0.68112355 -0.88844883 -0.7549138 -0.88871264 C -0.7568454 -0.88870573 -0.7587671 -0.88863796 -0.7606782 -0.88851035 Z");
 
-        let intersections = super::find_intersecions(&a, &b);
-
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        //ag.print_coords_table();
-        // bg.print_coords_table();
-
         let merged = shape_difference(&a, &b);
 
         let merged = match merged {
@@ -942,15 +933,6 @@ mod test {
             0 0 0 0 Z",
         );
 
-        let intersections = super::find_intersecions(&a, &b);
-
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
-
         let merged = shape_difference(&a, &b);
 
         match merged {
@@ -971,24 +953,12 @@ mod test {
             "M -1 -1 C -1 -1 -1 1 -1 1 C -1 1 1 1 1 1 C 1 0 1 -1 1 -1 C 1 -1 -1 -1 -1 -1 Z",
         );
 
-        let intersections = super::find_intersecions(&a, &b);
-
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
-
         let merged = shape_difference(&a, &b);
 
         match merged {
             ShapeDifference::New(merged) => {
                 assert_eq!(merged.len(), 1);
-                assert_eq!(
-                    merged[0].path(),
-                    "Mno 0 1 1 C 2 1 2 0 1 0 C 1 0 1 1 1 1 C 1 1 0 1 0 1 Z"
-                );
+                assert_eq!(merged[0].path(), "M 1 1 C 2 1 2 0 1 0 C 1 0 1 1 1 1 Z");
             }
             _ => panic!("Should be a new shape"),
         };
