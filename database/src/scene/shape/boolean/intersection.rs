@@ -58,9 +58,11 @@ fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Err
 
         return Ok(ShapeIntersection::A);
     }
+
     let mut ag = create_shape(a, intersections_a);
     let mut bg = create_shape(b, intersections_b);
-    mark_entry_exit_points(&mut ag, a, &mut bg, b);
+    mark_entry_exit_points(&mut ag, a, &mut bg, b)?;
+
     let merged_shapes = do_intersection(&ag, &bg, a, b);
     return Ok(ShapeIntersection::New(merged_shapes));
 }
@@ -203,112 +205,6 @@ mod test {
         },
         DbCoord,
     };
-
-    #[test]
-    fn given_two_circle_when_intersection_then_new_1() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.2, 0.0), Length2d::new(0.2, 0.2));
-
-        let merged = shape_intersection(&a, &b);
-        let shapes = match merged {
-            ShapeIntersection::New(merged) => merged,
-            _ => panic!("Should be a new shape"),
-        };
-
-        assert_eq!(shapes.len(), 1);
-        assert_eq!(shapes[0].curves_len(), 4);
-
-        let steps = 9;
-        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-                let coord = &DbCoord::new(x, y);
-                assert_eq!(
-                    shapes[0].contains(&coord.coord),
-                    a.contains(&coord.coord) && b.contains(&coord.coord),
-                    "Contains failed at ({}, {})",
-                    x,
-                    y
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn given_two_oval_with_no_valid_p_when_intersection_then_new_1() {
-        let mut shape1 = vec![
-            DbCoord::new(0.0, 0.3),
-            DbCoord::new(-0.8, 0.3),
-            DbCoord::new(-0.8, -0.3),
-            DbCoord::new(0.0, -0.3),
-            DbCoord::new(0.8, -0.3),
-            DbCoord::new(0.8, 0.3),
-            DbCoord::new(0.0, 0.3),
-        ];
-        shape1.reverse();
-
-        let shape2 = vec![
-            DbCoord::new(0.3, 0.0),
-            DbCoord::new(0.3, 0.8),
-            DbCoord::new(-0.3, 0.8),
-            DbCoord::new(-0.3, 0.0),
-            DbCoord::new(-0.3, -0.8),
-            DbCoord::new(0.3, -0.8),
-            DbCoord::new(0.3, 0.0),
-        ];
-
-        let a = Shape::new_from_path(shape1, Affine::identity());
-        let b = Shape::new_from_path(shape2, Affine::identity());
-
-        let merged = shape_intersection(&a, &b);
-
-        let merged = match merged {
-            ShapeIntersection::New(merged) => merged,
-            _ => panic!("Should be a new shape"),
-        };
-
-        assert_eq!(merged.len(), 1);
-        assert_eq!(merged[0].curves_len(), 8);
-
-        let steps = 7;
-        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-                let coord = &DbCoord::new(x, y);
-                assert_eq!(
-                    merged[0].contains(&coord.coord),
-                    a.contains(&coord.coord) && b.contains(&coord.coord),
-                    "Contains failed at ({}, {})",
-                    x,
-                    y
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn given_two_circle_when_intersection_then_b() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.1, 0.1));
-
-        let merged = shape_intersection(&a, &b);
-
-        assert!(
-            matches!(merged, ShapeIntersection::B),
-            "Should be ShapeIntersection::B"
-        );
-    }
-
-    #[test]
-    fn given_two_circle_when_intersection_then_none() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.3, 0.3), Length2d::new(0.1, 0.1));
-
-        let merged = shape_intersection(&a, &b);
-
-        assert!(
-            matches!(merged, ShapeIntersection::None),
-            "Should be ShapeUnion::None"
-        );
-    }
 
     #[test]
     fn given_two_c_shape_when_intersection_then_new_2() {

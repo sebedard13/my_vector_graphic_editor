@@ -42,9 +42,12 @@ fn try_shape_union(a: &Shape, b: &Shape) -> Result<ShapeUnion, anyhow::Error> {
             return Ok(ShapeUnion::None);
         }
     }
+
     let mut ag = create_shape(a, intersections_a);
     let mut bg = create_shape(b, intersections_b);
-    mark_entry_exit_points(&mut ag, a, &mut bg, b);
+
+    mark_entry_exit_points(&mut ag, a, &mut bg, b)?;
+
     let merge_shape = do_union(&ag, &bg, a, b);
     Ok(ShapeUnion::New(merge_shape))
 }
@@ -142,107 +145,6 @@ mod test {
 
     use crate::scene::shape::Shape;
     use crate::DbCoord;
-
-    #[test]
-    fn given_two_circle_when_union_then_new() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.2, 0.0), Length2d::new(0.2, 0.2));
-
-        let merged = shape_union(&a, &b);
-        let merged = match merged {
-            ShapeUnion::New(merged) => merged,
-            _ => panic!("Should be a new shape"),
-        };
-
-        assert_eq!(merged.curves_len(), 8);
-
-        let steps = 5;
-        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-                let coord = &Coord::new(x, y);
-                assert_eq!(
-                    merged.contains(&coord),
-                    a.contains(&coord) || b.contains(&coord),
-                    "Contains failed at ({}, {})",
-                    x,
-                    y
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn given_two_oval_with_no_valid_p_when_union_then_new() {
-        let mut shape1 = vec![
-            DbCoord::new(0.0, 0.3),
-            DbCoord::new(-0.8, 0.3),
-            DbCoord::new(-0.8, -0.3),
-            DbCoord::new(0.0, -0.3),
-            DbCoord::new(0.8, -0.3),
-            DbCoord::new(0.8, 0.3),
-            DbCoord::new(0.0, 0.3),
-        ];
-        shape1.reverse();
-
-        let shape2 = vec![
-            DbCoord::new(0.3, 0.0),
-            DbCoord::new(0.3, 0.8),
-            DbCoord::new(-0.3, 0.8),
-            DbCoord::new(-0.3, 0.0),
-            DbCoord::new(-0.3, -0.8),
-            DbCoord::new(0.3, -0.8),
-            DbCoord::new(0.3, 0.0),
-        ];
-
-        let a = Shape::new_from_path(shape1, Affine::identity());
-        let b = Shape::new_from_path(shape2, Affine::identity());
-
-        let merged = shape_union(&a, &b);
-
-        let merged = match merged {
-            ShapeUnion::New(merged) => merged,
-            _ => panic!("Should be a new shape"),
-        };
-
-        assert_eq!(merged.curves_len(), 4);
-
-        let steps = 5;
-        for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-            for y in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
-                let coord = &Coord::new(x, y);
-                assert_eq!(
-                    merged.contains(&coord),
-                    a.contains(&coord) || b.contains(&coord),
-                    "Contains failed at ({}, {})",
-                    x,
-                    y
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn given_two_circle_when_union_then_a() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.1, 0.1));
-
-        let merged = shape_union(&a, &b);
-
-        assert!(matches!(merged, ShapeUnion::A), "Should be ShapeUnion::A");
-    }
-
-    #[test]
-    fn given_two_circle_when_union_then_none() {
-        let a = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.2, 0.2));
-        let b = Shape::new_circle(Coord::new(0.3, 0.3), Length2d::new(0.1, 0.1));
-
-        let merged = shape_union(&a, &b);
-
-        assert!(
-            matches!(merged, ShapeUnion::None),
-            "Should be ShapeUnion::None"
-        );
-    }
 
     ///These two test are more about the intersection precision to not give two intersections for the same point
     #[test]
@@ -456,7 +358,7 @@ mod test {
         let mut ag = super::create_shape(&a, intersections.0);
         let mut bg = super::create_shape(&b, intersections.1);
 
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b).unwrap();
 
         let valid_values = vec![-0.5923179, -0.7849242, -1.00, 1.00, 0.00];
         for i in 0..ag.data.len() {

@@ -3,6 +3,7 @@ use super::IntersectionType;
 use crate::math::curve::cubic_bezier;
 use crate::scene::shape::Shape;
 use anyhow::Context;
+use anyhow::Error;
 use common::types::Coord;
 
 pub(super) fn mark_entry_exit_points(
@@ -10,28 +11,43 @@ pub(super) fn mark_entry_exit_points(
     a: &Shape,
     bg: &mut GreinerShape,
     b: &Shape,
-) {
-    mark_shape_entries(ag, bg, b);
-    mark_shape_entries(bg, ag, a);
+) -> Result<(), anyhow::Error> {
+    mark_shape_entries(ag, bg, b)?;
+    mark_shape_entries(bg, ag, a)?;
+    Ok(())
 }
 
-fn mark_shape_entries(shape: &mut GreinerShape, other_greiner: &GreinerShape, other: &Shape) {
-    let mut status_entry = true;
-    let start_index = find_p_not_intersection(shape);
-    let coord = &shape.data[start_index].coord;
-    let con = other.contains(coord);
-    if con {
-        status_entry = false;
-    }
-    #[cfg(test)]
-    println!("Coord {:?} is inside: {}", coord, con);
+fn mark_shape_entries(
+    shape: &mut GreinerShape,
+    other_greiner: &GreinerShape,
+    other: &Shape,
+) -> Result<(), anyhow::Error> {
+    let mut run = || -> Result<(), anyhow::Error> {
+        let mut status_entry = true;
+        let start_index = find_p_not_intersection(shape)?;
+        let coord = &shape
+            .data
+            .get(start_index)
+            .context("Index out of bounds")?
+            .coord;
+        let con = other.contains(coord);
+        if con {
+            status_entry = false;
+        }
+        #[cfg(test)]
+        println!("Coord {:?} is inside: {}", coord, con);
 
-    set_common_in_out(shape, other_greiner).unwrap();
+        set_common_in_out(shape, other_greiner)?;
 
-    run_mark_entry(shape, start_index, status_entry);
+        run_mark_entry(shape, start_index, status_entry)?;
 
-    #[cfg(test)]
-    shape.print_coords_table();
+        #[cfg(test)]
+        shape.print_coords_table();
+
+        Ok(())
+    };
+
+    run().context("Could not define in out of the shape")
 }
 
 fn set_common_in_out(
@@ -57,35 +73,43 @@ fn set_common_in_out(
     Ok(())
 }
 
-fn find_p_not_intersection(shape: &mut GreinerShape) -> usize {
+fn find_p_not_intersection(shape: &mut GreinerShape) -> Result<usize, anyhow::Error> {
     let mut current_index = shape.start;
     let mut count = 0;
-    while shape.data[current_index].intersect != IntersectionType::None {
-        current_index = shape.data[current_index].next.unwrap();
-        current_index = shape.data[current_index].next.unwrap();
-        current_index = shape.data[current_index].next.unwrap();
+    let mut current_coord = shape
+        .data
+        .get(current_index)
+        .context("Index out of bounds")?;
+    while current_coord.intersect != IntersectionType::None {
+        (current_index, current_coord) = shape.move_by(current_index, 3, true)?;
         count += 3;
         if count > shape.data.len() {
-            panic!("Infinite loop");
+            return Err(anyhow::anyhow!("No point are not an intersection"));
         }
     }
-    current_index
+    Ok(current_index)
 }
 
-fn run_mark_entry(shape: &mut GreinerShape, start_index: usize, mut status_entry: bool) {
+fn run_mark_entry(
+    shape: &mut GreinerShape,
+    start_index: usize,
+    mut status_entry: bool,
+) -> Result<(), Error> {
     let mut current_index = start_index;
-    while shape.data[current_index].next.is_some()
-        && shape.data[current_index].next.unwrap() != start_index
-    {
-        let next_index = shape.data[current_index].next.unwrap();
-        if shape.data[next_index].intersect.is_intersection() {
-            shape.data[next_index].entry = status_entry;
+    for _ in (0..(shape.data.len() + 2)).step_by(3) {
+        let current = shape.move_by_mut(current_index, 3, true)?;
+        current_index = current.0;
+        let current = current.1;
+
+        //// Broooo not sure about that
+        if current.intersect.is_intersection() {
+            current.entry = status_entry;
             status_entry = !status_entry;
-        } else if shape.data[next_index].intersect.is_common() {
-            shape.data[next_index].entry = status_entry;
+        } else if current.intersect.is_common() {
+            current.entry = status_entry;
         }
-        current_index = next_index;
     }
+    Ok(())
 }
 
 fn is_overlapping(
@@ -94,15 +118,15 @@ fn is_overlapping(
     other: &GreinerShape,
     direction: bool,
 ) -> bool {
-    let (p0, cp0, cp1, p1) = shape.next_four_coord(next_index, direction).unwrap();
+    let (p0, cp0, cp1, p1) = shape.next_curve(next_index, direction).unwrap();
 
     let other_index = shape.data[next_index]
         .neighbor
         .context("Intersection has no neighbor ??")
         .unwrap();
     let other_curves_to_check: [(Coord, Coord, Coord, Coord); 2] = {
-        let a = other.next_four_coord(other_index, true).unwrap();
-        let b = other.next_four_coord(other_index, false).unwrap();
+        let a = other.next_curve(other_index, true).unwrap();
+        let b = other.next_curve(other_index, false).unwrap();
         [a, b]
     };
 

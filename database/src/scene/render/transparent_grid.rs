@@ -7,12 +7,9 @@ use super::DrawingContext;
 const F_WIDTH: f32 = 45.0; // px
 const I_WIDTH: i32 = F_WIDTH as i32; // px
 
-#[allow(dead_code)]
 pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(), String> {
     let transform = renderer.get_transform()?;
-    log::info!("transform: {:?}", transform);
     let max_view = renderer.get_max_view()?;
-    log::info!("max_view: {:?}", max_view);
 
     let max_view_top_left = Coord {
         c: max_view.top_left.c,
@@ -60,7 +57,6 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
     renderer.fill_background(&Rgba::white())?;
     renderer.set_fill(&Rgba::from_small_hex_string("#cac7c7"))?;
 
-    println!("Max view path: {:?}", max_view_shape.path());
     for x in (x_start..x_end).step_by((I_WIDTH * 2) as usize) {
         for y in (y_start..y_end).step_by((I_WIDTH * 2) as usize) {
             let corner0 = Coord::new(x as f32, y as f32);

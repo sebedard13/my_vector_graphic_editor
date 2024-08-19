@@ -3,6 +3,7 @@ use common::{
     types::{Coord, ScreenRect},
     Rgba,
 };
+use transparent_grid::render_transparent_grid;
 //use transparent_grid::render_transparent_grid;
 
 use crate::{LayerId, Scene};
@@ -57,7 +58,7 @@ impl Scene {
         options: RenderOption,
     ) -> Result<(), String> {
         renderer.create()?;
-        //render_transparent_grid(renderer)?;
+        render_transparent_grid(renderer)?;
         renderer.fill_background(&self.background)?;
 
         for layer in self.layers.iter().rev() {

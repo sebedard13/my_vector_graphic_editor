@@ -20,7 +20,7 @@ use crate::{
     scene::shape::Shape,
     DbCoord,
 };
-use anyhow::Context;
+use anyhow::{Context, Error};
 use common::{dbg_str, types::Coord};
 use std::fmt::Display;
 
@@ -124,7 +124,45 @@ impl GreinerShape {
         }
     }
 
-    pub fn next_four_coord(
+    pub fn move_by(
+        &self,
+        start: usize,
+        mut count: usize,
+        direction: bool,
+    ) -> Result<(usize, &CoordOfIntersection), Error> {
+        let mut current = start;
+        while count > 0 {
+            let value = self.data.get(current).context("Index out of bound")?;
+            if direction {
+                current = value.next.context("Invalid No next")?;
+            } else {
+                current = value.prev.context("Invalid No prev")?;
+            }
+            count -= 1;
+        }
+        Ok((current, &self.data[current]))
+    }
+
+    pub fn move_by_mut(
+        &mut self,
+        start: usize,
+        mut count: usize,
+        direction: bool,
+    ) -> Result<(usize, &mut CoordOfIntersection), Error> {
+        let mut current = start;
+        while count > 0 {
+            let value = self.data.get(current).context("Index out of bound")?;
+            if direction {
+                current = value.next.context("Invalid No next")?;
+            } else {
+                current = value.prev.context("Invalid No prev")?;
+            }
+            count -= 1;
+        }
+        Ok((current, &mut self.data[current]))
+    }
+
+    pub fn next_curve(
         &self,
         mut current_index: usize,
         direction: bool,
@@ -347,76 +385,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
         }
     }
 
-    //assert_intersections_even_count(a, &mut intersections_a, b, &mut intersections_b);
-
     (intersections_a, intersections_b)
-}
-/// A Shape should be closed so we should have an even number of intersections between two shapes.
-/// If not, it is maybe a bug in the intersection calculation or a precision problem.
-/// In this case, we remove the closest intersection point to the others and update the neighbor index.
-#[allow(dead_code)] // Maybe useful
-fn assert_intersections_even_count(
-    a: &Shape,
-    intersections_a: &mut Vec<CoordOfIntersection>,
-    b: &Shape,
-    intersections_b: &mut Vec<CoordOfIntersection>,
-) {
-    assert_eq!(intersections_a.len(), intersections_b.len());
-
-    if (intersections_a.len() % 2) != 0 {
-        let mut count_intersection = 0;
-        for i in 0..intersections_a.len() {
-            if intersections_a[i].intersect.is_intersection() {
-                count_intersection += 1;
-            }
-        }
-        if count_intersection % 2 == 0 {
-            return;
-        }
-
-        log::warn!(
-            "{}",
-            dbg_str!("Shape are closed so we should have an even number of intersections. Fix will be applied with a lost in precision")
-        );
-        log::info!("A: {}", a.path());
-        log::info!("B: {}", b.path());
-
-        let mut difference = Vec::with_capacity(intersections_a.len() * intersections_a.len());
-        for i in 0..intersections_a.len() {
-            for j in 0..intersections_a.len() {
-                if intersections_a[i].intersect != IntersectionType::Intersection
-                    || intersections_a[j].intersect != IntersectionType::Intersection
-                {
-                    difference.push(f32::MAX);
-                } else {
-                    difference.push((intersections_a[i].coord - intersections_a[j].coord).norm());
-                }
-            }
-        }
-
-        //find min of difference
-        let mut min = f32::MAX;
-        let mut min_index: usize = 0;
-        for i in 0..intersections_a.len() {
-            for j in 0..intersections_a.len() {
-                if difference[i] < min && i != j {
-                    min = difference[i];
-                    min_index = i * intersections_a.len() + j;
-                }
-            }
-        }
-
-        intersections_a.remove(min_index);
-        intersections_b.remove(min_index);
-
-        for i in 0..intersections_a.len() {
-            if intersections_a[i].neighbor.unwrap() > min_index {
-                intersections_a[i].neighbor = Some(intersections_a[i].neighbor.unwrap() - 1);
-                intersections_b[i].neighbor = Some(intersections_b[i].neighbor.unwrap() - 1);
-            }
-        }
-    }
-    assert_eq!(intersections_a.len() % 2, 0); // Shape are closed so we should have an even number of intersections
 }
 
 fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> GreinerShape {
@@ -429,9 +398,6 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     intersections.sort();
     let mut iter = intersections.iter();
-    if iter.len() > 8 {
-        log::warn!("Too many intersections, maybe a bug in the intersection calculation or a precision problem");
-    }
     let mut current_intersection = iter.next();
 
     for (curve_index, curve) in shape.curves().enumerate() {
@@ -555,40 +521,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
     compress_coord_ptr(&mut result, start_a);
 
     let shape = GreinerShape::new(result, start_a, intersections.len());
-    //remove_uncessary_common(&mut shape);
     shape
-}
-
-#[allow(dead_code)] // Maybe useful
-fn remove_uncessary_common(shape: &mut GreinerShape) {
-    let mut i = 0;
-    let mut current_index = shape.start;
-    while i == 0 || current_index != shape.start {
-        if shape.data[current_index].intersect == IntersectionType::CommonIntersection {
-            let prev_point = {
-                let prev_index = shape.data[current_index].prev.unwrap();
-                let prev = &shape.data[prev_index];
-                let prev_prev_index = prev.prev.unwrap();
-                let prev_prev = &shape.data[prev_prev_index];
-                let prev_prev_prev_index = prev_prev.prev.unwrap();
-                &shape.data[prev_prev_prev_index]
-            };
-            let next_point = {
-                let next_index = shape.data[current_index].next.unwrap();
-                let next = &shape.data[next_index];
-                let next_next_index = next.next.unwrap();
-                let next_next = &shape.data[next_next_index];
-                let next_next_next_index = next_next.next.unwrap();
-                &shape.data[next_next_next_index]
-            };
-
-            if (prev_point.intersect.is_common()) && (next_point.intersect.is_common()) {
-                shape.data[current_index].intersect = IntersectionType::Common;
-            }
-        }
-        current_index = shape.data[current_index].next.unwrap();
-        i += 1;
-    }
 }
 
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
@@ -633,6 +566,13 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
     }
 }
 
+
+
+/// Basic tests for the boolean operations.
+/// The tests are based on basic shapes and the expected result can be seen easily.
+#[cfg(test)]
+mod basic_test;
+
 #[cfg(test)]
 mod test {
     use common::{
@@ -644,39 +584,6 @@ mod test {
     use crate::{scene::shape::Shape, DbCoord};
 
     use super::{find_intersecions, CoordOfIntersection};
-
-    #[test]
-    fn given_intersection_count_not_even_when_assert_then_is_fix() {
-        let a = Shape::new();
-        let b = Shape::new();
-
-        let mut intersection_a = vec![
-            CoordOfIntersection::from_intersection(Coord::new(0.0, 0.0), 0.0, 0),
-            CoordOfIntersection::from_intersection(Coord::new(0.00001, 0.000001), 0.000001, 0),
-            CoordOfIntersection::from_intersection(Coord::new(2.0, 1.0), 0.0, 1),
-        ];
-
-        let mut intersection_b = vec![
-            CoordOfIntersection::from_intersection(Coord::new(0.0, 0.0), 0.0, 0),
-            CoordOfIntersection::from_intersection(Coord::new(0.00001, 0.000001), 0.000001, 0),
-            CoordOfIntersection::from_intersection(Coord::new(2.0, 1.0), 0.0, 1),
-        ];
-
-        for i in 0..intersection_a.len() {
-            intersection_a[i].neighbor = Some(i);
-            intersection_b[i].neighbor = Some(i);
-        }
-
-        super::assert_intersections_even_count(&a, &mut intersection_a, &b, &mut intersection_b);
-
-        assert_eq!(intersection_a.len(), 2);
-        assert_eq!(intersection_b.len(), 2);
-
-        for i in 0..intersection_a.len() {
-            assert_eq!(intersection_a[i].neighbor.unwrap(), i);
-            assert_eq!(intersection_b[i].neighbor.unwrap(), i);
-        }
-    }
 
     #[test]
     fn given_bug_diff_when_difference() {
@@ -734,7 +641,7 @@ mod test {
         let mut ag = create_shape(&a, intersections.0);
         let mut bg = create_shape(&b, intersections.1);
 
-        mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
+        mark_entry_exit_points(&mut ag, &a, &mut bg, &b).unwrap();
 
         let mut common_count = 0;
         let mut inteersection_count = 0;
@@ -773,7 +680,7 @@ mod test {
         assert_eq!(ag.len(), 18);
         assert_eq!(bg.len(), 18);
 
-        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+        mark_entry_exit_points(&mut ag, a, &mut bg, b).unwrap();
 
         assert_eq!(ag.get(0).entry, false);
         assert_eq!(ag.get(3).entry, true);
@@ -818,7 +725,7 @@ mod test {
         let mut ag = create_shape(a, i_a);
         let mut bg = create_shape(b, i_b);
 
-        mark_entry_exit_points(&mut ag, a, &mut bg, b);
+        mark_entry_exit_points(&mut ag, a, &mut bg, b).unwrap();
 
         assert_eq!(ag.len(), 18);
         assert_eq!(bg.len(), 18);
