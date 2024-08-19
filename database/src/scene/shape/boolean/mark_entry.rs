@@ -11,20 +11,8 @@ pub(super) fn mark_entry_exit_points(
     bg: &mut GreinerShape,
     b: &Shape,
 ) {
-    or_common_intersection(ag, bg);
-
     mark_shape_entries(ag, bg, b);
     mark_shape_entries(bg, ag, a);
-}
-
-fn or_common_intersection(a: &mut GreinerShape, b: &mut GreinerShape) {
-    for i in 0..a.intersections_len {
-        if a.data[i].intersect == IntersectionType::CommonIntersection {
-            b.data[i].intersect = IntersectionType::CommonIntersection;
-        } else if b.data[i].intersect == IntersectionType::CommonIntersection {
-            a.data[i].intersect = IntersectionType::CommonIntersection;
-        }
-    }
 }
 
 fn mark_shape_entries(shape: &mut GreinerShape, other_greiner: &GreinerShape, other: &Shape) {
@@ -38,10 +26,35 @@ fn mark_shape_entries(shape: &mut GreinerShape, other_greiner: &GreinerShape, ot
     #[cfg(test)]
     println!("Coord {:?} is inside: {}", coord, con);
 
-    run_mark_entry(shape, &other_greiner, start_index, status_entry);
+    set_common_in_out(shape, other_greiner).unwrap();
+
+    run_mark_entry(shape, start_index, status_entry);
 
     #[cfg(test)]
     shape.print_coords_table();
+}
+
+fn set_common_in_out(
+    shape: &mut GreinerShape,
+    other_greiner: &GreinerShape,
+) -> Result<(), anyhow::Error> {
+    for i in 0..shape.intersections_len {
+        if shape.data[i].intersect == IntersectionType::UnspecifiedCommonIntersection {
+            let is_overlapping_forward = is_overlapping(shape, i, other_greiner, true);
+            let is_overlapping_backward = is_overlapping(shape, i, other_greiner, false);
+            if is_overlapping_forward && is_overlapping_backward {
+                shape.data[i].intersect = IntersectionType::Common;
+            } else if is_overlapping_forward {
+                shape.data[i].intersect = IntersectionType::IntersectionCommon;
+            } else if is_overlapping_backward {
+                shape.data[i].intersect = IntersectionType::CommonIntersection;
+            } else {
+                shape.data[i].intersect = IntersectionType::Intersection;
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn find_p_not_intersection(shape: &mut GreinerShape) -> usize {
@@ -59,36 +72,29 @@ fn find_p_not_intersection(shape: &mut GreinerShape) -> usize {
     current_index
 }
 
-fn run_mark_entry(
-    shape: &mut GreinerShape,
-    other: &GreinerShape,
-    start_index: usize,
-    mut status_entry: bool,
-) {
+fn run_mark_entry(shape: &mut GreinerShape, start_index: usize, mut status_entry: bool) {
     let mut current_index = start_index;
     while shape.data[current_index].next.is_some()
         && shape.data[current_index].next.unwrap() != start_index
     {
         let next_index = shape.data[current_index].next.unwrap();
         if shape.data[next_index].intersect.is_intersection() {
-            let is_overlapping = shape.data[next_index].intersect.is_common()
-                && is_overlapping(shape, next_index, other);
-            if is_overlapping {
-                shape.data[next_index].intersect = IntersectionType::Common;
-                shape.data[next_index].entry = status_entry;
-                current_index = next_index;
-                continue;
-            }
-
             shape.data[next_index].entry = status_entry;
             status_entry = !status_entry;
+        } else if shape.data[next_index].intersect.is_common() {
+            shape.data[next_index].entry = status_entry;
         }
         current_index = next_index;
     }
 }
 
-fn is_overlapping(shape: &mut GreinerShape, next_index: usize, other: &GreinerShape) -> bool {
-    let (p0, cp0, cp1, p1) = shape.next_four_coord(next_index, true).unwrap();
+fn is_overlapping(
+    shape: &mut GreinerShape,
+    next_index: usize,
+    other: &GreinerShape,
+    direction: bool,
+) -> bool {
+    let (p0, cp0, cp1, p1) = shape.next_four_coord(next_index, direction).unwrap();
 
     let other_index = shape.data[next_index]
         .neighbor
@@ -116,11 +122,3 @@ fn is_overlapping(shape: &mut GreinerShape, next_index: usize, other: &GreinerSh
     }
     false
 }
-
-// fn update_start_to_intersection(shape: &mut GreinerShape) {
-//     let mut current_index = shape.start;
-//     while !shape.data[current_index].intersect.is_intersection() {
-//         current_index = shape.data[current_index].next.unwrap();
-//     }
-//     shape.start = current_index;
-// }

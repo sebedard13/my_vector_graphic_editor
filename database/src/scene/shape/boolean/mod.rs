@@ -52,7 +52,9 @@ struct GreinerShape {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum IntersectionType {
     Intersection,
+    UnspecifiedCommonIntersection,
     CommonIntersection,
+    IntersectionCommon,
     Common,
     None,
 }
@@ -62,6 +64,7 @@ impl IntersectionType {
         match self {
             IntersectionType::Intersection => true,
             IntersectionType::CommonIntersection => true,
+            IntersectionType::UnspecifiedCommonIntersection => true,
             _ => false,
         }
     }
@@ -70,6 +73,7 @@ impl IntersectionType {
         match self {
             IntersectionType::Common => true,
             IntersectionType::CommonIntersection => true,
+            IntersectionType::IntersectionCommon => true,
             _ => false,
         }
     }
@@ -82,6 +86,8 @@ impl Display for IntersectionType {
             IntersectionType::Common => write!(f, "Common"),
             IntersectionType::None => write!(f, "None"),
             IntersectionType::CommonIntersection => write!(f, "C.Int."),
+            IntersectionType::IntersectionCommon => write!(f, "Int.C."),
+            IntersectionType::UnspecifiedCommonIntersection => write!(f, "Unspec."),
         }
     }
 }
@@ -311,11 +317,12 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                         }
 
                         if point_a.t == 0.0 && point_b.t == 0.0 {
-                            point_a.intersect = IntersectionType::CommonIntersection;
-                            point_b.intersect = IntersectionType::CommonIntersection;
+                            point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
+                            point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
                         } else if point_a.t == 0.0 || point_b.t == 0.0 {
-                            point_a.intersect = IntersectionType::CommonIntersection;
-                            point_b.intersect = IntersectionType::CommonIntersection;
+                            //Will flip later if neccesary
+                            point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
+                            point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
                         }
 
                         point_a.neighbor = Some(intersections_b.len());

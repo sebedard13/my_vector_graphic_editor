@@ -1,5 +1,4 @@
 use anyhow::Error;
-
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
     IntersectionType,
@@ -131,7 +130,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if current.intersect.is_intersection() || current.intersect == IntersectionType::IntersectionCommon {
                         intersections_done[next] = true;
                         break;
                     }
@@ -152,7 +151,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if current.intersect.is_intersection() || current.intersect == IntersectionType::IntersectionCommon {
                         intersections_done[next] = true;
                         break;
                     }
@@ -199,7 +198,7 @@ mod test {
 
     use crate::{
         scene::shape::{
-            boolean::{difference::shape_difference, find_intersecions, ShapeDifference},
+            boolean::find_intersecions,
             Shape,
         },
         DbCoord,

@@ -4,6 +4,7 @@ use anyhow::Error;
 
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
+    IntersectionType,
 };
 use crate::scene::shape::Shape;
 
@@ -63,7 +64,9 @@ fn try_shape_difference(a: &Shape, b: &Shape) -> Result<ShapeDifference, Error> 
 
 fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
     for i in 0..intersections.len() {
-        if intersections[i].intersect.is_intersection() {
+        if intersections[i].intersect.is_intersection()
+            || intersections[i].intersect == IntersectionType::IntersectionCommon
+        {
             return false;
         }
     }
@@ -122,8 +125,16 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && current.entry)
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && !current.entry)
+                    {
                         break;
                     }
                 }
@@ -143,8 +154,16 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && !current.entry)
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && current.entry)
+                    {
                         break;
                     }
                 }
@@ -164,8 +183,16 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && current.entry)
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && !current.entry)
+                    {
                         break;
                     }
                 }
@@ -186,22 +213,30 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect.is_common() {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && !current.entry)
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && current.entry)
+                    {
                         break;
                     }
                 }
             }
-           // if current.intersect.is_intersection() {
-                let next = current.neighbor.unwrap();
-                let eq = ptr::eq(current_shape, ag);
-                if eq {
-                    current_shape = bg;
-                } else {
-                    current_shape = ag;
-                }
-                current = &current_shape.data[next];
-         //   }
+            // if current.intersect.is_intersection() {
+            let next = current.neighbor.unwrap();
+            let eq = ptr::eq(current_shape, ag);
+            if eq {
+                current_shape = bg;
+            } else {
+                current_shape = ag;
+            }
+            current = &current_shape.data[next];
+            //   }
             // first interaction is from ag
             let first_neigboor = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
             if ptr::eq(current, first_intersection) || ptr::eq(current, first_neigboor) {
@@ -355,6 +390,11 @@ mod test {
 
     #[test]
     fn given_shape_with_intersections_point_as_b_when_difference_then_valid() {
+        let _ = env_logger::builder()
+            .filter_level(LevelFilter::max())
+            .is_test(true)
+            .try_init();
+
         //A: M 1 -1 C 1 -1 1 1 1 1 C 1 1 0 0 0 0 C 0 0 -1 -1 -1 -1 C -1 -1 1 -1 1 -1 Z
         /*B: M -0.47455588 -0.47455588
         C -0.47455588 -0.47455588 0 0 0 0
