@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(
             ids.len(),
             4,
-            "There should be 4 coord because every thhing is a line"
+            "There should be 4 coord because everything is a line"
         );
     }
 }

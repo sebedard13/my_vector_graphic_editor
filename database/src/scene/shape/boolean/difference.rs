@@ -83,11 +83,13 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
     let mut intersections_done = vec![false; ag.intersections_len];
 
     for i in 0..ag.intersections_len {
-        let current = &ag.data[i];
-        if !current.intersect.is_intersection() {
+        if !ag.data[i].intersect.is_intersection() {
             intersections_done[i] = true;
         }
     }
+
+    let max_visit_count = (ag.len() + bg.len()) * 2;
+    let mut visit_count = 0;
 
     let mut shapes = Vec::new();
 
@@ -120,12 +122,12 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
                 }
-            } else if ptr::eq(current_shape, bg) && !current.entry {
+            } else if ptr::eq(current_shape, bg) {
                 loop {
                     let next = current.prev.unwrap();
                     current = &current_shape.data[next];
@@ -141,7 +143,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
@@ -162,7 +164,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
@@ -184,30 +186,31 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
                 }
             }
-
-            let next = current.neighbor.unwrap();
-            let eq = ptr::eq(current_shape, ag);
-            if eq {
-                current_shape = bg;
-            } else {
-                current_shape = ag;
-            }
-            current = &current_shape.data[next];
-
+           // if current.intersect.is_intersection() {
+                let next = current.neighbor.unwrap();
+                let eq = ptr::eq(current_shape, ag);
+                if eq {
+                    current_shape = bg;
+                } else {
+                    current_shape = ag;
+                }
+                current = &current_shape.data[next];
+         //   }
             // first interaction is from ag
-            if ptr::eq(current, first_intersection)
-                || ptr::eq(
-                    current,
-                    bg.data.get(first_intersection.neighbor.unwrap()).unwrap(),
-                )
-            {
+            let first_neigboor = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
+            if ptr::eq(current, first_intersection) || ptr::eq(current, first_neigboor) {
                 break;
+            }
+
+            visit_count += 3;
+            if visit_count > max_visit_count {
+                panic!("Infinite loop detected");
             }
         }
         shapes.push(merged);
@@ -410,12 +413,6 @@ mod test {
         let a = Shape::new_from_path(coord_a, Affine::identity());
         let b = Shape::new_from_path(coord_b, Affine::identity());
 
-        let intersections = super::find_intersecions(&a, &b);
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-
         let merged = shape_difference(&a, &b);
 
         assert!(
@@ -429,6 +426,7 @@ mod test {
         };
 
         assert_eq!(merged.len(), 1);
+        println!("{:?}", merged[0].path());
 
         let steps = 30;
         for x in (0..steps).map(|x| ((x as f32 * 2.0) / steps as f32) - 1.0) {
@@ -918,7 +916,7 @@ mod test {
         match merged {
             ShapeDifference::New(merged) => {
                 assert_eq!(merged.len(), 1);
-                assert_ne!("M 0 383 C 0 383 0 360 0 360 C 0 338.3812 0 0 0 0 C 0 0 559 0 559 0 C 559 0 559 383 559 383 C 559 383 45 383 45 383 C 45 383 45 405 45 405 C 45 405 0 405 0 405 C 0 405 0 383 0 383 Z", merged[0].path());
+                assert_eq!("M 0 383 C 0 383 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 383 45 383 C 45 383 0 383 0 383 Z", merged[0].path());
             }
             _ => panic!("Should be a new shape"),
         };

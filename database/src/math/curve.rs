@@ -201,8 +201,12 @@ pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
     vec_cp0.normalize();
     vec_cp1.normalize();
 
-    return (vec_cp0.prec_eq(&vec_line) || cp0.c == p0.c)
-        && (vec_cp1.prec_eq(&vec_line) || cp1.c == p0.c);
+    let cp0_is_line = vec_cp0.prec_eq(&vec_line);
+    let cp1_is_line = vec_cp1.prec_eq(&vec_line);
+    let cp0_is_nan = cp0.c == p0.c;
+    let cp1_is_nan = cp1.c == p0.c;
+    let res = (cp0_is_line || cp0_is_nan) && (cp1_is_line || cp1_is_nan);
+    return res;
 }
 
 #[cfg(test)]

@@ -9,6 +9,9 @@ mod difference;
 mod intersection;
 mod union;
 
+mod mark_entry;
+use mark_entry::mark_entry_exit_points;
+
 use crate::{
     math::{
         curve::{add_smooth_result, is_line},
@@ -17,6 +20,7 @@ use crate::{
     scene::shape::Shape,
     DbCoord,
 };
+use anyhow::Context;
 use common::{dbg_str, types::Coord};
 use std::fmt::Display;
 
@@ -101,6 +105,35 @@ impl GreinerShape {
             data,
             start,
             intersections_len,
+        }
+    }
+
+    pub fn next_four_coord(
+        &self,
+        mut current_index: usize,
+        direction: bool,
+    ) -> Result<(Coord, Coord, Coord, Coord), anyhow::Error> {
+        match direction {
+            true => {
+                let p0 = self.data.get(current_index).context("No next")?;
+                current_index = p0.next.context("No next")?;
+                let cp0 = self.data.get(current_index).context("No next")?;
+                current_index = cp0.next.context("No next")?;
+                let cp1 = self.data.get(current_index).context("No next")?;
+                current_index = cp1.next.context("No next")?;
+                let p1 = self.data.get(current_index).context("No next")?;
+                Ok((p0.coord, cp0.coord, cp1.coord, p1.coord))
+            }
+            false => {
+                let p0 = self.data.get(current_index).context("No next")?;
+                current_index = p0.prev.context("No next")?;
+                let cp0 = self.data.get(current_index).context("No next")?;
+                current_index = cp0.prev.context("No next")?;
+                let cp1 = self.data.get(current_index).context("No next")?;
+                current_index = cp1.prev.context("No next")?;
+                let p1 = self.data.get(current_index).context("No next")?;
+                Ok((p0.coord, cp0.coord, cp1.coord, p1.coord))
+            }
         }
     }
 
@@ -278,8 +311,8 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                         }
 
                         if point_a.t == 0.0 && point_b.t == 0.0 {
-                            point_a.intersect = IntersectionType::Common;
-                            point_b.intersect = IntersectionType::Common;
+                            point_a.intersect = IntersectionType::CommonIntersection;
+                            point_b.intersect = IntersectionType::CommonIntersection;
                         } else if point_a.t == 0.0 || point_b.t == 0.0 {
                             point_a.intersect = IntersectionType::CommonIntersection;
                             point_b.intersect = IntersectionType::CommonIntersection;
@@ -541,115 +574,45 @@ fn remove_uncessary_common(shape: &mut GreinerShape) {
     }
 }
 
-fn or_common_intersection(a: &mut GreinerShape, b: &mut GreinerShape) {
-    for i in 0..a.intersections_len {
-        if a.data[i].intersect == IntersectionType::CommonIntersection {
-            b.data[i].intersect = IntersectionType::CommonIntersection;
-        } else if b.data[i].intersect == IntersectionType::CommonIntersection {
-            a.data[i].intersect = IntersectionType::CommonIntersection;
-        }
-    }
-}
-
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
-    let mut index = 0;
     let mut current_index = start_a;
 
     let mut i_p0 = start_a;
-    let mut i_cp0 = 0;
-    let mut i_cp1 = 0;
-
-    while index == 0 || current_index != start_a {
-        //cp0
-        if index % 3 == 1 {
-            i_cp0 = current_index;
-        }
-        //cp1
-        else if index % 3 == 2 {
-            i_cp1 = current_index;
-        }
-        //p1
-        if index % 3 == 0 && index != 0 {
-            let i_p1 = current_index;
-
-            let p0 = list[i_p0].coord;
-            let cp0 = list[i_cp0].coord;
-            let cp1 = list[i_cp1].coord;
-            let p1 = list[i_p1].coord;
-
-            if is_line(&p0, &cp0, &cp1, &p1) {
-                list[i_cp0].coord = list[i_p0].coord;
-                list[i_cp1].coord = list[i_p1].coord;
-
-                if list[i_p0].rel_coord.is_some() {
-                    list[i_cp0].rel_coord = list[i_p0].rel_coord.clone();
-                } else {
-                    let rc = Some(list[i_p0].coord_ptr());
-                    list[i_p0].rel_coord = rc.clone();
-                    list[i_cp0].rel_coord = rc;
-                }
-                if list[i_p1].rel_coord.is_some() {
-                    list[i_cp1].rel_coord = list[i_p1].rel_coord.clone();
-                } else {
-                    let rc = Some(list[i_p1].coord_ptr());
-                    list[i_p1].rel_coord = rc.clone();
-                    list[i_cp1].rel_coord = rc;
-                }
-            }
-
-            i_p0 = current_index;
-        }
+    for _ in (0..(list.len() + 2)).step_by(3) {
         current_index = list[current_index].next.unwrap();
-        index += 1;
-    }
-}
+        let i_cp0 = current_index;
 
-fn mark_entry_exit_points(ag: &mut GreinerShape, a: &Shape, bg: &mut GreinerShape, b: &Shape) {
-    or_common_intersection(ag, bg);
+        current_index = list[current_index].next.unwrap();
+        let i_cp1 = current_index;
 
-    mark_shape_entries(ag, b);
-    mark_shape_entries(bg, a);
-}
+        current_index = list[current_index].next.unwrap();
+        let i_p1 = current_index;
 
-fn mark_shape_entries(shape: &mut GreinerShape, other: &Shape) {
-    let mut status_entry = true;
-    let start_index = find_p_not_intersection(shape);
-    let coord = &shape.data[start_index].coord;
-    let con = other.contains(coord);
-    if con {
-        status_entry = false;
-    }
+        let p0 = list[i_p0].coord;
+        let cp0 = list[i_cp0].coord;
+        let cp1 = list[i_cp1].coord;
+        let p1 = list[i_p1].coord;
 
-    run_mark_entry(shape, start_index, status_entry);
-}
+        if is_line(&p0, &cp0, &cp1, &p1) {
+            list[i_cp0].coord = list[i_p0].coord;
+            list[i_cp1].coord = list[i_p1].coord;
 
-fn find_p_not_intersection(shape: &mut GreinerShape) -> usize {
-    let mut current_index = shape.start;
-    let mut count = 0;
-    while shape.data[current_index].intersect != IntersectionType::None {
-        current_index = shape.data[current_index].next.unwrap();
-        current_index = shape.data[current_index].next.unwrap();
-        current_index = shape.data[current_index].next.unwrap();
-        count += 3;
-        if count > shape.data.len() {
-            panic!("Infinite loop");
+            if list[i_p0].rel_coord.is_some() {
+                list[i_cp0].rel_coord = list[i_p0].rel_coord.clone();
+            } else {
+                let rc = Some(list[i_p0].coord_ptr());
+                list[i_p0].rel_coord = rc.clone();
+                list[i_cp0].rel_coord = rc;
+            }
+            if list[i_p1].rel_coord.is_some() {
+                list[i_cp1].rel_coord = list[i_p1].rel_coord.clone();
+            } else {
+                let rc = Some(list[i_p1].coord_ptr());
+                list[i_p1].rel_coord = rc.clone();
+                list[i_cp1].rel_coord = rc;
+            }
         }
-    }
-    current_index
-}
-
-fn run_mark_entry(shape: &mut GreinerShape, start_index: usize, mut status_entry: bool) {
-    let mut current_index = start_index;
-    while shape.data[current_index].next.is_some()
-        && shape.data[current_index].next.unwrap() != start_index
-    {
-        let next_index = shape.data[current_index].next.unwrap();
-        let next = &mut shape.data[next_index];
-        if next.intersect.is_intersection() {
-            next.entry = status_entry;
-            status_entry = !status_entry;
-        }
-        current_index = next_index;
+        i_p0 = current_index;
     }
 }
 
@@ -660,7 +623,7 @@ mod test {
         types::{Coord, Length2d},
     };
 
-    use super::{create_shape, mark_entry_exit_points};
+    use super::{create_shape, mark_entry::mark_entry_exit_points};
     use crate::{scene::shape::Shape, DbCoord};
 
     use super::{find_intersecions, CoordOfIntersection};

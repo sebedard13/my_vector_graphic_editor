@@ -427,11 +427,7 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
         && f64::abs(coeff1) < f64::EPSILON
     {
         if p0y == y && p1y == y {
-            if p0.x() < p1.x() {
-                return vec![0.0];
-            } else {
-                return vec![1.0];
-            }
+            return vec![0.0, 1.0];
         }
         return Vec::new();
     }

@@ -20,9 +20,14 @@ pub fn shape_union(a: &Shape, b: &Shape) -> ShapeUnion {
     match try_shape_union(a, b) {
         Ok(value) => value,
         Err(value) => {
-            log::error!("Error while trying to union a {} and b {}: {}", a.path(), b.path(), value);
+            log::error!(
+                "Error while trying to union a {} and b {}: {}",
+                a.path(),
+                b.path(),
+                value
+            );
             ShapeUnion::None
-        },
+        }
     }
 }
 

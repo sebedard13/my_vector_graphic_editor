@@ -298,4 +298,17 @@ mod test {
 
         shape.render(&mut renderer).expect("Render should be ok");
     }
+
+    #[test]
+    fn given_shape_when_contains_outside_on_axis_then_return_false() {
+        let shape = Shape::quick_from_string(
+            "M 540 0 C 540 0 
+            540 45 540 45 C 540 45 
+            585 45 585 45 C 585 45
+            585 0 585 0 C 585 0
+            540 0 540 0 Z",
+        );
+        let coord = Coord::new(0.0, 0.0);
+        assert!(!shape.contains(&coord));
+    }
 }

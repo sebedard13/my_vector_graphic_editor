@@ -92,6 +92,13 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
     let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
 
+    for i in 0..ag.intersections_len {
+        let current = &ag.data[i];
+        if !current.intersect.is_intersection() {
+            intersections_done[i] = true;
+        }
+    }
+
     let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
 
@@ -124,7 +131,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
@@ -145,27 +152,28 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() {
+                    if current.intersect.is_intersection() || current.intersect.is_common() {
                         intersections_done[next] = true;
                         break;
                     }
                 }
             }
-            let next = current.neighbor.unwrap();
-            let eq = std::ptr::eq(current_shape, ag);
-            if eq {
-                current_shape = bg;
-            } else {
-                current_shape = ag;
+
+            if current.intersect.is_intersection() {
+                let next = current.neighbor.unwrap();
+                let eq = std::ptr::eq(current_shape, ag);
+                if eq {
+                    current_shape = bg;
+                } else {
+                    current_shape = ag;
+                }
+                current = &current_shape.data[next];
             }
-            current = &current_shape.data[next];
 
             // first interaction is from ag
+            let bg_first_intersection = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
             if std::ptr::eq(current, first_intersection)
-                || std::ptr::eq(
-                    current,
-                    bg.data.get(first_intersection.neighbor.unwrap()).unwrap(),
-                )
+                || std::ptr::eq(current, bg_first_intersection)
             {
                 break;
             }
@@ -411,7 +419,7 @@ mod test {
 
     #[test]
     fn given_shapes_with_common_side_and_intersection_when_intersection_then_new() {
-        let max_view = Shape::quick_from_string(
+        let a = Shape::quick_from_string(
             "M 0 0 C 0 0
             559 0 559 0 C 559 0 
             559 383 559 383 C 559 383 
@@ -419,7 +427,7 @@ mod test {
             0 0 0 0 Z",
         );
 
-        let shape = Shape::quick_from_string(
+        let b = Shape::quick_from_string(
             "M 540 0 C 540 0 
             540 45 540 45 C 540 45 
             585 45 585 45 C 585 45
@@ -427,10 +435,11 @@ mod test {
             540 0 540 0 Z",
         );
 
-        match shape.intersection(&max_view) {
+        match b.intersection(&a) {
             ShapeIntersection::New(new_shape) => {
                 assert_eq!(new_shape.len(), 1);
                 assert_eq!(new_shape[0].curves_len(), 4);
+                assert_eq!(new_shape[0].path(), "M 540 0 C 540 0 540 45 540 45 C 540 45 559 45 559 45 C 559 45 559 0 559 0 C 559 0 540 0 540 0 Z");
             }
             _ => panic!("Should be ShapeIntersection::New"),
         }
@@ -448,21 +457,13 @@ mod test {
             0 0 0 0 Z",
         );
 
-        let intersections = super::find_intersecions(&a, &b);
-
-        let mut ag = super::create_shape(&a, intersections.0);
-        let mut bg = super::create_shape(&b, intersections.1);
-
-        super::mark_entry_exit_points(&mut ag, &a, &mut bg, &b);
-        ag.print_coords_table();
-        bg.print_coords_table();
-
-        let merged = shape_difference(&a, &b);
+        let merged = shape_intersection(&a, &b);
 
         match merged {
-            ShapeDifference::New(merged) => {
+            ShapeIntersection::New(merged) => {
                 assert_eq!(merged.len(), 1);
                 println!("{:?}", merged[0].path());
+                assert_eq!(merged[0].path(), "M 0 383 C 0 383 0 360 0 360 C 0 360 45 360 45 360 C 45 360 45 383 45 383 C 45 383 0 383 0 383 Z");
             }
             _ => panic!("Should be a new shape"),
         };
