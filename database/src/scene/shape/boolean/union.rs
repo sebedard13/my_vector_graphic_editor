@@ -55,6 +55,9 @@ fn try_shape_union(a: &Shape, b: &Shape) -> Result<ShapeUnion, anyhow::Error> {
 fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {
     let first_intersection = &ag.data[0];
 
+    let max_visit_count = (ag.len() + bg.len()) * 2;
+    let mut visit_count = 0;
+
     let mut merged = Shape {
         id: a.id,
         path: vec![first_intersection.coord_ptr()],
@@ -128,6 +131,11 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
         {
             break;
         }
+
+        visit_count += 3;
+        if visit_count > max_visit_count {
+            panic!("Infinite loop detected");
+        }
     }
 
     let len_last = merged.path.len() - 1;
@@ -140,8 +148,6 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
 mod test {
     use super::{shape_union, ShapeUnion};
     use common::pures::Affine;
-    use common::types::Coord;
-    use common::types::Length2d;
 
     use crate::scene::shape::Shape;
     use crate::DbCoord;

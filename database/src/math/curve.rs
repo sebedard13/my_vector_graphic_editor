@@ -201,10 +201,11 @@ pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
     vec_cp0.normalize();
     vec_cp1.normalize();
 
+
     let cp0_is_line = vec_cp0.prec_eq(&vec_line);
     let cp1_is_line = vec_cp1.prec_eq(&vec_line);
-    let cp0_is_nan = cp0.c == p0.c;
-    let cp1_is_nan = cp1.c == p0.c;
+    let cp0_is_nan = cp0 == p0;
+    let cp1_is_nan = cp1 == p0;
     let res = (cp0_is_line || cp0_is_nan) && (cp1_is_line || cp1_is_nan);
     return res;
 }
@@ -429,5 +430,16 @@ mod test {
         let p1 = Coord::new(1.0, 1.0);
 
         assert!(!is_line(&p0, &cp0, &cp1, &p1));
+    }
+
+    #[test]
+    fn is_line_01(){
+        let p0 = Coord::new(0.7, 0.7);
+        let cp0 = Coord::new(0.6999999, 0.6999999);
+        let cp1 = Coord::new(0.5857143, 0.7);
+        let p1 = Coord::new(0.3, 0.7);
+
+        assert!(is_line(&p0, &cp0, &cp1, &p1));
+
     }
 }

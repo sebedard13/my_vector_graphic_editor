@@ -86,6 +86,29 @@ pub fn verify_difference(res: ShapeDifference, a: Shape, b: Shape) {
     }
 }
 
+pub fn print_svg_scale(a: &Shape, b: &Shape, scale: f32) {
+    /*<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+        <path d="M -0.7 -0.7 C -0.7 -0.7 0.7 -0.7 0.7 -0.7 C 0.7 -0.7 0.7 0.5 0.7 0.5 C 0.7 0.5 -0.7 0.5 -0.7 0.5 C -0.7 0.5 -0.7 -0.7 -0.7 -0.7 Z" fill="red" transform="scale(100)"/>
+        <path d="M -0.7 -0.5 C -0.7 -0.5 0.7 -0.5 0.7 -0.5 C 0.7 -0.5 0.7 0.7 0.7 0.7 C 0.7 0.7 -0.7 0.7 -0.7 0.7 C -0.7 0.7 -0.7 -0.5 -0.7 -0.5 Z" fill="black" transform="scale(100)"/>
+    </svg>*/
+
+    let a_path = a.path();
+    let b_path = b.path();
+
+    let svg = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+    <path d="{}" fill="red" transform="scale({})"/>
+    <path d="{}" fill="black" transform="scale({})"/>
+</svg>"#,
+        a_path, scale, b_path, scale
+    );
+    println!("{}", svg);
+}
+
+fn print_svg(a: &Shape, b: &Shape) {
+    print_svg_scale(a, b, 100.0);
+}
+
 mod overlapping_circles {
     use common::types::{Coord, Length2d};
 
@@ -112,7 +135,6 @@ mod overlapping_circles {
         let (a, b) = create();
 
         let res = shape_union(&a, &b);
-        //match print
         match &res {
             ShapeUnion::New(_) => {}
             _ => panic!("Unexpected result"),
@@ -367,37 +389,39 @@ mod squares_with_a_common_side {
         scene::shape::boolean::{
             difference::shape_difference, intersection::shape_intersection, union::shape_union,
             ShapeDifference, ShapeIntersection, ShapeUnion,
-        }, DbCoord, Shape
+        },
+        DbCoord, Shape,
     };
 
     fn create() -> (Shape, Shape) {
-        let a = Shape::new_from_lines(vec![
-            DbCoord::new(-0.7, 0.0),
-            DbCoord::new(-0.7, 0.9),
-            DbCoord::new(0.3, 0.9),
-            DbCoord::new(0.3, 0.0),
-        ], Affine::identity());
-        let b = Shape::new_from_lines(vec![
-            DbCoord::new(-0.7, -0.7),
-            DbCoord::new(0.7, -0.7),
-            DbCoord::new(0.7, 0.7),
-            DbCoord::new(-0.7, 0.7),
-        ], Affine::identity());
+        let a = Shape::new_from_lines(
+            vec![
+                DbCoord::new(-0.7, 0.0),
+                DbCoord::new(-0.7, 0.9),
+                DbCoord::new(0.3, 0.9),
+                DbCoord::new(0.3, 0.0),
+            ],
+            Affine::identity(),
+        );
+        let b = Shape::new_from_lines(
+            vec![
+                DbCoord::new(-0.7, -0.7),
+                DbCoord::new(0.7, -0.7),
+                DbCoord::new(0.7, 0.7),
+                DbCoord::new(-0.7, 0.7),
+            ],
+            Affine::identity(),
+        );
         (a, b)
     }
 
     #[test]
     fn union() {
         let (a, b) = create();
-        println!("A: {:?}", a.path());
-        println!("B: {:?}", b.path());
 
         let res = shape_union(&a, &b);
-        //match print
         match &res {
-            ShapeUnion::New(merged) => {
-                println!("{:?}", merged.path());
-            }
+            ShapeUnion::New(_) => {}
             _ => panic!("Unexpected result"),
         }
 
@@ -436,4 +460,82 @@ mod squares_with_a_common_side {
     }
 }
 
-mod squares_sliding {}
+mod squares_sliding {
+    use common::pures::Affine;
+
+    use super::{print_svg, verify_difference, verify_intersection, verify_union};
+    use crate::{
+        scene::shape::boolean::{
+            difference::shape_difference, intersection::shape_intersection, union::shape_union,
+            ShapeDifference, ShapeIntersection, ShapeUnion,
+        },
+        DbCoord, Shape,
+    };
+
+    fn create() -> (Shape, Shape) {
+        let a = Shape::new_from_lines(
+            vec![
+                DbCoord::new(-0.7, -0.7),
+                DbCoord::new(0.7, -0.7),
+                DbCoord::new(0.7, 0.5),
+                DbCoord::new(-0.7, 0.5),
+            ],
+            Affine::identity(),
+        );
+        let b = Shape::new_from_lines(
+            vec![
+                DbCoord::new(-0.7, -0.5),
+                DbCoord::new(0.7, -0.5),
+                DbCoord::new(0.7, 0.7),
+                DbCoord::new(-0.7, 0.7),
+            ],
+            Affine::identity(),
+        );
+        (a, b)
+    }
+
+    #[test]
+    fn union() {
+        let (a, b) = create();
+
+        let res = shape_union(&a, &b);
+
+        match &res {
+            ShapeUnion::New(_) => {}
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_union(res, a, b);
+    }
+
+    #[test]
+    fn intersection() {
+        let (a, b) = create();
+        print_svg(&a, &b);
+        let res = shape_intersection(&a, &b);
+
+        match &res {
+            ShapeIntersection::New(merged) => {
+                assert_eq!(merged.len(), 1);
+            }
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_intersection(res, a, b);
+    }
+
+    #[test]
+    fn difference() {
+        let (a, b) = create();
+
+        let res = shape_difference(&a, &b);
+        match &res {
+            ShapeDifference::New(merged) => {
+                assert_eq!(merged.len(), 1);
+            }
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_difference(res, a, b);
+    }
+}

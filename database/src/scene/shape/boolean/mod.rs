@@ -21,7 +21,7 @@ use crate::{
     DbCoord,
 };
 use anyhow::{Context, Error};
-use common::{dbg_str, types::Coord};
+use common::types::Coord;
 use std::fmt::Display;
 
 pub use self::{difference::ShapeDifference, intersection::ShapeIntersection, union::ShapeUnion};
@@ -566,8 +566,6 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
     }
 }
 
-
-
 /// Basic tests for the boolean operations.
 /// The tests are based on basic shapes and the expected result can be seen easily.
 #[cfg(test)]
@@ -583,7 +581,7 @@ mod test {
     use super::{create_shape, mark_entry::mark_entry_exit_points};
     use crate::{scene::shape::Shape, DbCoord};
 
-    use super::{find_intersecions, CoordOfIntersection};
+    use super::find_intersecions;
 
     #[test]
     fn given_bug_diff_when_difference() {
