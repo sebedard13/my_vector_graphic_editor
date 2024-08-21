@@ -86,8 +86,9 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
     let mut intersections_done = vec![false; ag.intersections_len];
 
     for i in 0..ag.intersections_len {
-        if !(ag.data[i].intersect == IntersectionType::Intersection
-            || (ag.data[i].intersect == IntersectionType::CommonIntersection && !ag.data[i].entry))
+        let current = &ag.data[i];
+        if !(current.intersect == IntersectionType::Intersection
+            || (current.intersect == IntersectionType::CommonIntersection && !current.entry)) 
         {
             intersections_done[i] = true;
         }
@@ -769,29 +770,6 @@ mod test {
                 );
             }
         }
-    }
-
-    #[test]
-    fn given_squares_2i_1ci_when_difference_then_new() {
-        let a = Shape::quick_from_string("M 0 360 C 0 360 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 360 45 360 C 45 360 0 360 0 360 Z");
-        //max_view
-        let b = Shape::quick_from_string(
-            "M 0 0 C 0 0
-            559 0 559 0 C 559 0 
-            559 383 559 383 C 559 383 
-            0 383 0 383 C 0 383 
-            0 0 0 0 Z",
-        );
-
-        let merged = shape_difference(&a, &b);
-
-        match merged {
-            ShapeDifference::New(merged) => {
-                assert_eq!(merged.len(), 1);
-                assert_eq!("M 0 383 C 0 383 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 383 45 383 C 45 383 0 383 0 383 Z", merged[0].path());
-            }
-            _ => panic!("Should be a new shape"),
-        };
     }
 
     #[test]

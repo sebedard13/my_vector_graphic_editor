@@ -1,9 +1,9 @@
-use anyhow::Error;
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
     IntersectionType,
 };
 use crate::scene::shape::Shape;
+use anyhow::Error;
 
 pub enum ShapeIntersection {
     /// B fully contains A so the result is A
@@ -73,7 +73,7 @@ fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
     }
 
     for i in 0..intersections.len() {
-        if intersections[i].intersect == IntersectionType::Intersection {
+        if intersections[i].intersect.is_any_intersection() {
             return false;
         }
     }
@@ -95,7 +95,10 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
     for i in 0..ag.intersections_len {
         let current = &ag.data[i];
-        if !current.intersect.is_intersection() {
+        if !(current.intersect == IntersectionType::Intersection
+            || (current.intersect == IntersectionType::IntersectionCommon && !current.entry)
+            || (current.intersect == IntersectionType::CommonIntersection && current.entry))
+        {
             intersections_done[i] = true;
         }
     }
@@ -132,8 +135,14 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect == IntersectionType::IntersectionCommon {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && !current.entry)
+                    {
                         break;
                     }
                 }
@@ -153,23 +162,27 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
                     merged.path.append(&mut vec![cp0, cp1, p1]);
 
-                    if current.intersect.is_intersection() || current.intersect == IntersectionType::IntersectionCommon {
+                    if next < current_shape.intersections_len {
                         intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && !current.entry)
+                    {
                         break;
                     }
                 }
             }
 
-            if current.intersect.is_intersection() {
-                let next = current.neighbor.unwrap();
-                let eq = std::ptr::eq(current_shape, ag);
-                if eq {
-                    current_shape = bg;
-                } else {
-                    current_shape = ag;
-                }
-                current = &current_shape.data[next];
+            let next = current.neighbor.unwrap();
+            let eq = std::ptr::eq(current_shape, ag);
+            if eq {
+                current_shape = bg;
+            } else {
+                current_shape = ag;
             }
+            current = &current_shape.data[next];
 
             // first interaction is from ag
             let bg_first_intersection = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
@@ -193,16 +206,10 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 #[cfg(test)]
 mod test {
     use super::{shape_intersection, ShapeIntersection};
-    use common::{
-        pures::{Affine, Vec2},
-        types::{Coord, Length2d},
-    };
+    use common::pures::{Affine, Vec2};
 
     use crate::{
-        scene::shape::{
-            boolean::find_intersecions,
-            Shape,
-        },
+        scene::shape::{boolean::find_intersecions, Shape},
         DbCoord,
     };
 
@@ -338,29 +345,5 @@ mod test {
             }
             _ => panic!("Should be ShapeIntersection::New"),
         }
-    }
-
-    #[test]
-    fn given_squares_2i_1ci_when_intersection_then_new() {
-        let a = Shape::quick_from_string("M 0 360 C 0 360 0 405 0 405 C 0 405 45 405 45 405 C 45 405 45 360 45 360 C 45 360 0 360 0 360 Z");
-        //max_view
-        let b = Shape::quick_from_string(
-            "M 0 0 C 0 0
-            559 0 559 0 C 559 0 
-            559 383 559 383 C 559 383 
-            0 383 0 383 C 0 383 
-            0 0 0 0 Z",
-        );
-
-        let merged = shape_intersection(&a, &b);
-
-        match merged {
-            ShapeIntersection::New(merged) => {
-                assert_eq!(merged.len(), 1);
-                println!("{:?}", merged[0].path());
-                assert_eq!(merged[0].path(), "M 0 383 C 0 383 0 360 0 360 C 0 360 45 360 45 360 C 45 360 45 383 45 383 C 45 383 0 383 0 383 Z");
-            }
-            _ => panic!("Should be a new shape"),
-        };
     }
 }

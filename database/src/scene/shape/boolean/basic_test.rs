@@ -460,6 +460,86 @@ mod squares_with_a_common_side {
     }
 }
 
+mod squares_with_a_common_side_flip {
+    use common::pures::Affine;
+
+    use super::{print_svg, verify_difference, verify_intersection, verify_union};
+    use crate::{
+        scene::shape::boolean::{
+            difference::shape_difference, intersection::shape_intersection, union::shape_union,
+            ShapeDifference, ShapeIntersection, ShapeUnion,
+        },
+        DbCoord, Shape,
+    };
+
+    fn create() -> (Shape, Shape) {
+        let a = Shape::new_from_lines(
+            vec![
+                DbCoord::new(-0.6, -0.6),
+                DbCoord::new(0.6, -0.6),
+                DbCoord::new(0.6, 0.6),
+                DbCoord::new(-0.6, 0.6),
+            ],
+            Affine::identity(),
+        );
+        let b = Shape::new_from_lines(
+            vec![
+                DbCoord::new(0.3, -0.6),
+                DbCoord::new(0.3, -0.3),
+                DbCoord::new(0.8, -0.3),
+                DbCoord::new(0.8, -0.6),
+            ],
+            Affine::identity(),
+        );
+        print_svg(&a, &b);
+        (a, b)
+    }
+
+    #[test]
+    fn union() {
+        let (a, b) = create();
+
+        let res = shape_union(&a, &b);
+        match &res {
+            ShapeUnion::New(_) => {}
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_union(res, a, b);
+    }
+
+    #[test]
+    fn intersection() {
+        let (a, b) = create();
+
+        let res = shape_intersection(&a, &b);
+
+        match &res {
+            ShapeIntersection::New(merged) => {
+                assert_eq!(merged.len(), 1);
+            }
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_intersection(res, a, b);
+    }
+
+    #[test]
+    fn difference() {
+        let (a, b) = create();
+
+        let res = shape_difference(&a, &b);
+        match &res {
+            ShapeDifference::New(merged) => {
+                assert_eq!(merged.len(), 1);
+            }
+            _ => panic!("Unexpected result"),
+        }
+
+        verify_difference(res, a, b);
+    }
+}
+
 mod squares_sliding {
     use common::pures::Affine;
 
