@@ -1,3 +1,5 @@
+use super::CoordOfIntersection;
+use super::Direction;
 use super::GreinerShape;
 use super::IntersectionType;
 use crate::math::curve::cubic_bezier;
@@ -23,6 +25,10 @@ fn mark_shape_entries(
     other: &Shape,
 ) -> Result<(), anyhow::Error> {
     let mut run = || -> Result<(), anyhow::Error> {
+        set_common_in_out(shape, other_greiner)?;
+
+        handle_non_intersection(shape, other_greiner)?;
+
         let mut status_entry = true;
         let start_index = find_p_not_intersection(shape)?;
         let coord = &shape
@@ -30,14 +36,11 @@ fn mark_shape_entries(
             .get(start_index)
             .context("Index out of bounds")?
             .coord;
-        let con = other.contains(coord);
-        if con {
+        if other.contains(coord) {
             status_entry = false;
         }
         #[cfg(test)]
-        println!("Coord {:?} is inside: {}", coord, con);
-
-        set_common_in_out(shape, other_greiner)?;
+        println!("Coord {:?} is inside: {}", coord, status_entry);
 
         run_mark_entry(shape, start_index, status_entry)?;
 
@@ -50,14 +53,80 @@ fn mark_shape_entries(
     run().context("Could not define in out of the shape")
 }
 
+struct ExtractedCurves {
+    pub index_c0: usize,
+    pub coords_c0: (Coord, Coord, Coord, Coord),
+    pub coords_neighbor_c0: (Coord, Coord, Coord, Coord),
+    pub index_c1: usize,
+    pub coords_c1: (Coord, Coord, Coord, Coord),
+    pub coords_neighbor_c1: (Coord, Coord, Coord, Coord),
+}
+
+fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Result<(), Error> {
+    let mut extracteds = Vec::<ExtractedCurves>::new();
+    let mut intersection: Vec<(usize, &CoordOfIntersection)> = shape
+        .data
+        .iter()
+        .enumerate()
+        .take(shape.intersections_len)
+        .collect();
+    intersection.sort_by(|a, b| a.1.next.unwrap().cmp(&b.1.next.unwrap()));
+
+    for (i, _) in intersection {
+        match shape.data[i].intersect {
+            IntersectionType::Intersection => {
+                let coords_c0 = shape.next_curve(i, Direction::Backward)?;
+                let coords_c1 = shape.next_curve(i, Direction::Forward)?;
+
+                let other_index = shape.data[i].neighbor.unwrap();
+                assert_eq!(other_index, i);
+
+                let coords_neighbor_c0 = other.next_curve(i, Direction::Backward)?;
+                let coords_neighbor_c1 = other.next_curve(i, Direction::Forward)?;
+                extracteds.push(ExtractedCurves {
+                    index_c0: i,
+                    coords_c0,
+                    coords_neighbor_c0,
+                    index_c1: i,
+                    coords_c1,
+                    coords_neighbor_c1,
+                });
+            }
+            IntersectionType::IntersectionCommon => {
+                let coords_c0 = shape.next_curve(i, Direction::Backward)?;
+                let coords_c1 = shape.next_curve(i, Direction::Forward)?;
+
+                //Maybe not valid ??
+                let other_index = (i + 1) % shape.intersections_len;
+                let coords_neighbor_c0 = other.next_curve(other_index, Direction::Backward)?;
+                let coords_neighbor_c1 = other.next_curve(other_index, Direction::Forward)?;
+
+                extracteds.push(ExtractedCurves {
+                    index_c0: i,
+                    coords_c0,
+                    coords_neighbor_c0,
+                    index_c1: other_index,
+                    coords_c1,
+                    coords_neighbor_c1,
+                });
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
 fn set_common_in_out(
     shape: &mut GreinerShape,
     other_greiner: &GreinerShape,
 ) -> Result<(), anyhow::Error> {
     for i in 0..shape.intersections_len {
         if shape.data[i].intersect == IntersectionType::UnspecifiedCommonIntersection {
-            let is_overlapping_forward = is_overlapping(shape, i, other_greiner, true);
-            let is_overlapping_backward = is_overlapping(shape, i, other_greiner, false);
+            let is_overlapping_forward =
+                is_overlapping(shape, i, other_greiner, Direction::Forward)?;
+            let is_overlapping_backward =
+                is_overlapping(shape, i, other_greiner, Direction::Backward)?;
             if is_overlapping_forward && is_overlapping_backward {
                 shape.data[i].intersect = IntersectionType::Common;
             } else if is_overlapping_forward {
@@ -81,7 +150,7 @@ fn find_p_not_intersection(shape: &mut GreinerShape) -> Result<usize, anyhow::Er
         .get(current_index)
         .context("Index out of bounds")?;
     while current_coord.intersect != IntersectionType::None {
-        (current_index, current_coord) = shape.move_by(current_index, 3, true)?;
+        (current_index, current_coord) = shape.move_by(current_index, 3, Direction::Forward)?;
         count += 3;
         if count > shape.data.len() {
             return Err(anyhow::anyhow!("No point are not an intersection"));
@@ -97,7 +166,7 @@ fn run_mark_entry(
 ) -> Result<(), Error> {
     let mut current_index = start_index;
     for _ in (0..(shape.data.len() + 2)).step_by(3) {
-        let current = shape.move_by_mut(current_index, 3, true)?;
+        let current = shape.move_by_mut(current_index, 3, Direction::Forward)?;
         current_index = current.0;
         let current = current.1;
 
@@ -115,17 +184,16 @@ fn is_overlapping(
     shape: &mut GreinerShape,
     next_index: usize,
     other: &GreinerShape,
-    direction: bool,
-) -> bool {
-    let (p0, cp0, cp1, p1) = shape.next_curve(next_index, direction).unwrap();
+    direction: Direction,
+) -> Result<bool, Error> {
+    let (p0, cp0, cp1, p1) = shape.next_curve(next_index, direction)?;
 
     let other_index = shape.data[next_index]
         .neighbor
-        .context("Intersection has no neighbor ??")
-        .unwrap();
+        .context("Intersection has no neighbor ??")?;
     let other_curves_to_check: [(Coord, Coord, Coord, Coord); 2] = {
-        let a = other.next_curve(other_index, true).unwrap();
-        let b = other.next_curve(other_index, false).unwrap();
+        let a = other.next_curve(other_index, Direction::Forward)?;
+        let b = other.next_curve(other_index, Direction::Backward)?;
         [a, b]
     };
 
@@ -140,8 +208,8 @@ fn is_overlapping(
         );
 
         if coord == other_coord {
-            return true;
+            return Ok(true);
         }
     }
-    false
+    Ok(false)
 }

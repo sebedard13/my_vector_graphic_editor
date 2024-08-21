@@ -42,15 +42,20 @@ impl Shape {
 
 /// When calculating the union of two shapes, we need to find all the intersection points between the two shapes.
 /// GreinerShape is a representation of a shape where all intersection points are added as separate coordinates and marked as such.
-/// It contains a doubly linked list of CoordOfIntersection.
+/// It contains a double linked list of CoordOfIntersection.
 struct GreinerShape {
     pub data: Vec<CoordOfIntersection>,
     pub start: usize,
     pub intersections_len: usize,
 }
 
+enum Direction {
+    Forward,
+    Backward,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum IntersectionType {
+enum IntersectionType {
     Intersection,
     UnspecifiedCommonIntersection,
     CommonIntersection,
@@ -128,15 +133,18 @@ impl GreinerShape {
         &self,
         start: usize,
         mut count: usize,
-        direction: bool,
+        direction: Direction,
     ) -> Result<(usize, &CoordOfIntersection), Error> {
         let mut current = start;
         while count > 0 {
             let value = self.data.get(current).context("Index out of bound")?;
-            if direction {
-                current = value.next.context("Invalid No next")?;
-            } else {
-                current = value.prev.context("Invalid No prev")?;
+            match direction {
+                Direction::Forward => {
+                    current = value.next.context("Invalid No next")?;
+                }
+                Direction::Backward => {
+                    current = value.prev.context("Invalid No prev")?;
+                }
             }
             count -= 1;
         }
@@ -147,15 +155,18 @@ impl GreinerShape {
         &mut self,
         start: usize,
         mut count: usize,
-        direction: bool,
+        direction: Direction,
     ) -> Result<(usize, &mut CoordOfIntersection), Error> {
         let mut current = start;
         while count > 0 {
             let value = self.data.get(current).context("Index out of bound")?;
-            if direction {
-                current = value.next.context("Invalid No next")?;
-            } else {
-                current = value.prev.context("Invalid No prev")?;
+            match direction {
+                Direction::Forward => {
+                    current = value.next.context("Invalid No next")?;
+                }
+                Direction::Backward => {
+                    current = value.prev.context("Invalid No prev")?;
+                }
             }
             count -= 1;
         }
@@ -165,10 +176,10 @@ impl GreinerShape {
     pub fn next_curve(
         &self,
         mut current_index: usize,
-        direction: bool,
+        direction: Direction,
     ) -> Result<(Coord, Coord, Coord, Coord), anyhow::Error> {
         match direction {
-            true => {
+            Direction::Forward => {
                 let p0 = self.data.get(current_index).context("No next")?;
                 current_index = p0.next.context("No next")?;
                 let cp0 = self.data.get(current_index).context("No next")?;
@@ -178,7 +189,7 @@ impl GreinerShape {
                 let p1 = self.data.get(current_index).context("No next")?;
                 Ok((p0.coord, cp0.coord, cp1.coord, p1.coord))
             }
-            false => {
+            Direction::Backward => {
                 let p0 = self.data.get(current_index).context("No next")?;
                 current_index = p0.prev.context("No next")?;
                 let cp0 = self.data.get(current_index).context("No next")?;

@@ -103,7 +103,7 @@ fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Co
 
 /// Return the normalized tangent vector at t of curve defined by p0, cp0, cp1, p1
 /// Panic if no tangent vector found by having the same point for p0, cp0, cp1 and p1
-fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec2 {
+pub fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec2 {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
         return p0.c - &Vec2 { x: 0.1, y: 0.1 };
     }

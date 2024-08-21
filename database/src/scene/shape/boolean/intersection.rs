@@ -1,7 +1,7 @@
 use std::ptr;
 
 use super::{
-    create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
+    create_shape, find_intersecions, mark_entry_exit_points, GreinerShape,
     IntersectionType,
 };
 use crate::scene::shape::Shape;
@@ -38,48 +38,34 @@ pub fn shape_intersection(a: &Shape, b: &Shape) -> ShapeIntersection {
 
 fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Error> {
     let (intersections_a, intersections_b) = find_intersecions(a, b);
-    if empty_intersection(&intersections_a) && empty_intersection(&intersections_b) {
-        //may have common intersection
-
-        let mut common_curve_check = vec![false; a.curves_len()];
-        for i in 0..intersections_a.len() {
-            if intersections_a[i].intersect == IntersectionType::CommonIntersection {
-                common_curve_check[intersections_a[i].curve_index] = true;
-            }
+    if intersections_a.is_empty() && intersections_b.is_empty() {
+        if b.contains(&a.path[0].coord) {
+            return Ok(ShapeIntersection::A);
+        } else if a.contains(&b.path[0].coord) {
+            return Ok(ShapeIntersection::B);
+        } else {
+            return Ok(ShapeIntersection::None);
         }
-
-        if let Some(index_curve_not_common) = common_curve_check.iter().position(|&is_visited| !is_visited) {
-            if b.contains(&a.curve_select(index_curve_not_common).unwrap().p0.coord) {
-                return Ok(ShapeIntersection::A);
-            } else if a.contains(&b.path[0].coord) {
-                return Ok(ShapeIntersection::B);
-            } else {
-                return Ok(ShapeIntersection::None);
-            }
-        }
-
-        return Ok(ShapeIntersection::A);
     }
 
     let mut ag = create_shape(a, intersections_a);
     let mut bg = create_shape(b, intersections_b);
     mark_entry_exit_points(&mut ag, a, &mut bg, b)?;
 
+    if let Some(result) = handle_touching_shape()? {
+        return Ok(result);
+    }
+
+
     let merged_shapes = do_intersection(&ag, &bg, a, b);
     return Ok(ShapeIntersection::New(merged_shapes));
 }
 
-fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
-    if intersections.len() == 0 {
-        return true;
-    }
+fn handle_touching_shape() -> Result<Option<ShapeIntersection>, Error>{
+    //TODO: Implement
 
-    for i in 0..intersections.len() {
-        if intersections[i].intersect.is_any_intersection() {
-            return false;
-        }
-    }
-    true
+
+    Ok(None)
 }
 
 fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
