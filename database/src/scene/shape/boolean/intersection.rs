@@ -1,3 +1,5 @@
+use std::ptr;
+
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, CoordOfIntersection, GreinerShape,
     IntersectionType,
@@ -119,7 +121,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
         let mut current = first_intersection;
         let mut current_shape = ag;
         loop {
-            if current.entry {
+            if ptr::eq(current_shape, bg) && current.entry {
                 loop {
                     let next = current.next.unwrap();
                     current = &current_shape.data[next];
@@ -140,8 +142,68 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
                     }
 
                     if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && current.entry)
                         || (current.intersect == IntersectionType::CommonIntersection
                             && !current.entry)
+                    {
+                        break;
+                    }
+                }
+            } else if ptr::eq(current_shape, bg) {
+                loop {
+                    let next = current.prev.unwrap();
+                    current = &current_shape.data[next];
+                    let cp0 = current.coord_ptr();
+
+                    let next = current.prev.unwrap();
+                    current = &current_shape.data[next];
+                    let cp1 = current.coord_ptr();
+
+                    let next = current.prev.unwrap();
+                    current = &current_shape.data[next];
+                    let p1 = current.coord_ptr();
+
+                    merged.path.append(&mut vec![cp0, cp1, p1]);
+
+                    if next < current_shape.intersections_len {
+                        intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && current.entry)
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && !current.entry)
+                    {
+                        break;
+                    }
+                }
+            } else if current.entry {
+                loop {
+                    let next = current.next.unwrap();
+                    current = &current_shape.data[next];
+                    let cp0 = current.coord_ptr();
+
+                    let next = current.next.unwrap();
+                    current = &current_shape.data[next];
+                    let cp1 = current.coord_ptr();
+
+                    let next = current.next.unwrap();
+                    current = &current_shape.data[next];
+                    let p1 = current.coord_ptr();
+
+                    merged.path.append(&mut vec![cp0, cp1, p1]);
+
+                    if next < current_shape.intersections_len {
+                        intersections_done[next] = true;
+                    }
+
+                    if current.intersect == IntersectionType::Intersection
+                        || (current.intersect == IntersectionType::IntersectionCommon
+                            && !current.entry)
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && current.entry)
                     {
                         break;
                     }
@@ -167,8 +229,10 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
                     }
 
                     if current.intersect == IntersectionType::Intersection
-                        || (current.intersect == IntersectionType::CommonIntersection
+                        || (current.intersect == IntersectionType::IntersectionCommon
                             && !current.entry)
+                        || (current.intersect == IntersectionType::CommonIntersection
+                            && current.entry)
                     {
                         break;
                     }

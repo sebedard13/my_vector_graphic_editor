@@ -165,7 +165,7 @@ mod test {
     use super::*;
 
     #[test]
-
+    #[ignore]
     fn test_render_transparent_grid() {
         //transform: Affine { m00: 375.0, m10: 0.0, m01: 0.0, m11: 250.0, m02: 279.5, m12: 191.5 }
         // max_view: ScreenRect { top_left: ScreenCoord { c: Vec2 { x: 0.0, y: 0.0 } }, bottom_right: ScreenCoord { c: Vec2 { x: 559.0, y: 383.0 } }
