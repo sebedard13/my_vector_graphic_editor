@@ -53,7 +53,24 @@ fn try_shape_union(a: &Shape, b: &Shape) -> Result<ShapeUnion, anyhow::Error> {
 }
 
 fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {
-    let first_intersection = &ag.data[0];
+    let mut intersections_done = vec![false; ag.intersections_len];
+    
+
+    for i in 0..ag.intersections_len {
+        let current = &ag.data[i];
+        if !(current.intersect == IntersectionType::Intersection
+            || current.intersect == IntersectionType::CommonIntersection)
+        {
+            intersections_done[i] = true;
+        }
+    }
+
+    let first_intersection = {
+        match intersections_done.iter().position(|&is_done| !is_done) {
+            Some(i) => &ag.data[i],
+            None => panic!("No first intersection found"),
+        }
+    };
 
     let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
@@ -123,11 +140,8 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
         current = &current_shape.data[next];
 
         // first interaction is from ag
-        if std::ptr::eq(current, first_intersection)
-            || std::ptr::eq(
-                current,
-                bg.data.get(first_intersection.neighbor.unwrap()).unwrap(),
-            )
+        let bg_first_intersection = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
+        if std::ptr::eq(current, first_intersection) || std::ptr::eq(current, bg_first_intersection)
         {
             break;
         }

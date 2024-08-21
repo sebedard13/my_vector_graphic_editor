@@ -48,7 +48,7 @@ fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Err
             }
         }
 
-        if let Some(index_curve_not_common) = find_index_false(&common_curve_check) {
+        if let Some(index_curve_not_common) = common_curve_check.iter().position(|&is_visited| !is_visited) {
             if b.contains(&a.curve_select(index_curve_not_common).unwrap().p0.coord) {
                 return Ok(ShapeIntersection::A);
             } else if a.contains(&b.path[0].coord) {
@@ -82,15 +82,6 @@ fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
     true
 }
 
-fn find_index_false(v: &Vec<bool>) -> Option<usize> {
-    for (i, b) in v.iter().enumerate() {
-        if !b {
-            return Some(i);
-        }
-    }
-    None
-}
-
 fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
     let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
@@ -108,7 +99,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
     let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
 
-    while let Some(i) = find_index_false(&intersections_done) {
+    while let Some(i) = intersections_done.iter().position(|&is_visited| !is_visited) {
         let first_intersection = &ag.data[i];
         intersections_done[i] = true;
 

@@ -73,15 +73,6 @@ fn empty_intersection(intersections: &Vec<CoordOfIntersection>) -> bool {
     true
 }
 
-fn find_index_false(v: &Vec<bool>) -> Option<usize> {
-    for (i, b) in v.iter().enumerate() {
-        if !b {
-            return Some(i);
-        }
-    }
-    None
-}
-
 fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
     let mut intersections_done = vec![false; ag.intersections_len];
 
@@ -99,7 +90,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
 
     let mut shapes = Vec::new();
 
-    while let Some(i) = find_index_false(&intersections_done) {
+    while let Some(i) = intersections_done.iter().position(|&is_visited| !is_visited) {
         let first_intersection = &ag.data[i];
         intersections_done[i] = true;
 
