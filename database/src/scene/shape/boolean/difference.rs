@@ -86,7 +86,9 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
     let mut intersections_done = vec![false; ag.intersections_len];
 
     for i in 0..ag.intersections_len {
-        if !ag.data[i].intersect.is_intersection() {
+        if !(ag.data[i].intersect == IntersectionType::Intersection
+            || (ag.data[i].intersect == IntersectionType::CommonIntersection && !ag.data[i].entry))
+        {
             intersections_done[i] = true;
         }
     }
@@ -227,7 +229,7 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
                     }
                 }
             }
-            // if current.intersect.is_intersection() {
+
             let next = current.neighbor.unwrap();
             let eq = ptr::eq(current_shape, ag);
             if eq {
@@ -236,7 +238,6 @@ fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) ->
                 current_shape = ag;
             }
             current = &current_shape.data[next];
-            //   }
             // first interaction is from ag
             let first_neigboor = bg.data.get(first_intersection.neighbor.unwrap()).unwrap();
             if ptr::eq(current, first_intersection) || ptr::eq(current, first_neigboor) {
@@ -263,7 +264,10 @@ mod test {
     };
     use log::LevelFilter;
 
-    use crate::{scene::shape::Shape, DbCoord};
+    use crate::{
+        scene::shape::{boolean::basic_test::print_svg_scale, Shape},
+        DbCoord,
+    };
 
     #[test]
     fn given_two_circle_when_difference_then_ereasea() {
@@ -343,6 +347,7 @@ mod test {
         let a = Shape::new_from_path(coord_a, Affine::identity());
         let b = Shape::new_from_path(coord_b, Affine::identity());
 
+        print_svg_scale(&a, &b, 1.0);
         let merged = shape_difference(&a, &b);
 
         assert!(
@@ -650,7 +655,6 @@ mod test {
          C -0.6378605 -0.76599944 -0.6410273 -0.76582164 -0.64416337 -0.76548296 
          C -0.6652278 -0.8342496 -0.711435 -0.88181823 -0.7653334 -0.88201094 
          C -0.79469514 -0.881906 -0.8217743 -0.8677416 -0.84374976 -0.84374976 Z");
-
 
         let merged = shape_difference(&a, &b);
 

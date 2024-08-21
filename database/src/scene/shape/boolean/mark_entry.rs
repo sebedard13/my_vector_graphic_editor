@@ -101,7 +101,6 @@ fn run_mark_entry(
         current_index = current.0;
         let current = current.1;
 
-        //// Broooo not sure about that
         if current.intersect.is_intersection() {
             current.entry = status_entry;
             status_entry = !status_entry;
