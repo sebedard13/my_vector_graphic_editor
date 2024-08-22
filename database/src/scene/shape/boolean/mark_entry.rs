@@ -3,6 +3,7 @@ use super::Direction;
 use super::GreinerShape;
 use super::IntersectionType;
 use crate::math::curve::cubic_bezier;
+use crate::math::curve3::curve_realy_intersect;
 use crate::scene::shape::Shape;
 use anyhow::Context;
 use anyhow::Error;
@@ -14,6 +15,9 @@ pub(super) fn mark_entry_exit_points(
     bg: &mut GreinerShape,
     b: &Shape,
 ) -> Result<(), anyhow::Error> {
+    set_common_in_out(ag, bg)?;
+    set_common_in_out(bg, ag)?;
+
     mark_shape_entries(ag, bg, b)?;
     mark_shape_entries(bg, ag, a)?;
     Ok(())
@@ -25,8 +29,6 @@ fn mark_shape_entries(
     other: &Shape,
 ) -> Result<(), anyhow::Error> {
     let mut run = || -> Result<(), anyhow::Error> {
-        set_common_in_out(shape, other_greiner)?;
-
         handle_non_intersection(shape, other_greiner)?;
 
         let mut status_entry = true;
@@ -72,37 +74,61 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
         .collect();
     intersection.sort_by(|a, b| a.1.next.unwrap().cmp(&b.1.next.unwrap()));
 
-    for (i, _) in intersection {
-        match shape.data[i].intersect {
+    for (i, (index_in_shape, _)) in (&intersection).into_iter().enumerate() {
+        let index_in_shape = *index_in_shape;
+        match shape.data[index_in_shape].intersect {
             IntersectionType::Intersection => {
-                let coords_c0 = shape.next_curve(i, Direction::Backward)?;
-                let coords_c1 = shape.next_curve(i, Direction::Forward)?;
+                let coords_c0 = shape.next_curve(index_in_shape, Direction::Backward)?;
+                let coords_c1 = shape.next_curve(index_in_shape, Direction::Forward)?;
 
-                let other_index = shape.data[i].neighbor.unwrap();
-                assert_eq!(other_index, i);
+                let other_index = shape.data[index_in_shape].neighbor.unwrap();
+                assert_eq!(other_index, index_in_shape);
 
-                let coords_neighbor_c0 = other.next_curve(i, Direction::Backward)?;
-                let coords_neighbor_c1 = other.next_curve(i, Direction::Forward)?;
+                let coords_neighbor_c0 = other.next_curve(index_in_shape, Direction::Backward)?;
+                let coords_neighbor_c1 = other.next_curve(index_in_shape, Direction::Forward)?;
                 extracteds.push(ExtractedCurves {
-                    index_c0: i,
+                    index_c0: index_in_shape,
                     coords_c0,
                     coords_neighbor_c0,
-                    index_c1: i,
+                    index_c1: index_in_shape,
                     coords_c1,
                     coords_neighbor_c1,
                 });
             }
             IntersectionType::IntersectionCommon => {
-                let coords_c0 = shape.next_curve(i, Direction::Backward)?;
-                let coords_c1 = shape.next_curve(i, Direction::Forward)?;
-
                 //Maybe not valid ??
-                let other_index = (i + 1) % shape.intersections_len;
-                let coords_neighbor_c0 = other.next_curve(other_index, Direction::Backward)?;
-                let coords_neighbor_c1 = other.next_curve(other_index, Direction::Forward)?;
+                let mut other_index_in_intersection = (i + 1) % intersection.len();
+                loop {
+                    let other_index = intersection[other_index_in_intersection].0;
+                    if shape.data[other_index].intersect == IntersectionType::CommonIntersection {
+                        break;
+                    }
+                    other_index_in_intersection =
+                        (other_index_in_intersection + 1) % intersection.len();
+                }
+                let other_index = intersection[other_index_in_intersection].0;
+
+                let coords_c0 = shape.next_curve(index_in_shape, Direction::Backward)?;
+                let coords_c1 = shape.next_curve(other_index, Direction::Forward)?;
+
+                let other_coordf = &other.data[index_in_shape];
+
+                let (coords_neighbor_c0, coords_neighbor_c1) = {
+                    if other_coordf.intersect == IntersectionType::IntersectionCommon {
+                        (
+                            other.next_curve(index_in_shape, Direction::Backward)?,
+                            other.next_curve(other_index, Direction::Forward)?,
+                        )
+                    } else {
+                        (
+                            other.next_curve(other_index, Direction::Backward)?,
+                            other.next_curve(index_in_shape, Direction::Forward)?,
+                        )
+                    }
+                };
 
                 extracteds.push(ExtractedCurves {
-                    index_c0: i,
+                    index_c0: index_in_shape,
                     coords_c0,
                     coords_neighbor_c0,
                     index_c1: other_index,
@@ -114,6 +140,29 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
         }
     }
 
+    for extracted in extracteds.iter() {
+        if !curve_realy_intersect(
+            &extracted.coords_c0.3,
+            &extracted.coords_c0.2,
+            &extracted.coords_c0.1,
+            &extracted.coords_c0.0,
+            &extracted.coords_c1.0,
+            &extracted.coords_c1.1,
+            &extracted.coords_c1.2,
+            &extracted.coords_c1.3,
+            &extracted.coords_neighbor_c0.3,
+            &extracted.coords_neighbor_c0.2,
+            &extracted.coords_neighbor_c0.1,
+            &extracted.coords_neighbor_c0.0,
+            &extracted.coords_neighbor_c1.0,
+            &extracted.coords_neighbor_c1.1,
+            &extracted.coords_neighbor_c1.2,
+            &extracted.coords_neighbor_c1.3,
+        ) {
+            shape.data[extracted.index_c0].intersect = IntersectionType::Common;
+            shape.data[extracted.index_c1].intersect = IntersectionType::Common;
+        }
+    }
     Ok(())
 }
 
