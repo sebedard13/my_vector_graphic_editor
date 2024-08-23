@@ -74,16 +74,6 @@ impl IntersectionType {
         }
     }
 
-    pub fn is_any_intersection(&self) -> bool {
-        match self {
-            IntersectionType::Intersection => true,
-            IntersectionType::CommonIntersection => true,
-            IntersectionType::UnspecifiedCommonIntersection => true,
-            IntersectionType::IntersectionCommon => true,
-            _ => false,
-        }
-    }
-
     pub fn is_common(&self) -> bool {
         match self {
             IntersectionType::Common => true,
@@ -200,6 +190,23 @@ impl GreinerShape {
                 Ok((p0.coord, cp0.coord, cp1.coord, p1.coord))
             }
         }
+    }
+
+    pub fn find_first_p_not_intersection(&self) -> Result<usize, anyhow::Error> {
+        let mut current_index = self.start;
+        let mut count = 0;
+        let mut current_coord = self
+            .data
+            .get(current_index)
+            .context("Index out of bounds")?;
+        while current_coord.intersect != IntersectionType::None {
+            (current_index, current_coord) = self.move_by(current_index, 3, Direction::Forward)?;
+            count += 3;
+            if count > self.data.len() {
+                return Err(anyhow::anyhow!("No point are not an intersection"));
+            }
+        }
+        Ok(current_index)
     }
 
     #[allow(dead_code)] // For testing
@@ -658,7 +665,7 @@ mod test {
             if ag.data[i].intersect.is_common() {
                 common_count += 1;
             }
-            if ag.data[i].intersect.is_any_intersection() {
+            if ag.data[i].intersect != super::IntersectionType::None && ag.data[i].intersect != super::IntersectionType::Common {
                 inteersection_count += 1;
                 assert!(
                     ag.data[i].t == 0.654658318

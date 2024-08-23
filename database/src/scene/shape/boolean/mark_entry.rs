@@ -32,7 +32,7 @@ fn mark_shape_entries(
         handle_non_intersection(shape, other_greiner)?;
 
         let mut status_entry = true;
-        let start_index = find_p_not_intersection(shape)?;
+        let start_index = shape.find_first_p_not_intersection()?;
         let coord = &shape
             .data
             .get(start_index)
@@ -162,6 +162,9 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
             shape.data[extracted.index_c0].intersect = IntersectionType::Common;
             shape.data[extracted.index_c1].intersect = IntersectionType::Common;
         }
+        else{
+            println!("{:?}, {:?}, {:?}, {:?}", extracted.coords_c0, extracted.coords_c1, extracted.coords_neighbor_c0, extracted.coords_neighbor_c1);
+        }
     }
     Ok(())
 }
@@ -189,23 +192,6 @@ fn set_common_in_out(
     }
 
     Ok(())
-}
-
-fn find_p_not_intersection(shape: &mut GreinerShape) -> Result<usize, anyhow::Error> {
-    let mut current_index = shape.start;
-    let mut count = 0;
-    let mut current_coord = shape
-        .data
-        .get(current_index)
-        .context("Index out of bounds")?;
-    while current_coord.intersect != IntersectionType::None {
-        (current_index, current_coord) = shape.move_by(current_index, 3, Direction::Forward)?;
-        count += 3;
-        if count > shape.data.len() {
-            return Err(anyhow::anyhow!("No point are not an intersection"));
-        }
-    }
-    Ok(current_index)
 }
 
 fn run_mark_entry(

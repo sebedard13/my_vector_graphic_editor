@@ -1,8 +1,7 @@
 use std::ptr;
 
 use super::{
-    create_shape, find_intersecions, mark_entry_exit_points, GreinerShape,
-    IntersectionType,
+    create_shape, find_intersecions, mark_entry_exit_points, GreinerShape, IntersectionType,
 };
 use crate::scene::shape::Shape;
 use anyhow::Error;
@@ -52,18 +51,49 @@ fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Err
     let mut bg = create_shape(b, intersections_b);
     mark_entry_exit_points(&mut ag, a, &mut bg, b)?;
 
-    if let Some(result) = handle_touching_shape()? {
+    if let Some(result) = handle_touching_shape(&ag, &bg)? {
         return Ok(result);
     }
-
 
     let merged_shapes = do_intersection(&ag, &bg, a, b);
     return Ok(ShapeIntersection::New(merged_shapes));
 }
 
-fn handle_touching_shape() -> Result<Option<ShapeIntersection>, Error>{
-    //TODO: Implement
+fn handle_touching_shape(
+    ag: &GreinerShape,
+    bg: &GreinerShape,
+) -> Result<Option<ShapeIntersection>, Error> {
+    let mut count_intersections = 0;
+    for i in 0..ag.intersections_len {
+        let current = &ag.data[i];
+        if current.intersect.is_intersection() {
+            count_intersections += 1;
+        }
+    }
 
+    if count_intersections % 2 == 1 {
+        return Err(anyhow::anyhow!(
+            "Odd number of intersections that is illogical"
+        ));
+    }
+
+    if count_intersections == 0 && ag.intersections_len * 3 == ag.len() {
+        return Err(anyhow::anyhow!(
+            "Only common intersections and free points. Is it the same shape?"
+        ));
+    }
+
+    if count_intersections == 0 {
+        if ag.data[0].entry && bg.data[0].entry {
+            return Ok(Some(ShapeIntersection::None));
+        } else if ag.data[0].entry && !bg.data[0].entry {
+            return Ok(Some(ShapeIntersection::B));
+        } else if !ag.data[0].entry && bg.data[0].entry {
+            return Ok(Some(ShapeIntersection::A));
+        } else {
+            unreachable!("If both are not entry, then they are always on the same side");
+        }
+    }
 
     Ok(None)
 }
@@ -85,7 +115,10 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
     let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
 
-    while let Some(i) = intersections_done.iter().position(|&is_visited| !is_visited) {
+    while let Some(i) = intersections_done
+        .iter()
+        .position(|&is_visited| !is_visited)
+    {
         let first_intersection = &ag.data[i];
         intersections_done[i] = true;
 
@@ -250,7 +283,10 @@ mod test {
     use common::pures::{Affine, Vec2};
 
     use crate::{
-        scene::shape::{boolean::find_intersecions, Shape},
+        scene::shape::{
+            boolean::{basic_test::print_svg_scale, find_intersecions},
+            Shape,
+        },
         DbCoord,
     };
 
@@ -353,6 +389,8 @@ mod test {
             135 0 135 0 C 135 0
             90 0 90 0 Z",
         );
+
+        print_svg_scale(&shape, &max_view, 1.0);
 
         match shape.intersection(&max_view) {
             ShapeIntersection::A => (),

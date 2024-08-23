@@ -7,7 +7,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::{forward_ref_binop, forward_ref_unop};
+use crate::{forward_ref_binop, forward_ref_unop, PRECISION};
 
 #[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 #[cfg_attr(feature = "ts", derive(Tsify))]
@@ -42,6 +42,11 @@ impl Vec2 {
         self.y /= norm;
     }
 
+    pub fn abs(&mut self) {
+        self.x = self.x.abs();
+        self.y = self.y.abs();
+    }
+
     pub fn distance(&self, other: Vec2) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -68,9 +73,10 @@ impl Vec2 {
         }
     }
 
-    pub fn prec_eq(&self, other: &Vec2) -> bool {
-        let precision = f32::EPSILON * 100.0;
-        (self.x - other.x).abs() < precision && (self.y - other.y).abs() < precision
+    pub fn vector_direction_equal(&self, other: &Vec2) -> bool {
+        let dot = self.dot(*other);
+        let res = dot / (self.norm() * other.norm());
+        (res.abs() - 1.0).abs() <= PRECISION
     }
 
     pub fn dot(&self, other: Vec2) -> f32 {

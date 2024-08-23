@@ -1,3 +1,5 @@
+use anyhow::Error;
+
 use super::{
     create_shape, find_intersecions, mark_entry_exit_points, GreinerShape, IntersectionType,
 };
@@ -48,8 +50,51 @@ fn try_shape_union(a: &Shape, b: &Shape) -> Result<ShapeUnion, anyhow::Error> {
 
     mark_entry_exit_points(&mut ag, a, &mut bg, b)?;
 
+    if let Some(result) = handle_touching_shape(&ag, &bg)? {
+        return Ok(result);
+    }
+
     let merge_shape = do_union(&ag, &bg, a, b);
     Ok(ShapeUnion::New(merge_shape))
+}
+
+fn handle_touching_shape(
+    ag: &GreinerShape,
+    bg: &GreinerShape,
+) -> Result<Option<ShapeUnion>, Error> {
+    let mut count_intersections = 0;
+    for i in 0..ag.intersections_len {
+        let current = &ag.data[i];
+        if current.intersect.is_intersection() {
+            count_intersections += 1;
+        }
+    }
+
+    if count_intersections % 2 == 1 {
+        return Err(anyhow::anyhow!(
+            "Odd number of intersections that is illogical"
+        ));
+    }
+
+    if count_intersections == 0 && ag.intersections_len * 3 == ag.len() {
+        return Err(anyhow::anyhow!(
+            "Only common intersections and free points. Is it the same shape?"
+        ));
+    }
+
+    if count_intersections == 0 {
+        if ag.data[0].entry && bg.data[0].entry {
+            unimplemented!("We should compute the shape of the intersection");
+        } else if ag.data[0].entry && !bg.data[0].entry {
+            return Ok(Some(ShapeUnion::A));
+        } else if !ag.data[0].entry && bg.data[0].entry {
+            return Ok(Some(ShapeUnion::B));
+        } else {
+            unreachable!("If both are not entry, then they are always on the same side");
+        }
+    }
+
+    Ok(None)
 }
 
 fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {

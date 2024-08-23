@@ -684,7 +684,7 @@ mod squares_touching_outside {
 
         let res = shape_difference(&a, &b);
         match &res {
-            ShapeDifference::EraseA => {}
+            ShapeDifference::A => {}
             _ => panic!("Unexpected result"),
         }
     }
