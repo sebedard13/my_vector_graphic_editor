@@ -165,6 +165,14 @@ pub fn intersection(
     c2_cp1: &Coord,
     c2_p1: &Coord,
 ) -> IntersectionResult {
+    let rect1 = quick_bounding_box(c1_p0, c1_cp0, c1_cp1, c1_p1);
+    let rect2 = quick_bounding_box(c2_p0, c2_cp0, c2_cp1, c2_p1);
+
+    if !own_intersect(&rect1, &rect2) {
+        return IntersectionResult::None;
+    }
+
+
     match curves_overlap(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1) {
         Overlap::ASmallerAndInsideB => return IntersectionResult::ASmallerAndInsideB,
         Overlap::BSmallerAndInsideA => return IntersectionResult::BSmallerAndInsideA,

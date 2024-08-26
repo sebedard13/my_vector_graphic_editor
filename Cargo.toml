@@ -1,3 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["common", "desktop", "database", "wasm_client"]
+
+[profile.profiling]
+inherits = "release"
+debug = true
