@@ -1,17 +1,20 @@
 use std::{fmt::Display, ops::Mul};
 
 use float_cmp::{ApproxEq, F32Margin};
+
 use serde::{Deserialize, Serialize};
+
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::forward_ref_binop;
 
 use super::Vec2;
 
-#[wasm_bindgen]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
-// Transformation matrix for 2D space
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
+/// Transformation matrix for 2D space
 pub struct Affine {
     /// m00 m01 m02
     /// m10 m11 m12
@@ -235,9 +238,9 @@ mod test {
     #[test]
     fn test_inverse() {
         let mat = Affine::new(1.0, 2.0, 3.0, 4.0, 5.0, 6.0);
-        println!("{}", mat);
+
         let inv = mat.inverse();
-        println!("{}", inv);
+
         assert_eq!(mat * inv, Affine::identity());
     }
 

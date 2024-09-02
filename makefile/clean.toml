@@ -41,8 +41,8 @@ run_task = [
 [tasks.wasm_clean_unix]
 workspace = false
 command = "rm"
-args = ["-rf", "wasm_vgc/pkg"]
+args = ["-rf", "wasm_client/pkg"]
 
 [tasks.wasm_clean_win]
 workspace = false
-script = "if exist \"wasm_vgc/pkg\" rmdir /s /q \"wasm_vgc/pkg\""
+script = "if exist \"wasm_client/pkg\" rmdir /s /q \"wasm_client/pkg\""

@@ -1,14 +1,17 @@
 use float_cmp::{ApproxEq, F32Margin};
+
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::forward_ref_binop;
+use crate::{forward_ref_binop, forward_ref_unop, PRECISION};
 
-#[wasm_bindgen]
-#[derive(Clone, Debug, PartialEq, Copy, Default)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Default, Serialize, Deserialize)]
 pub struct Vec2 {
     pub x: f32,
     pub y: f32,
@@ -37,6 +40,11 @@ impl Vec2 {
         self.y /= norm;
     }
 
+    pub fn abs(&mut self) {
+        self.x = self.x.abs();
+        self.y = self.y.abs();
+    }
+
     pub fn distance(&self, other: Vec2) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -47,6 +55,30 @@ impl Vec2 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         dx * dx + dy * dy
+    }
+
+    pub fn min(a: &Vec2, b: &Vec2) -> Vec2 {
+        Vec2 {
+            x: a.x.min(b.x),
+            y: a.y.min(b.y),
+        }
+    }
+
+    pub fn max(a: &Vec2, b: &Vec2) -> Vec2 {
+        Vec2 {
+            x: a.x.max(b.x),
+            y: a.y.max(b.y),
+        }
+    }
+
+    pub fn vector_direction_equal(&self, other: &Vec2) -> bool {
+        let dot = self.dot(*other);
+        let res = dot / (self.norm() * other.norm());
+        (res.abs() - 1.0).abs() <= PRECISION
+    }
+
+    pub fn dot(&self, other: Vec2) -> f32 {
+        self.x * other.x + self.y * other.y
     }
 }
 
@@ -146,6 +178,19 @@ impl Div<Vec2> for Vec2 {
 }
 
 forward_ref_binop!(impl Div, div for Vec2, Vec2);
+
+impl Neg for Vec2 {
+    type Output = Vec2;
+
+    fn neg(self) -> Vec2 {
+        Vec2 {
+            x: -self.x,
+            y: -self.y,
+        }
+    }
+}
+
+forward_ref_unop!(impl Neg, neg for Vec2);
 
 impl ApproxEq for &Vec2 {
     type Margin = F32Margin;

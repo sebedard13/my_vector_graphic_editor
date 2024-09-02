@@ -9,7 +9,7 @@
                 "@schematics/angular:component": {
                     "style": "scss",
                     "changeDetection": "OnPush",
-                    "standalone": false,
+                    "standalone": true,
                     "skipTests": true
                 },
                 "@schematics/angular:service": {
@@ -26,7 +26,7 @@
                         "outputPath": "dist/view",
                         "index": "src/index.html",
                         "main": "src/main.ts",
-                        "polyfills": ["zone.js"],
+                        "polyfills": [],
                         "tsConfig": "tsconfig.app.json",
                         "inlineStyleLanguage": "scss",
                         "assets": ["src/favicon.ico", "src/assets"],
@@ -57,10 +57,10 @@
                             "sourceMap": true,
                             "namedChunks": true,
                             "fileReplacements": [
-                              {
-                                "replace": "src/environments/environment.ts",
-                                "with": "src/environments/environment.development.ts"
-                              }
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.development.ts"
+                                }
                             ]
                         }
                     },
@@ -85,16 +85,7 @@
                     }
                 },
                 "test": {
-                    "builder": "@angular-devkit/build-angular:karma",
-                    "options": {
-                        "polyfills": ["zone.js", "zone.js/testing"],
-                        "tsConfig": "tsconfig.spec.json",
-                        "inlineStyleLanguage": "scss",
-                        "assets": ["src/favicon.ico", "src/assets"],
-                        "styles": ["src/styles.scss"],
-                        "scripts": [],
-                        "karmaConfig": "karma.conf.js"
-                    }
+                    "builder": "@analogjs/vitest-angular:test"
                 },
                 "lint": {
                     "builder": "@angular-eslint/builder:lint",
@@ -106,6 +97,9 @@
         }
     },
     "cli": {
-        "schematicCollections": ["@angular-eslint/schematics"]
+        "schematicCollections": ["@angular-eslint/schematics"],
+        "cache": {
+            "enabled": false
+        }
     }
 }

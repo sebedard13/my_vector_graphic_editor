@@ -1,16 +1,16 @@
-import { CanvasContent } from "wasm-vgc";
+import { SceneClient } from "wasm-client";
 
 export class Scene {
-    canvasContent: CanvasContent;
+    sceneClient: SceneClient;
     metadata: Metadata;
 
-    constructor(canvasContent: CanvasContent) {
-        this.canvasContent = canvasContent;
+    constructor(sceneClient: SceneClient) {
+        this.sceneClient = sceneClient;
         this.metadata = new Metadata();
     }
 
     free(): void {
-        this.canvasContent.free();
+        this.sceneClient.free();
     }
 }
 

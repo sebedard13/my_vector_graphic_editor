@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { ScenesService } from "./scenes.service";
-import { render_cover } from "wasm-vgc";
+import { ScreenRect } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -13,12 +13,11 @@ export class RenderService {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;
 
-            const rect = scene.canvasContent.get_render_rect();
+            const rect = scene.sceneClient.get_render_rect() as ScreenRect;
             canvas.width = rect.width();
             canvas.height = rect.height();
 
-            render_cover(ctx, scene.canvasContent, rect.width(), rect.height());
-            rect.free();
+            scene.sceneClient.render_cover(ctx, rect.width(), rect.height());
 
             const a = document.createElement("a");
             a.href = canvas.toDataURL("image/png");

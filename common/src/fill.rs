@@ -1,19 +1,32 @@
 use serde::{Deserialize, Serialize};
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[wasm_bindgen]
-#[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
     pub b: u8,
     pub a: u8,
 }
-#[wasm_bindgen]
+
 impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
         Rgba { r, g, b, a }
+    }
+
+    pub fn black() -> Rgba {
+        Rgba::new(0, 0, 0, 255)
+    }
+
+    pub fn white() -> Rgba {
+        Rgba::new(255, 255, 255, 255)
+    }
+
+    pub fn transparent() -> Rgba {
+        Rgba::new(0, 0, 0, 0)
     }
 
     ///
@@ -114,5 +127,32 @@ impl From<[u8; 4]> for Rgba {
             b: value[2],
             a: value[3],
         }
+    }
+}
+
+impl Default for Rgba {
+    fn default() -> Self {
+        Rgba::black()
+    }
+}
+
+use wasm_bindgen::convert::*;
+use wasm_bindgen::describe::*;
+
+impl WasmDescribeVector for Rgba {
+    fn describe_vector() {
+        inform(VECTOR);
+        Rgba::describe();
+    }
+}
+
+impl VectorIntoWasmAbi for Rgba {
+    type Abi = <
+        wasm_bindgen::__rt::std::boxed::Box<[wasm_bindgen::JsValue]>
+        as wasm_bindgen::convert::IntoWasmAbi
+        >::Abi;
+
+    fn vector_into_abi(vector: wasm_bindgen::__rt::std::boxed::Box<[Rgba]>) -> Self::Abi {
+        wasm_bindgen::convert::js_value_vector_into_abi(vector)
     }
 }

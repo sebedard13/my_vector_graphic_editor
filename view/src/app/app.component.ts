@@ -1,13 +1,22 @@
-import { Component, ComponentRef, Type, ViewChild, ViewContainerRef } from "@angular/core";
+import {
+    ChangeDetectionStrategy,
+    Component,
+    ComponentRef,
+    Type,
+    ViewChild,
+    ViewContainerRef,
+} from "@angular/core";
 import { EventsService } from "./scene/events.service";
 import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
 import { map } from "rxjs";
+import { DebugService } from "./scene/debug.service";
 
 @Component({
     selector: "app-root",
     templateUrl: "./app.component.html",
     styleUrls: ["./app.component.scss"],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
     @ViewChild("modalContainer", { read: ViewContainerRef }) modalContainer!: ViewContainerRef;
@@ -26,6 +35,7 @@ export class AppComponent {
         protected eventsService: EventsService,
         protected cameraService: CameraService,
         private modalService: ModalService,
+        private debugService: DebugService,
     ) {
         cameraService.activate();
         this.modalService.getModalObservable().subscribe((data) => {

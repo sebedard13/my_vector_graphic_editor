@@ -1,4 +1,4 @@
-import { Component, Signal, computed } from "@angular/core";
+import { ChangeDetectionStrategy, Component, Signal, computed } from "@angular/core";
 import { MouseInfoService } from "../mouse-info.service";
 import { map } from "rxjs/operators";
 import { Observable } from "rxjs";
@@ -10,6 +10,7 @@ type OptionCoordView = { x: string; y: string } | null;
     selector: "app-mouse-info",
     templateUrl: "./mouse-info.component.html",
     styleUrls: ["./mouse-info.component.scss"],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MouseInfoComponent {
     protected zoom$: Observable<string> = this.cameraService.zoom$.pipe(

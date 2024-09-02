@@ -2,8 +2,8 @@ import { ReplaySubject, Subject, Subscription, filter, map, shareReplay } from "
 import { EventsService } from "../scene/events.service";
 import { ScenesService } from "../scene/scenes.service";
 import { Injectable, inject } from "@angular/core";
-import { ScreenLength2d, ScreenCoord } from "wasm-vgc";
 import { Functionality } from "./functionality";
+import { ScreenCoord } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -30,7 +30,7 @@ export class CameraService extends Functionality {
                     if (scene == null) {
                         return -1;
                     }
-                    return scene.canvasContent.camera_get_zoom();
+                    return scene.sceneClient.camera_get_zoom();
                 }),
                 shareReplay(1),
             )
@@ -38,7 +38,7 @@ export class CameraService extends Functionality {
                 this.zoom.next(zoom);
             });
 
-        this.sceneService.currentSceneChange$.subscribe((_) => {
+        this.sceneService.currentScene$.subscribe((_) => {
             this.zoomChange.next();
         });
     }
@@ -46,7 +46,7 @@ export class CameraService extends Functionality {
     activate(): void {
         const zoomEvent = this.eventsService.wheel$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
-                scene.canvasContent.camera_zoom_at(
+                scene.sceneClient.camera_zoom_at(
                     event.deltaY * -1,
                     new ScreenCoord(event.offsetX, event.offsetY),
                 );
@@ -59,8 +59,8 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    scene.canvasContent.camera_pan_by(
-                        new ScreenLength2d(event.movementX, event.movementY),
+                    scene.sceneClient.camera_pan_by(
+                        new ScreenCoord(event.movementX, event.movementY),
                     );
                 });
             });
@@ -70,9 +70,9 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "q"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    let angle = scene.canvasContent.camera_get_rotation();
+                    let angle = scene.sceneClient.camera_get_rotation();
                     angle += 0.0872664626;
-                    scene.canvasContent.camera_set_rotation(angle);
+                    scene.sceneClient.camera_set_rotation(angle);
                 });
             });
         this.subscriptions.push(rotate5);
@@ -81,7 +81,7 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "r"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    scene.canvasContent.camera_set_rotation(0);
+                    scene.sceneClient.camera_set_rotation(0);
                 });
             });
         this.subscriptions.push(rotateHome);
@@ -90,9 +90,9 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "e"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    let angle = scene.canvasContent.camera_get_rotation();
+                    let angle = scene.sceneClient.camera_get_rotation();
                     angle -= 0.0872664626;
-                    scene.canvasContent.camera_set_rotation(angle);
+                    scene.sceneClient.camera_set_rotation(angle);
                 });
             });
         this.subscriptions.push(rotateMinus5);
@@ -101,8 +101,8 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "z"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    const flip = scene.canvasContent.camera_get_reflect_x();
-                    scene.canvasContent.camera_set_reflect_x(!flip);
+                    const flip = scene.sceneClient.camera_get_reflect_x();
+                    scene.sceneClient.camera_set_reflect_x(!flip);
                 });
             });
         this.subscriptions.push(flipX);
@@ -111,8 +111,8 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "x"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    const flip = scene.canvasContent.camera_get_reflect_y();
-                    scene.canvasContent.camera_set_reflect_y(!flip);
+                    const flip = scene.sceneClient.camera_get_reflect_y();
+                    scene.sceneClient.camera_set_reflect_y(!flip);
                 });
             });
         this.subscriptions.push(flipY);
@@ -121,7 +121,7 @@ export class CameraService extends Functionality {
             .pipe(filter((event) => event.key == "c"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
-                    scene.canvasContent.camera_home();
+                    scene.sceneClient.camera_home();
                 });
             });
         this.subscriptions.push(reset);

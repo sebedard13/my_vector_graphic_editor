@@ -2,7 +2,6 @@ import { Injectable } from "@angular/core";
 import { Functionality } from "./functionality";
 import { EventsService } from "../scene/events.service";
 import { Subscription } from "rxjs";
-import { ScreenCoord, toggle_handle } from "wasm-vgc";
 import { ScenesService } from "../scene/scenes.service";
 import { SelectionService } from "../scene/selection.service";
 
@@ -24,11 +23,7 @@ export class ToggleHandleService extends Functionality {
         const addRemove = this.eventsService.mouseDown$.subscribe((event) => {
             this.sceneService.currentSceneNow((scene) => {
                 if (event.buttons == 1) {
-                    toggle_handle(
-                        this.selectionService.selection,
-                        scene.canvasContent,
-                        new ScreenCoord(event.offsetX, event.offsetY),
-                    );
+                    scene.sceneClient.toggle_handle(this.selectionService.selection);
                 }
             });
         });

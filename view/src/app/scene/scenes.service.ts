@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Observable, combineLatest, map, mergeMap, of } from "rxjs";
-import { environment } from "src/environments/environment";
-import { CanvasContent, load_from_arraybuffer, save_to_arraybuffer } from "wasm-vgc";
+import { environment } from "../../environments/environment";
+import { SceneClient } from "wasm-client";
 import { Scene } from "./scene";
 
 @Injectable({
@@ -13,8 +13,10 @@ export class ScenesService {
 
     public scenes$: Observable<Scene[]> = this.scenesSubject.asObservable();
 
-    public currentSceneChange$: Observable<void> = this.indexCurrentSceneSubject.pipe(
-        map(() => {}),
+    public currentScene$: Observable<Scene | null> = this.indexCurrentSceneSubject.pipe(
+        map(() => {
+            return this.currentScene();
+        }),
     );
 
     public hasScenes$: Observable<boolean> = this.scenes$.pipe(map((scenes) => scenes.length > 0));
@@ -22,7 +24,7 @@ export class ScenesService {
 
     constructor() {
         if (environment.openWithTestScenes) {
-            this.scenesSubject.next([new Scene(CanvasContent.default_call())]);
+            this.scenesSubject.next([new Scene(SceneClient.default_call())]);
             this.indexCurrentSceneSubject.next(0);
         }
 
@@ -85,7 +87,7 @@ export class ScenesService {
                 const reader = new FileReader();
                 reader.onload = () => {
                     const buffer = reader.result as ArrayBuffer;
-                    const canvasContent = load_from_arraybuffer(new Uint8Array(buffer));
+                    const canvasContent = SceneClient.load(new Uint8Array(buffer));
                     const scene = new Scene(canvasContent);
                     let filename = file.name;
                     if (filename.endsWith(".vgc")) {
@@ -107,7 +109,7 @@ export class ScenesService {
 
     public saveSceneToFile(): void {
         this.currentSceneNow((scene) => {
-            const array = save_to_arraybuffer(scene.canvasContent);
+            const array = scene.sceneClient.save();
             const url = URL.createObjectURL(new Blob([array]));
 
             const a = document.createElement("a");
@@ -118,7 +120,7 @@ export class ScenesService {
     }
 
     public addNewScene(width: number, height: number, name: string) {
-        const canvasContent = new CanvasContent(width, height);
+        const canvasContent = new SceneClient(width, height);
         const scene = new Scene(canvasContent);
         scene.metadata.name = name;
 
@@ -129,13 +131,12 @@ export class ScenesService {
     }
 
     public currentSceneNow(callback: (scene: Scene) => void) {
-        const indexScene = this.indexCurrentSceneSubject.getValue();
-        const scenes = this.scenesSubject.getValue();
-        if (indexScene === null || scenes.length === 0) {
+        const scene = this.currentScene();
+        if (!scene) {
             return;
         }
 
-        return callback(scenes[indexScene]);
+        return callback(scene);
     }
 
     public currentScene(): Scene | null {

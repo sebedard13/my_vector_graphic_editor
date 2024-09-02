@@ -1,12 +1,15 @@
-<div class="main-container w-100 h-100">
+<div class="main-container h-100">
     <div class="top-row row bg bb">
         <app-menu-bar></app-menu-bar>
         <app-mouse-info></app-mouse-info>
     </div>
-    <div class="main w-100 h-100 row">
+    <div class="main h-100 row">
         <app-tools-bar></app-tools-bar>
-        <div class="w-100">
-            <app-scene-view class="w-100 h-100"></app-scene-view>
+
+        <app-scene-view class="grow h-100"></app-scene-view>
+
+        <div class="h-100 bg bl" style="inline-size: 325px">
+            <app-scene-viewer></app-scene-viewer>
         </div>
     </div>
 </div>

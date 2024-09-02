@@ -1,14 +1,9 @@
-[tasks.install]
-workspace = false
-description = "Install all dependencies"
-script = ["cd view", "npm i"]
-
 [tasks.wasm_watch]
 workspace = false
-script = ["cd wasm_vgc", "wasm-pack build --debug"]
+script = ["cd wasm_client", "wasm-pack build --debug"]
 watch = { no_git_ignore = false, watch = [
-    "./wasm_vgc/",
-    "./vgc/",
+    "./wasm_client/",
+    "./database/",
     "./common/",
 ] }
 
