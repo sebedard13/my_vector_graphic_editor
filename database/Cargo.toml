@@ -6,15 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-postcard = { version = "1.0.8", features = ["alloc"] }
-polynomen = "1.1.0"
-serde = { version = "1.0.130", features = ["derive"] }
-common = { path = "../common"}
-log = "0.4.21"
-anyhow = "1.0.40"
+anyhow.workspace = true
+log.workspace = true
+postcard.workspace = true
+polynomen.workspace = true
+serde.workspace = true
+tsify-next.workspace = true
+wasm-bindgen.workspace = true
 
-wasm-bindgen = { version = "0.2.89" }
-tsify-next = { version = "0.5.3", features = ["js"] }
+common = { path = "../common" }
 
 [dev-dependencies]
 float-cmp = "0.9.0"
