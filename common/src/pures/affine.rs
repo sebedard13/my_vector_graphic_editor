@@ -1,9 +1,9 @@
 use std::{fmt::Display, ops::Mul};
 
 use float_cmp::{ApproxEq, F32Margin};
-#[cfg(feature = "serialization")]
+
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -11,11 +11,9 @@ use crate::forward_ref_binop;
 
 use super::Vec2;
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 /// Transformation matrix for 2D space
 pub struct Affine {
     /// m00 m01 m02

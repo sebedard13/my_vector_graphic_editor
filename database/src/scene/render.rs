@@ -58,8 +58,8 @@ impl Scene {
         options: RenderOption,
     ) -> Result<(), String> {
         renderer.create()?;
-        render_transparent_grid(renderer)?;
         renderer.fill_background(&self.background)?;
+        render_transparent_grid(renderer)?;
 
         for layer in self.layers.iter().rev() {
             if let Some(to_layer) = options.to_layer {

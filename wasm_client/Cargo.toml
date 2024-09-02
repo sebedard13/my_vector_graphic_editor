@@ -22,10 +22,7 @@ js-sys = { version = "0.3.66" }
 wasm-bindgen = { version = "0.2.89" }
 
 postcard = { version = "1.0.7", features = ["alloc"] }
-common = { path = "../common", default-features = false, features = [
-    "ts",
-    "serialization",
-] }
+common = { path = "../common" }
 database = { path = "../database" }
 serde-wasm-bindgen = "0.6.5"
 serde = "1.0.204"

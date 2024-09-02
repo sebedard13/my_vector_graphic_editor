@@ -31,18 +31,7 @@ fn mark_shape_entries(
     let mut run = || -> Result<(), anyhow::Error> {
         handle_non_intersection(shape, other_greiner)?;
 
-        let mut status_entry = true;
-        let start_index = shape.find_first_p_not_intersection()?;
-        let coord = &shape
-            .data
-            .get(start_index)
-            .context("Index out of bounds")?
-            .coord;
-        if other.contains(coord) {
-            status_entry = false;
-        }
-        #[cfg(test)]
-        println!("Coord {:?} is inside: {}", coord, status_entry);
+        let (start_index, status_entry) = get_start_and_entry_status(shape, other)?;
 
         run_mark_entry(shape, start_index, status_entry)?;
 
@@ -53,6 +42,35 @@ fn mark_shape_entries(
     };
 
     run().context("Could not define in out of the shape")
+}
+
+fn get_start_and_entry_status(
+    shape: &mut GreinerShape,
+    other: &Shape,
+) -> Result<(usize, bool), Error> {
+    let start_index = {
+        let index = shape.find_first_p_not_intersection()?;
+        if index.is_none() {
+            //If there is no intersection, the shape is inside the other
+            // so coord will be inside and will exit
+            return Ok((shape.start, false));
+        }
+        index.unwrap()
+    };
+    let coord = &shape
+        .data
+        .get(start_index)
+        .context("Index out of bounds")?
+        .coord;
+    if other.contains(coord) {
+        #[cfg(test)]
+        println!("Coord {:?} is inside: {}", coord, false);
+        Ok((start_index, false))
+    } else {
+        #[cfg(test)]
+        println!("Coord {:?} is inside: {}", coord, true);
+        Ok((start_index, true))
+    }
 }
 
 struct ExtractedCurves {
@@ -159,11 +177,16 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
             &extracted.coords_neighbor_c1.2,
             &extracted.coords_neighbor_c1.3,
         ) {
+            // println!(
+            //     "{:?}, {:?}, {:?}, {:?}",
+            //     extracted.coords_c0,
+            //     extracted.coords_c1,
+            //     extracted.coords_neighbor_c0,
+            //     extracted.coords_neighbor_c1
+            // );
             shape.data[extracted.index_c0].intersect = IntersectionType::Common;
             shape.data[extracted.index_c1].intersect = IntersectionType::Common;
-        }
-        else{
-            println!("{:?}, {:?}, {:?}, {:?}", extracted.coords_c0, extracted.coords_c1, extracted.coords_neighbor_c0, extracted.coords_neighbor_c1);
+        } else {
         }
     }
     Ok(())

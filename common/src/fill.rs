@@ -1,21 +1,17 @@
-#[cfg(feature = "serialization")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Rgba {
     pub r: u8,
     pub g: u8,
     pub b: u8,
     pub a: u8,
 }
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+
 impl Rgba {
     pub fn new(r: u8, g: u8, b: u8, a: u8) -> Rgba {
         Rgba { r, g, b, a }
@@ -143,7 +139,6 @@ impl Default for Rgba {
 use wasm_bindgen::convert::*;
 use wasm_bindgen::describe::*;
 
-#[cfg(feature = "ts")]
 impl WasmDescribeVector for Rgba {
     fn describe_vector() {
         inform(VECTOR);

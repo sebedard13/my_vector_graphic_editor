@@ -59,6 +59,7 @@ pub fn curve_realy_intersect(
         let point0 = cubic_bezier(0.1, c1_p1, c1_cp1, c1_cp0, c1_p0);
         let point1 = cubic_bezier(0.1, c2_p0, c2_cp0, c2_cp1, c2_p1);
 
+        println!("{:?} {:?} {:?} {:?} {:?} {:?}", point0, point1, n_c1_p1, lv1, n_c2_p0, lv2);
         let res = points_are_different_side(&point0, &point1, n_c1_p1, &lv1, n_c2_p0, &lv2);
         res
     } else {
@@ -325,10 +326,10 @@ mod tests {
 
     #[test]
     fn curve_realy_intersect_bug02() {
-        //{ x: -0.7, y: 0.5 }, { x: -0.7, y: 0.5 }, { x: 0.7, y: 0.5 }, { x: 0.7, y: 0.5 }
-        //{ x: -0.7, y: -0.50000006 }, { x: -0.7, y: -0.50000006 }, { x: -0.7, y: -0.7 }, { x: -0.7, y: -0.7 }
-        //{ x: -0.7, y: 0.5 }, { x: -0.7, y: 0.5 }, { x: -0.7, y: 0.7 }, { x: -0.7, y: 0.7 }
-        //{ x: -0.7, y: -0.50000006 }, { x: -0.7, y: -0.50000006 }, { x: 0.7, y: -0.49999997 }, { x: 0.7, y: -0.49999997 } }
+        //{ x: -0.7, y: 0.5,{ x: -0.7, y: 0.5,{ x: 0.7, y: 0.5,{ x: 0.7, y: 0.5 }
+        //{ x: -0.7, y: -0.50000006,{ x: -0.7, y: -0.50000006,{ x: -0.7, y: -0.7,{ x: -0.7, y: -0.7 }
+        //{ x: -0.7, y: 0.5,{ x: -0.7, y: 0.5,{ x: -0.7, y: 0.7,{ x: -0.7, y: 0.7 }
+        //{ x: -0.7, y: -0.50000006,{ x: -0.7, y: -0.50000006,{ x: 0.7, y: -0.49999997,{ x: 0.7, y: -0.49999997 } }
 
         let c1_p0 = Coord::new(-0.7, 0.5);
         let c1_cp0 = Coord::new(-0.7, 0.5);
@@ -347,6 +348,39 @@ mod tests {
         let n_c2_cp0 = Coord::new(-0.7, -0.50000006);
         let n_c2_cp1 = Coord::new(0.7, -0.49999997);
         let n_c2_p1 = Coord::new(0.7, -0.49999997);
+
+        let intersect = curve_realy_intersect(
+            &c1_p1, &c1_cp1, &c1_cp0, &c1_p0, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1, &n_c1_p1,
+            &n_c1_cp1, &n_c1_cp0, &n_c1_p0, &n_c2_p0, &n_c2_cp0, &n_c2_cp1, &n_c2_p1,
+        );
+
+        assert_eq!(intersect, true);
+    }
+
+    #[test]
+    fn curve_realy_intersect_bug03(){
+        //({ x: 0.0, y: 630.0 },{ x: 0.0, y: 630.0 },{ x: 45.0, y: 630.0 },{ x: 45.0, y: 630.0 } }
+        //{ x: 0.0, y: 672.5 },{ x: 0.0, y: 672.5 },{ x: 0.0, y: 675.0 },{ x: 0.0, y: 675.0 } }
+        //{ x: 0.0, y: 630.0 },{ x: 0.0, y: 630.0 },{ x: -1.1444092e-5, y: 172.5 },{ x: -1.1444092e-5, y: 172.5 } }
+        //{ x: 0.0, y: 672.5 },{ x: 0.0, y: 672.5 },{ x: 45.0, y: 672.5 },{ x: 45.0, y: 672.5 } })
+
+        let c1_p0 = Coord::new(0.0, 630.0);
+        let c1_cp0 = Coord::new(0.0, 630.0);
+        let c1_cp1 = Coord::new(45.0, 630.0);
+        let c1_p1 = Coord::new(45.0, 630.0);
+        let c2_p0 = Coord::new(0.0, 672.5);
+        let c2_cp0 = Coord::new(0.0, 672.5);
+        let c2_cp1 = Coord::new(0.0, 675.0);
+        let c2_p1 = Coord::new(0.0, 675.0);
+
+        let n_c1_p0 = Coord::new(0.0, 630.0);
+        let n_c1_cp0 = Coord::new(0.0, 630.0);
+        let n_c1_cp1 = Coord::new(-1.1444092e-5, 172.5);
+        let n_c1_p1 = Coord::new(-1.1444092e-5, 172.5);
+        let n_c2_p0 = Coord::new(0.0, 672.5);
+        let n_c2_cp0 = Coord::new(0.0, 672.5);
+        let n_c2_cp1 = Coord::new(45.0, 672.5);
+        let n_c2_p1 = Coord::new(45.0, 672.5);
 
         let intersect = curve_realy_intersect(
             &c1_p1, &c1_cp1, &c1_cp0, &c1_p0, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1, &n_c1_p1,

@@ -1,7 +1,7 @@
-use crate::pures::Vec2;
-#[cfg(feature = "serialization")]
+use crate::pures::{Affine, Vec2};
+
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -11,16 +11,14 @@ pub use coord::Coord;
 /**
  * A screen coordinate in pixels
  */
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct ScreenCoord {
     pub c: Vec2,
 }
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenCoord {
     #[cfg_attr(
         all(feature = "bindgen", not(feature = "ts")),
@@ -50,16 +48,15 @@ impl ScreenCoord {
 /**
  * A rectangle in the 2D space of the canvas
  */
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Rect {
     pub top_left: Coord,
     pub bottom_right: Coord,
 }
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+
 impl Rect {
     #[cfg_attr(
         all(feature = "bindgen", not(feature = "ts")),
@@ -113,21 +110,43 @@ impl Rect {
             && self.top_left.c.y <= point.c.y
             && self.bottom_right.c.y >= point.c.y
     }
+
+    /// Returns an affine transformation that maps the rectangle to the normal space
+    /// (centered at 0,0 and with a width and height of 2)
+    ///
+    /// ```rust
+    /// use common::types::{Rect, Coord};
+    /// use common::pures::Affine;
+    ///
+    /// let rect = Rect::new(2.0, 7.0, 9.0, 9.0);
+    /// let affine = rect.affine_to_normal();
+    ///
+    /// assert_eq!(rect.center().transform(&affine), Coord::new(0.0, 0.0));
+    /// assert_eq!(rect.top_left.transform(&affine), Coord::new(-1.0, -1.0));
+    /// assert_eq!(rect.bottom_right.transform(&affine), Coord::new(1.0, 1.0));
+    /// ```
+    pub fn affine_to_normal(&self) -> Affine {
+        Affine::identity()
+            .translate(self.center().c * -1.0)
+            .scale(Vec2::new(
+                1.0 / (self.width() / 2.0),
+                1.0 / (self.height() / 2.0),
+            ))
+    }
 }
 
 /**
  * A rectangle in the screen space
  */
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct ScreenRect {
     pub top_left: ScreenCoord,
     pub bottom_right: ScreenCoord,
 }
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+
 impl ScreenRect {
     #[cfg_attr(
         all(feature = "bindgen", not(feature = "ts")),
@@ -160,16 +179,13 @@ impl ScreenRect {
     }
 }
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct ScreenLength2d {
     pub c: Vec2,
 }
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
 impl ScreenLength2d {
     #[cfg_attr(
         all(feature = "bindgen", not(feature = "ts")),
@@ -180,15 +196,13 @@ impl ScreenLength2d {
     }
 }
 
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
-#[cfg_attr(feature = "ts", derive(Tsify))]
-#[cfg_attr(feature = "ts", tsify(into_wasm_abi, from_wasm_abi))]
-#[derive(Clone, Debug, PartialEq, Copy)]
-#[cfg_attr(feature = "serialization", derive(Serialize, Deserialize))]
+#[derive(Tsify)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Length2d {
     pub c: Vec2,
 }
-#[cfg_attr(all(feature = "bindgen", not(feature = "ts")), wasm_bindgen)]
+
 impl Length2d {
     #[cfg_attr(
         all(feature = "bindgen", not(feature = "ts")),
@@ -196,5 +210,20 @@ impl Length2d {
     )]
     pub fn new(x: f32, y: f32) -> Length2d {
         Length2d { c: Vec2::new(x, y) }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rect_affine_to_normal() {
+        let rect = Rect::new(2.0, 7.0, 9.0, 9.0);
+        let affine = rect.affine_to_normal();
+
+        assert_eq!(rect.center().transform(&affine), Coord::new(0.0, 0.0));
+        assert_eq!(rect.top_left.transform(&affine), Coord::new(-1.0, -1.0));
+        assert_eq!(rect.bottom_right.transform(&affine), Coord::new(1.0, 1.0));
     }
 }

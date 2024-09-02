@@ -75,7 +75,17 @@ fn contains_point(vertices: &[Coord; 8], point: &Coord) -> bool {
         }
 
         if f32::abs(point.y() - v2.y()) <= PRECISION || f32::abs(point.y() - v1.y()) <= PRECISION {
-            point = point + Coord::new(0.0, PRECISION * 2.0);
+            let change = {
+                let max = f32::max(point.y().abs(), point.x().abs());
+                if max <= 1.0 {
+                    PRECISION * 2.0
+                } else {
+                //TODO: the coord value should be close to -1.0 or 1.0
+                   max.log10().ceil() * PRECISION * 2.0
+                }
+            };
+
+            point = point + Coord::new(0.0, change);
         }
 
         if point.y() + PRECISION < v1.y().min(v2.y()) || point.y() - PRECISION > v1.y().max(v2.y())
@@ -97,6 +107,15 @@ fn contains_point(vertices: &[Coord; 8], point: &Coord) -> bool {
 mod test {
 
     use super::*;
+
+    fn print_vertice_for_desmos(coords: [Coord; 8]) {
+        let string = coords
+            .iter()
+            .map(|c| format!("({}, {})", c.c.x, c.c.y))
+            .collect::<Vec<String>>()
+            .join(", ");
+        println!("{}", string);
+    }
 
     #[test]
     fn test_points_are_different_side() {
@@ -260,6 +279,26 @@ mod test {
         let l2v = Vec2::new(0.70710677, 0.70710677).normal();
 
         let vertices = create_shape_from_infinite_lines(&point, &point2, &l1, &l1v, &l2, &l2v);
+
+        let left = contains_point(&vertices, &point);
+        let right = contains_point(&vertices, &point2);
+        assert_ne!(left, right);
+    }
+
+    #[test]
+    fn create_shape_from_infinite_lines_bug06() {
+        // Coord { c: Vec2 { x: 1.2599999, y: 630.0 } } Coord { c: Vec2 { x: 0.0, y: 672.5699 } } Coord { c: Vec2 { x: 0.0, y: 630.0 } } Vec2 { x: -2.5014407e-8, y: -1.0 } Coord { c: Vec2 { x: 0.0, y: 672.5 } } Vec2 { x: 1.0, y: 0.0 }
+
+        let point = Coord::new(1.2599999, 630.0);
+        let point2 = Coord::new(0.0, 672.5699);
+
+        let l1 = Coord::new(0.0, 630.0);
+        let l1v = Vec2::new(-2.5014407e-8, -1.0).normal();
+        let l2 = Coord::new(0.0, 672.5);
+        let l2v = Vec2::new(1.0, 0.0).normal();
+
+        let vertices = create_shape_from_infinite_lines(&point, &point2, &l1, &l1v, &l2, &l2v);
+        print_vertice_for_desmos(vertices);
 
         let left = contains_point(&vertices, &point);
         let right = contains_point(&vertices, &point2);

@@ -77,10 +77,12 @@ fn handle_touching_shape(
         ));
     }
 
-    if count_intersections == 0 && ag.intersections_len * 3 == ag.len() {
+    if count_intersections == 0 && ag.intersections_len * 3 == ag.len() && bg.intersections_len * 3 == bg.len() {
         return Err(anyhow::anyhow!(
             "Only common intersections and free points. Is it the same shape?"
         ));
+
+        //Yeah and it works for intersection
     }
 
     if count_intersections == 0 {
@@ -279,12 +281,15 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 
 #[cfg(test)]
 mod test {
-    use super::{shape_intersection, ShapeIntersection};
+    use super::{shape_intersection, try_shape_intersection, ShapeIntersection};
     use common::pures::{Affine, Vec2};
 
     use crate::{
         scene::shape::{
-            boolean::{basic_test::print_svg_scale, find_intersecions},
+            boolean::{
+                basic_test::{print_svg_scale, verify_intersection},
+                find_intersecions,
+            },
             Shape,
         },
         DbCoord,
@@ -424,5 +429,45 @@ mod test {
             }
             _ => panic!("Should be ShapeIntersection::New"),
         }
+    }
+
+    #[test]
+    fn bug_intersection_trans() {
+        //"M 0 0 C 0 0 0 20 0 20 C 0 20 30 20 30 20 C 30 20 30 0 30 0 C 30 0 0 0 0 0 Z" and b "M 0 0 C 0 0 30 0 30 0 C 30 0 30 30 30 30 C 30 30 0 30 0 30 C 0 30 0 0 0 0 Z"
+        let a = Shape::quick_from_string(
+            "M 0 0 C 0 0 0 20 0 20 C 0 20 30 20 30 20 C 30 20 30 0 30 0 C 30 0 0 0 0 0 Z",
+        );
+        let b = Shape::quick_from_string(
+            "M 0 0 C 0 0 30 0 30 0 C 30 0 30 30 30 30 C 30 30 0 30 0 30 C 0 30 0 0 0 0 Z",
+        );
+        print_svg_scale(&a, &b, 1.0);
+
+        let merged = try_shape_intersection(&a, &b).unwrap();
+
+        match merged {
+            ShapeIntersection::A => {}
+            _ => panic!("Should be A shape"),
+        };
+
+        verify_intersection(merged, a, b);
+    }
+
+    #[test]
+    fn bug2_intersection_trans(){
+        //a "M 0 630 C 0 630 0 675 0 675 C 0 675 45 675 45 675 C 45 675 45 630 45 630 C 45 630 0 630 0 630 Z" and b "M 0 672.5 C 0 672.5 724.5002 672.5 724.5002 672.5 C 724.5002 672.5 724.5002 172.5 724.5002 172.5 C 724.5002 172.5 -0.000011444092 172.5 -0.000011444092 172.5 C -0.000011444092 172.5 0 672.5 0 672.5 Z"
+        let a = Shape::quick_from_string("M 0 630 C 0 630 0 675 0 675 C 0 675 45 675 45 675 C 45 675 45 630 45 630 C 45 630 0 630 0 630 Z");
+        let b = Shape::quick_from_string("M 0 672.5 C 0 672.5 724.5002 672.5 724.5002 672.5 C 724.5002 672.5 724.5002 172.5 724.5002 172.5 C 724.5002 172.5 -0.000011444092 172.5 -0.000011444092 172.5 C -0.000011444092 172.5 0 672.5 0 672.5 Z");
+
+        print_svg_scale(&a, &b, 1.0);
+
+        let merged = try_shape_intersection(&a, &b).unwrap();
+
+        match merged {
+            ShapeIntersection::New(_) => {}
+            _ => panic!("Should be a new shape"),
+        };
+
+        verify_intersection(merged, a, b);
+    
     }
 }

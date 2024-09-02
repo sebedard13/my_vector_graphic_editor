@@ -192,7 +192,7 @@ impl GreinerShape {
         }
     }
 
-    pub fn find_first_p_not_intersection(&self) -> Result<usize, anyhow::Error> {
+    pub fn find_first_p_not_intersection(&self) -> Result<Option<usize>, anyhow::Error> {
         let mut current_index = self.start;
         let mut count = 0;
         let mut current_coord = self
@@ -203,10 +203,10 @@ impl GreinerShape {
             (current_index, current_coord) = self.move_by(current_index, 3, Direction::Forward)?;
             count += 3;
             if count > self.data.len() {
-                return Err(anyhow::anyhow!("No point are not an intersection"));
+                return Ok(None);
             }
         }
-        Ok(current_index)
+        Ok(Some(current_index))
     }
 
     #[allow(dead_code)] // For testing
@@ -665,7 +665,9 @@ mod test {
             if ag.data[i].intersect.is_common() {
                 common_count += 1;
             }
-            if ag.data[i].intersect != super::IntersectionType::None && ag.data[i].intersect != super::IntersectionType::Common {
+            if ag.data[i].intersect != super::IntersectionType::None
+                && ag.data[i].intersect != super::IntersectionType::Common
+            {
                 inteersection_count += 1;
                 assert!(
                     ag.data[i].t == 0.654658318

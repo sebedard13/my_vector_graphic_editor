@@ -9,7 +9,7 @@ edition = "2021"
 postcard = { version = "1.0.8", features = ["alloc"] }
 polynomen = "1.1.0"
 serde = { version = "1.0.130", features = ["derive"] }
-common = { path = "../common", default-features = false, features = ["ts"] }
+common = { path = "../common"}
 log = "0.4.21"
 anyhow = "1.0.40"
 
