@@ -5,3 +5,12 @@ members = ["common", "desktop", "database", "wasm_client"]
 [profile.profiling]
 inherits = "release"
 debug = true
+
+[workspace.dependencies]
+anyhow = "1.0.40"
+log = "0.4.21"
+polynomen = "1.1.0"
+postcard = { version = "1.0.7", features = ["alloc"] }
+serde = { version = "1.0.204", features = ["derive"] }
+tsify-next = { version = "0.5.3", features = ["js"] }
+wasm-bindgen = { version = "0.2.89" }

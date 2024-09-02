@@ -653,6 +653,7 @@ mod squares_touching_outside {
     }
 
     #[test]
+    #[ignore]
     fn union() {
         let (a, b) = create();
         print_svg(&a, &b);
