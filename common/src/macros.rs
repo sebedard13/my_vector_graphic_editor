@@ -1,5 +1,5 @@
-// implements binary operators "&T op U", "T op &U", "&T op &U"
-// based on "T op U" where T and U are expected to be `Copy`able
+// implements binary operators "&$type op U", "$type op &U", "&$type op &U"
+// based on "$type op U" where $type and U are expected to be `Copy`able
 #[macro_export]
 macro_rules! forward_ref_binop {
     (impl $imp:ident, $method:ident for $t:ty, $u:ty) => {
@@ -32,8 +32,8 @@ macro_rules! forward_ref_binop {
     };
 }
 
-// implements the unary operator "op &T"
-// based on "op T" where T is expected to be `Copy`able
+// implements the unary operator "op &$type"
+// based on "op $type" where $type is expected to be `Copy`able
 #[macro_export]
 macro_rules! forward_ref_unop {
     (impl $imp:ident, $method:ident for $t:ty) => {
@@ -48,7 +48,7 @@ macro_rules! forward_ref_unop {
     };
 }
 
-// implements "T op= &U", based on "T op= U"
+// implements "$type op= &U", based on "$type op= U"
 // where U is expected to be `Copy`able
 #[macro_export]
 macro_rules! forward_ref_op_assign {

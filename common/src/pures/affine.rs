@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
-use crate::forward_ref_binop;
+use crate::{forward_ref_binop, types::Coord};
 
 use super::Vec2;
 
@@ -80,12 +80,12 @@ impl Affine {
         }
     }
 
-    pub fn get_scale(&self) -> Vec2 {
-        Vec2::new(self.m00, self.m11)
+    pub fn get_scale(&self) -> Coord {
+        Coord::new(self.m00, self.m11)
     }
 
-    pub fn get_translation(&self) -> Vec2 {
-        Vec2::new(self.m02, self.m12)
+    pub fn get_translation(&self) -> Coord {
+        Coord::new(self.m02, self.m12)
     }
 
     pub fn from_rotation(angle: f32) -> Affine {
@@ -100,25 +100,25 @@ impl Affine {
         }
     }
 
-    pub fn from_scale(scale: Vec2) -> Affine {
+    pub fn from_scale<T: Vec2>(scale: T) -> Affine {
         Affine {
-            m00: scale.x,
+            m00: scale.x(),
             m10: 0.0,
             m01: 0.0,
-            m11: scale.y,
+            m11: scale.y(),
             m02: 0.0,
             m12: 0.0,
         }
     }
 
-    pub fn from_translate(translation: Vec2) -> Affine {
+    pub fn from_translate<T: Vec2>(translation: T) -> Affine {
         Affine {
             m00: 1.0,
             m10: 0.0,
             m01: 0.0,
             m11: 1.0,
-            m02: translation.x,
-            m12: translation.y,
+            m02: translation.x(),
+            m12: translation.y(),
         }
     }
 
@@ -172,8 +172,8 @@ macro_rules! from_to_self_and_copy {
 }
 
 from_to_self_and_copy!(from_rotation(angle: f32), rotate, rotate_copy);
-from_to_self_and_copy!(from_scale(scale: Vec2), scale, scale_copy);
-from_to_self_and_copy!(from_translate(translation: Vec2), translate, translate_copy);
+from_to_self_and_copy!(from_scale(scale: Coord), scale, scale_copy);
+from_to_self_and_copy!(from_translate(translation: Coord), translate, translate_copy);
 from_to_self_and_copy!(from_reflect_origin(), reflect_origin, reflect_origin_copy);
 from_to_self_and_copy!(from_reflect_x(), reflect_x, reflect_x_copy);
 from_to_self_and_copy!(from_reflect_y(), reflect_y, reflect_y_copy);
@@ -195,18 +195,16 @@ impl Mul<Affine> for Affine {
 
 forward_ref_binop!(impl Mul, mul for Affine, Affine);
 
-impl Mul<Vec2> for Affine {
-    type Output = Vec2;
+impl<T: Vec2> Mul<T> for Affine {
+    type Output = T;
 
-    fn mul(self, rhs: Vec2) -> Vec2 {
-        Vec2 {
-            x: self.m00 * rhs.x + self.m01 * rhs.y + self.m02,
-            y: self.m10 * rhs.x + self.m11 * rhs.y + self.m12,
-        }
+    fn mul(self, rhs: T) -> T {
+        let mut rtn = rhs.clone();
+        rtn.set_x(self.m00 * rhs.x() + self.m01 * rhs.y() + self.m02);
+        rtn.set_y(self.m10 * rhs.x() + self.m11 * rhs.y() + self.m12);
+        rtn
     }
 }
-
-forward_ref_binop!(impl Mul, mul for Affine, Vec2);
 
 impl ApproxEq for Affine {
     type Margin = F32Margin;
@@ -226,12 +224,12 @@ impl ApproxEq for Affine {
 mod test {
     use float_cmp::assert_approx_eq;
 
-    use crate::pures::{Affine, Vec2};
+    use crate::{pures::Affine, types::Coord};
 
     #[test]
     fn test_identity() {
         let identity = Affine::identity();
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         assert_eq!(identity * vec, vec);
     }
 
@@ -247,60 +245,60 @@ mod test {
     #[test]
     fn test_rotation() {
         let mat = Affine::from_rotation(std::f32::consts::PI / 2.0);
-        let vec = Vec2::new(1.0, 0.0);
+        let vec = Coord::new(1.0, 0.0);
         let rotated = mat * vec;
-        assert_approx_eq!(Vec2, rotated, Vec2::new(0.0, 1.0));
+        assert_approx_eq!(Coord, rotated, Coord::new(0.0, 1.0));
     }
 
     #[test]
     fn test_scale() {
-        let scale = Vec2::new(2.0, 3.0);
+        let scale = Coord::new(2.0, 3.0);
         let scaled = Affine::from_scale(scale);
 
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         let result = scaled * vec;
-        assert_eq!(result, Vec2::new(2.0, 3.0));
+        assert_eq!(result, Coord::new(2.0, 3.0));
     }
 
     #[test]
     fn test_translate() {
-        let translation = Vec2::new(2.0, 3.0);
+        let translation = Coord::new(2.0, 3.0);
         let translated = Affine::from_translate(translation);
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         let result = translated * vec;
-        assert_eq!(result, Vec2::new(3.0, 4.0));
+        assert_eq!(result, Coord::new(3.0, 4.0));
     }
 
     #[test]
     fn test_reflect_origin() {
         let reflect = Affine::from_reflect_origin();
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         let result = reflect * vec;
-        assert_eq!(result, Vec2::new(-1.0, -1.0));
+        assert_eq!(result, Coord::new(-1.0, -1.0));
     }
 
     #[test]
     fn test_reflect_x() {
         let reflect = Affine::from_reflect_x();
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         let result = reflect * vec;
-        assert_eq!(result, Vec2::new(1.0, -1.0));
+        assert_eq!(result, Coord::new(1.0, -1.0));
     }
 
     #[test]
     fn test_reflect_y() {
         let reflect = Affine::from_reflect_y();
-        let vec = Vec2::new(1.0, 1.0);
+        let vec = Coord::new(1.0, 1.0);
         let result = reflect * vec;
-        assert_eq!(result, Vec2::new(-1.0, 1.0));
+        assert_eq!(result, Coord::new(-1.0, 1.0));
     }
 
     #[test]
     fn rotation_of_square_at_center() {
         let mat = Affine::identity()
-            .translate(Vec2::new(-0.5, -0.5))
+            .translate(Coord::new(-0.5, -0.5))
             .rotate(std::f32::consts::PI / 4.0)
-            .translate(Vec2::new(0.5, 0.5));
+            .translate(Coord::new(0.5, 0.5));
 
         let m_res = Affine::new(
             0.70710677,
@@ -313,19 +311,19 @@ mod test {
 
         assert_approx_eq!(Affine, mat, m_res);
 
-        let p00 = Vec2::new(0.0, 0.0);
-        let p01 = Vec2::new(1.0, 0.0);
-        let p10 = Vec2::new(0.0, 1.0);
-        let p11 = Vec2::new(1.0, 1.0);
+        let p00 = Coord::new(0.0, 0.0);
+        let p01 = Coord::new(1.0, 0.0);
+        let p10 = Coord::new(0.0, 1.0);
+        let p11 = Coord::new(1.0, 1.0);
 
         let p00 = mat * p00;
         let p01 = mat * p01;
         let p10 = mat * p10;
         let p11 = mat * p11;
 
-        assert_approx_eq!(Vec2, p00, Vec2::new(0.5, -0.20710677));
-        assert_approx_eq!(Vec2, p01, Vec2::new(1.20710677, 0.5));
-        assert_approx_eq!(Vec2, p10, Vec2::new(-0.20710677, 0.5));
-        assert_approx_eq!(Vec2, p11, Vec2::new(0.5, 1.20710677));
+        assert_approx_eq!(Coord, p00, Coord::new(0.5, -0.20710677));
+        assert_approx_eq!(Coord, p01, Coord::new(1.20710677, 0.5));
+        assert_approx_eq!(Coord, p10, Coord::new(-0.20710677, 0.5));
+        assert_approx_eq!(Coord, p11, Coord::new(0.5, 1.20710677));
     }
 }
