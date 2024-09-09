@@ -6,6 +6,8 @@ use crate::{
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
 
+use crate::{forward_ref_binop, forward_ref_unop};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -62,6 +64,12 @@ impl ApproxEq for ScreenCoord {
     fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
         let margin = margin.into();
         self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
+    }
+}
+
+impl From<Coord> for ScreenCoord {
+    fn from(value: Coord) -> Self {
+        ScreenCoord::new(value.x, value.y)
     }
 }
 
@@ -140,7 +148,7 @@ impl Rect {
     ///
     /// let rect = Rect::new(2.0, 7.0, 9.0, 9.0);
     /// let affine = rect.affine_to_normal();
-    /// 
+    ///
     /// assert_eq!(affine * rect.center(), Coord::new(0.0, 0.0));
     /// assert_eq!(affine * rect.top_left, Coord::new(-1.0, -1.0));
     /// assert_eq!(affine * rect.bottom_right, Coord::new(1.0, 1.0));
@@ -201,7 +209,7 @@ impl ScreenRect {
 
 #[derive(Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Copy, Serialize, Deserialize)]
 pub struct ScreenLength2d {
     pub x: f32,
     pub y: f32,
@@ -217,9 +225,38 @@ impl ScreenLength2d {
     }
 }
 
+impl Vec2 for ScreenLength2d {
+    fn x(&self) -> f32 {
+        self.x
+    }
+
+    fn y(&self) -> f32 {
+        self.y
+    }
+
+    fn set_x(&mut self, x: f32) {
+        self.x = x;
+    }
+
+    fn set_y(&mut self, y: f32) {
+        self.y = y;
+    }
+}
+
+vec2_op!(ScreenLength2d);
+
+impl ApproxEq for ScreenLength2d {
+    type Margin = F32Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+        self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
+    }
+}
+
 #[derive(Tsify)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[derive(Clone, Debug, PartialEq, Copy, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, Copy, Serialize, Deserialize)]
 pub struct Length2d {
     pub x: f32,
     pub y: f32,
@@ -232,6 +269,41 @@ impl Length2d {
     )]
     pub fn new(x: f32, y: f32) -> Length2d {
         Length2d { x, y }
+    }
+}
+
+impl Vec2 for Length2d {
+    fn x(&self) -> f32 {
+        self.x
+    }
+
+    fn y(&self) -> f32 {
+        self.y
+    }
+
+    fn set_x(&mut self, x: f32) {
+        self.x = x;
+    }
+
+    fn set_y(&mut self, value: f32) {
+        self.y = value;
+    }
+}
+
+vec2_op!(Length2d);
+
+impl ApproxEq for Length2d {
+    type Margin = F32Margin;
+
+    fn approx_eq<M: Into<Self::Margin>>(self, other: Self, margin: M) -> bool {
+        let margin = margin.into();
+        self.x.approx_eq(other.x, margin) && self.y.approx_eq(other.y, margin)
+    }
+}
+
+impl From<ScreenLength2d> for Length2d {
+    fn from(value: ScreenLength2d) -> Self {
+        Length2d::new(value.x, value.y)
     }
 }
 

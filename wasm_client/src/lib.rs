@@ -44,7 +44,7 @@ impl SceneClient {
     pub fn get_render_rect(&self) -> ScreenRect {
         let size = self.scene_context.camera.get_base_scale();
 
-        ScreenRect::new(0.0, 0.0, size.c.x, size.c.y)
+        ScreenRect::new(0.0, 0.0, size.x, size.y)
     }
 
     pub fn default_call() -> SceneClient {

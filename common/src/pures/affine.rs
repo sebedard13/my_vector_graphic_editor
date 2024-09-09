@@ -157,14 +157,14 @@ impl Affine {
 }
 
 macro_rules! from_to_self_and_copy {
-    ($from_method:ident $(($($param:ident : $type:ty),* ))?, $method:ident, $copy_method:ident ) => {
+    ($from_method:ident $(< $( $lt:tt $( : $clt:tt $(+ $dlt:tt )* )? ),+ >)? $(($($param:ident : $type:ty),* ))?, $method:ident, $copy_method:ident ) => {
         impl Affine {
-            pub fn $method(&mut self $(, $($param : $type),* )?) -> Self {
+            pub fn $method$(< $( $lt $( : $clt $(+ $dlt )* )? ),+ >)?(&mut self $(, $($param : $type),* )?) -> Self {
                 *self = Affine::$from_method($( $($param),* )?) * *self;
                 *self
             }
 
-            pub fn $copy_method(&self $(, $($param : $type),* )?) -> Affine {
+            pub fn $copy_method$(< $( $lt $( : $clt $(+ $dlt )* )? ),+ >)?(&self $(, $($param : $type),* )?) -> Affine {
                 Affine::$from_method($( $($param),* )?) * *self
             }
         }
@@ -172,8 +172,8 @@ macro_rules! from_to_self_and_copy {
 }
 
 from_to_self_and_copy!(from_rotation(angle: f32), rotate, rotate_copy);
-from_to_self_and_copy!(from_scale(scale: Coord), scale, scale_copy);
-from_to_self_and_copy!(from_translate(translation: Coord), translate, translate_copy);
+from_to_self_and_copy!(from_scale<T: Vec2>(scale: T), scale, scale_copy);
+from_to_self_and_copy!(from_translate<T: Vec2>(translation: T), translate, translate_copy);
 from_to_self_and_copy!(from_reflect_origin(), reflect_origin, reflect_origin_copy);
 from_to_self_and_copy!(from_reflect_x(), reflect_x, reflect_x_copy);
 from_to_self_and_copy!(from_reflect_y(), reflect_y, reflect_y_copy);

@@ -236,8 +236,8 @@ impl GreinerShape {
             "Index", "x", "y", "In.sect", "Next", "Prev", "Neigh.", "Entry"
         );
         for (i, c) in self.data.iter().enumerate() {
-            let x = format!("{:.4}", c.coord.x());
-            let y = format!("{:.4}", c.coord.y());
+            let x = format!("{:.4}", c.coord.x);
+            let y = format!("{:.4}", c.coord.y);
             let neighbor = format!("{:?}", c.neighbor);
             let int = format!("{}", c.intersect);
 
@@ -302,7 +302,7 @@ impl CoordOfIntersection {
     pub fn coord_ptr(&self) -> DbCoord {
         match &self.rel_coord {
             Some(rel_coord) => rel_coord.clone(),
-            None => DbCoord::new(self.coord.x(), self.coord.y()),
+            None => DbCoord::new(self.coord.x, self.coord.y),
         }
     }
 }

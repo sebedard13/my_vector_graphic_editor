@@ -1,13 +1,22 @@
+use crate::{forward_ref_binop, forward_ref_unop};
+use crate::{pures::Vec2, vec2_op};
 use float_cmp::{ApproxEq, F32Margin};
 use serde::{Deserialize, Serialize};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::{pures::Vec2, vec2_op};
+use super::Coord;
 
 /// A 2D vector representing a direction
 #[derive(Clone, Debug, Copy, Default, PartialEq, Serialize, Deserialize)]
 pub struct Vector {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
+}
+
+impl Vector{
+    pub fn new(x: f32, y: f32) -> Vector {
+        Vector { x, y }
+    }
 }
 
 impl Vec2 for Vector {
@@ -36,5 +45,11 @@ impl ApproxEq for Vector {
     fn approx_eq<T: Into<Self::Margin>>(self, other: Self, margin: T) -> bool {
         let epsilon = margin.into();
         self.x.approx_eq(other.x, epsilon) && self.y.approx_eq(other.y, epsilon)
+    }
+}
+
+impl From<Vector> for Coord {
+    fn from(vector: Vector) -> Coord {
+        Coord::new(vector.x, vector.y)
     }
 }

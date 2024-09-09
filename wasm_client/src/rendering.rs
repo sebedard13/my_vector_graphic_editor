@@ -1,5 +1,5 @@
 use common::pures::{Affine, Vec2};
-use common::types::ScreenRect;
+use common::types::{Length2d, ScreenLength2d, ScreenRect};
 use database::RenderOption;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsValue;
@@ -19,8 +19,8 @@ impl SceneClient {
         let mut render = CanvasContext2DRender::new(ctx, transform, pixel_region);
 
         ctx.clear_rect(
-            pixel_region.top_left.c.x as f64,
-            pixel_region.top_left.c.y as f64,
+            pixel_region.top_left.x as f64,
+            pixel_region.top_left.y as f64,
             pixel_region.width() as f64,
             pixel_region.height() as f64,
         );
@@ -53,8 +53,8 @@ impl SceneClient {
         let mut ctx_2d_renderer = CanvasContext2DRender::new(
             ctx,
             Affine::identity()
-                .translate(max_rect.top_left.c * -1.0)
-                .scale(Vec2::new(scale_x, scale_y)),
+                .translate(max_rect.top_left * -1.0)
+                .scale(Length2d::new(scale_x, scale_y)),
             ScreenRect::new(0.0, 0.0, width, height),
         );
 
@@ -65,7 +65,7 @@ impl SceneClient {
 
     pub fn image_layer(&self, layer_id: usize, width: f32, height: f32) -> Result<String, JsValue> {
         let (w, h) = contain(
-            self.scene_context.camera.get_base_scale().c,
+            self.scene_context.camera.get_base_scale(),
             (width, height),
         );
 
@@ -87,8 +87,8 @@ impl SceneClient {
         let mut ctx_2d_renderer = CanvasContext2DRender::new(
             &ctx,
             Affine::identity()
-                .translate(max_rect.top_left.c * -1.0)
-                .scale(Vec2::new(w / max_rect.width(), h / max_rect.height())),
+                .translate(max_rect.top_left * -1.0)
+                .scale(Length2d::new(w / max_rect.width(), h / max_rect.height())),
             ScreenRect::new(0.0, 0.0, width, height),
         );
 
@@ -106,7 +106,7 @@ impl SceneClient {
     }
 }
 
-fn contain(mut ratio: Vec2, size: (f32, f32)) -> (f32, f32) {
+fn contain(mut ratio: ScreenLength2d, size: (f32, f32)) -> (f32, f32) {
     let (width, height) = size;
     ratio.normalize();
     if ratio.x > ratio.y {

@@ -1,3 +1,4 @@
+use common::pures::Vec2;
 use common::{
     dbg_str,
     types::{Coord, Rect},
@@ -171,7 +172,6 @@ pub fn intersection(
     if !own_intersect(&rect1, &rect2) {
         return IntersectionResult::None;
     }
-
 
     match curves_overlap(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1) {
         Overlap::ASmallerAndInsideB => return IntersectionResult::ASmallerAndInsideB,
@@ -481,9 +481,7 @@ pub fn curves_overlap(
     c2_p1: &Coord,
 ) -> Overlap {
     let ts = vec![
-        0.006263, 0.108011, 0.278309, 
-        0.347826, 0.406593, 0.437851, 
-        0.548986, 0.686813, 0.85558, 
+        0.006263, 0.108011, 0.278309, 0.347826, 0.406593, 0.437851, 0.548986, 0.686813, 0.85558,
         0.935159, 0.977084,
     ];
 
@@ -539,6 +537,7 @@ pub fn curves_overlap(
 #[cfg(test)]
 mod tests {
     use common::pures::{Affine, Vec2};
+    use common::types::{ScreenCoord, ScreenLength2d};
     use float_cmp::assert_approx_eq;
 
     use super::super::curve::cubic_bezier;
@@ -611,18 +610,21 @@ mod tests {
     #[test]
     fn when_two_complex_curves_then_intersection() {
         let m = Affine::identity()
-            .translate(Vec2::new(-20.0, -20.0))
-            .scale(Vec2::new(1.0 / (235.0 - 20.0), 1.0 / (235.0 - 20.0)));
+            .translate(ScreenCoord::new(-20.0, -20.0))
+            .scale(ScreenLength2d::new(
+                1.0 / (235.0 - 20.0),
+                1.0 / (235.0 - 20.0),
+            ));
 
-        let c1_p0 = Coord::new(50.0, 35.0).transform(&m);
-        let c1_cp0 = Coord::new(45.0, 235.0).transform(&m);
-        let c1_cp1 = Coord::new(220.0, 235.0).transform(&m);
-        let c1_p1 = Coord::new(220.0, 135.0).transform(&m);
+        let c1_p0 = m * Coord::new(50.0, 35.0);
+        let c1_cp0 = m * Coord::new(45.0, 235.0);
+        let c1_cp1 = m * Coord::new(220.0, 235.0);
+        let c1_p1 = m * Coord::new(220.0, 135.0);
 
-        let c2_p0 = Coord::new(20.0, 150.0).transform(&m);
-        let c2_cp0 = Coord::new(120.0, 20.0).transform(&m);
-        let c2_cp1 = Coord::new(220.0, 95.0).transform(&m);
-        let c2_p1 = Coord::new(140.0, 240.0).transform(&m);
+        let c2_p0 = m * Coord::new(20.0, 150.0);
+        let c2_cp0 = m * Coord::new(120.0, 20.0);
+        let c2_cp1 = m * Coord::new(220.0, 95.0);
+        let c2_p1 = m * Coord::new(140.0, 240.0);
 
         let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,
@@ -653,18 +655,21 @@ mod tests {
     #[test]
     fn when_two_complex_curves_then_intersection_3() {
         let m = Affine::identity()
-            .translate(Vec2::new(-20.0, -20.0))
-            .scale(Vec2::new(1.0 / (235.0 - 20.0), 1.0 / (235.0 - 20.0)));
+            .translate(ScreenCoord::new(-20.0, -20.0))
+            .scale(ScreenLength2d::new(
+                1.0 / (235.0 - 20.0),
+                1.0 / (235.0 - 20.0),
+            ));
 
-        let c1_p0 = Coord::new(50.0, 35.0).transform(&m);
-        let c1_cp0 = Coord::new(45.0, 235.0).transform(&m);
-        let c1_cp1 = Coord::new(220.0, 235.0).transform(&m);
-        let c1_p1 = Coord::new(220.0, 135.0).transform(&m);
+        let c1_p0 = m * Coord::new(50.0, 35.0);
+        let c1_cp0 = m * Coord::new(45.0, 235.0);
+        let c1_cp1 = m * Coord::new(220.0, 235.0);
+        let c1_p1 = m * Coord::new(220.0, 135.0);
 
-        let c2_p0 = Coord::new(81.0, 113.0).transform(&m);
-        let c2_cp0 = Coord::new(20.0, 208.0).transform(&m);
-        let c2_cp1 = Coord::new(220.0, 95.0).transform(&m);
-        let c2_p1 = Coord::new(140.0, 240.0).transform(&m);
+        let c2_p0 = m * Coord::new(81.0, 113.0);
+        let c2_cp0 = m * Coord::new(20.0, 208.0);
+        let c2_cp1 = m * Coord::new(220.0, 95.0);
+        let c2_p1 = m * Coord::new(140.0, 240.0);
 
         let res = intersection_simple(
             &c1_p0, &c1_cp0, &c1_cp1, &c1_p1, &c2_p0, &c2_cp0, &c2_cp1, &c2_p1,

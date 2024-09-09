@@ -87,9 +87,6 @@ pub trait Vec2:
 #[macro_export]
 macro_rules! vec2_op {
     ($type:ident) => {
-        use std::ops::{Add, Div, Mul, Neg, Sub};
-        use crate::{forward_ref_binop, forward_ref_unop};
-
         impl Add<$type> for $type {
             type Output = $type;
 

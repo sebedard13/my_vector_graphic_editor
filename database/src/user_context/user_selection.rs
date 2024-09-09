@@ -125,12 +125,11 @@ impl UserSelection {
             let db_coords = &shape.path;
             for db_coord in db_coords {
                 if point_in_radius(
-                    &cursor_position.c,
-                    &db_coord.coord().c,
-                    &canvas_context
+                    cursor_position,
+                    db_coord.coord(),
+                    canvas_context
                         .camera
-                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
-                        .c,
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0)),
                 ) {
                     self.hover_coord =
                         Some(HoverCoord::new(shape_selected.shape_index, db_coord.id));
@@ -181,12 +180,11 @@ impl UserSelection {
                 for db_coord in coords {
                     let coord = db_coord.coord();
                     if point_in_radius(
-                        &start_press.c,
-                        &coord.c,
-                        &canvas_context
+                        start_press,
+                        coord,
+                        canvas_context
                             .camera
-                            .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
-                            .c,
+                            .transform_to_length2d(ScreenLength2d::new(12.0, 12.0)),
                     ) {
                         selected_shape.coords.push(db_coord.id);
                         return;
@@ -207,12 +205,11 @@ impl UserSelection {
             for db_coord in db_coords {
                 let coord = db_coord.coord();
                 if point_in_radius(
-                    &start_press.c,
-                    &coord.c,
-                    &canvas_context
+                    start_press,
+                    coord,
+                    canvas_context
                         .camera
-                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0))
-                        .c,
+                        .transform_to_length2d(ScreenLength2d::new(12.0, 12.0)),
                 ) {
                     let pos = shape_selected
                         .coords

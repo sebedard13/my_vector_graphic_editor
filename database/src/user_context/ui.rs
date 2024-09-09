@@ -26,19 +26,19 @@ impl SceneUserContext {
 
             //Draw line between cp and p
             for curve in shape.curves() {
-                ctx.start_shape(&curve.p0.coord().transform(&t))?;
+                ctx.start_shape(&(t * curve.p0.coord()))?;
                 ctx.move_curve(
-                    &curve.p0.coord().transform(&t),
-                    &curve.cp0.coord().transform(&t),
-                    &curve.cp0.coord().transform(&t),
+                    &(t * curve.p0.coord()),
+                    &(t * curve.cp0.coord()),
+                    &(t * curve.cp0.coord()),
                 )?;
                 ctx.close_shape()?;
 
-                ctx.start_shape(&curve.cp1.coord().transform(&t))?;
+                ctx.start_shape(&(t * curve.cp1.coord()))?;
                 ctx.move_curve(
-                    &curve.cp1.coord().transform(&t),
-                    &curve.p1.coord().transform(&t),
-                    &curve.p1.coord().transform(&t),
+                    &(t * curve.cp1.coord()),
+                    &(t * curve.p1.coord()),
+                    &(t * curve.p1.coord()),
                 )?;
                 ctx.close_shape()?;
             }
@@ -64,13 +64,13 @@ impl SceneUserContext {
             //Draw shape selection border
             ctx.set_fill(&Rgba::transparent())?;
             ctx.set_stroke(&Rgba::new(0x3A, 0xD1, 0xEF, 0x80), 1.0)?;
-            ctx.start_shape(&shape.path.first().unwrap().coord().transform(&t))?;
+            ctx.start_shape(&(t * shape.path.first().unwrap().coord()))?;
 
             for curve in shape.curves() {
                 ctx.move_curve(
-                    &curve.cp0.coord().transform(&t),
-                    &curve.cp1.coord().transform(&t),
-                    &curve.p1.coord().transform(&t),
+                    &(t * curve.cp0.coord()),
+                    &(t * curve.cp1.coord()),
+                    &(t * curve.p1.coord()),
                 )?;
             }
             ctx.close_shape()?;
@@ -109,12 +109,10 @@ impl SceneUserContext {
         }
 
         if !point_in_radius(
-            &pos.c,
-            &min_coord.c,
-            &self
-                .camera
-                .transform_to_length2d(ScreenLength2d::new(10.0, 10.0))
-                .c,
+            pos,
+            min_coord,
+            self.camera
+                .transform_to_length2d(ScreenLength2d::new(10.0, 10.0)),
         ) {
             return Ok(());
         }

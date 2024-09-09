@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
+use super::{Length2d, ScreenCoord, Vector};
+
 /**
  * A coordinate in the 2D space of the canvas
  * Mostly 0.0 to 1.0, for a square canvas
@@ -34,7 +36,8 @@ impl Coord {
         Coord::new(x, y)
     }
 }
-
+use crate::{forward_ref_binop, forward_ref_unop};
+use std::ops::{Add, Div, Mul, Neg, Sub};
 vec2_op!(Coord);
 
 impl Vec2 for Coord {
@@ -61,6 +64,25 @@ impl PartialEq for Coord {
     }
 }
 
+// impl PartialOrd for Coord {
+//     fn partial_cmp(&self, other: &Coord) -> Option<std::cmp::Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
+
+// impl Eq for Coord {}
+
+// impl Ord for Coord {
+//     fn cmp(&self, other: &Coord) -> std::cmp::Ordering {
+//         let x_cmp = self.x.partial_cmp(&other.x);
+//         if x_cmp != Some(std::cmp::Ordering::Equal) {
+//             return x_cmp.expect("Coord should not have NaN values");
+//         }
+
+//         self.y.partial_cmp(&other.y).expect("Coord should not have NaN values")
+//     }
+// }
+
 #[derive(Clone, Copy)]
 pub struct MarginCoord(u32);
 
@@ -83,5 +105,26 @@ impl ApproxEq for Coord {
         let margin = margin.into().0 as f32;
         f32::abs(self.x - other.x) <= PRECISION * margin
             && f32::abs(self.y - other.y) <= PRECISION * margin
+    }
+}
+
+impl From<Coord> for Vector {
+    fn from(coord: Coord) -> Vector {
+        Vector {
+            x: coord.x,
+            y: coord.y,
+        }
+    }
+}
+
+impl From<ScreenCoord> for Coord {
+    fn from(coord: ScreenCoord) -> Coord {
+        Coord::new(coord.x, coord.y)
+    }
+}
+
+impl From<Length2d> for Coord {
+    fn from(length: Length2d) -> Coord {
+        Coord::new(length.x, length.y)
     }
 }
