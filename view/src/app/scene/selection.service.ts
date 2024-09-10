@@ -33,9 +33,7 @@ export class SelectionService {
 
         eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
-                const pt = scene.sceneClient.camera_project({
-                    c: { x: event.offsetX, y: event.offsetY },
-                } as ScreenCoord);
+                const pt = scene.sceneClient.camera_project({ x: event.offsetX, y: event.offsetY } as ScreenCoord);
 
                 //selection
                 this.selection.set_mouse_position(pt);

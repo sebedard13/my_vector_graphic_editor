@@ -4,15 +4,10 @@ use float_cmp::{ApproxEq, F32Margin};
 
 use serde::{Deserialize, Serialize};
 
-use tsify_next::Tsify;
-use wasm_bindgen::prelude::wasm_bindgen;
-
 use crate::{forward_ref_binop, types::Coord};
 
 use super::Vec2;
 
-#[derive(Tsify)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 #[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]
 /// Transformation matrix for 2D space
 pub struct Affine {
