@@ -116,8 +116,7 @@ impl Shape {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DbCoord {
     pub id: CoordId,
     pub(in super::super) coord: Coord,
@@ -134,7 +133,7 @@ impl DbCoord {
     pub fn transform(&self, transform: &Affine) -> Self {
         DbCoord {
             id: self.id,
-            coord: self.coord.transform(transform),
+            coord: *transform * self.coord,
         }
     }
 

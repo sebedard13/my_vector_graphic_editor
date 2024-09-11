@@ -1,4 +1,5 @@
 use common::{
+    pures::Vec2,
     types::{Coord, Rect},
     Rgba,
 };
@@ -14,13 +15,9 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
     let transform = renderer.get_transform()?;
     let max_view = renderer.get_max_view()?;
 
-    let max_view_top_left = Coord {
-        c: max_view.top_left.c,
-    };
+    let max_view_top_left = Coord::from(max_view.top_left);
 
-    let max_view_bottom_right = Coord {
-        c: max_view.bottom_right.c,
-    };
+    let max_view_bottom_right = Coord::from(max_view.bottom_right);
 
     let scene = Shape::new_from_lines(
         vec![
@@ -118,7 +115,7 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
             let coords: Vec<Coord> = shape_to_render
                 .path
                 .iter()
-                .map(|c| c.coord.transform(&to_scene_mat))
+                .map(|c| to_scene_mat * c.coord)
                 .collect();
             renderer.start_shape(&coords[0])?;
             for i in (1..(coords.len() - 1)).step_by(3) {
@@ -183,8 +180,8 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
 #[cfg(test)]
 mod test {
     use common::{
-        pures::{Affine, Vec2},
-        types::{ScreenCoord, ScreenRect},
+        pures::Affine,
+        types::{ScreenCoord, ScreenLength2d, ScreenRect},
     };
 
     use crate::scene::render::MockDrawingContext;
@@ -197,8 +194,8 @@ mod test {
         // max_view: ScreenRect { top_left: ScreenCoord { c: Vec2 { x: 0.0, y: 0.0 } }, bottom_right: ScreenCoord { c: Vec2 { x: 559.0, y: 383.0 } }
 
         let transform = Affine::identity()
-            .scale(Vec2::new(375.0, 250.0))
-            .translate(Vec2::new(279.5, 191.5));
+            .scale(ScreenLength2d::new(375.0, 250.0))
+            .translate(ScreenCoord::new(279.5, 191.5));
         let mut renderer = MockDrawingContext {
             transform: transform,
             max_view: ScreenRect {

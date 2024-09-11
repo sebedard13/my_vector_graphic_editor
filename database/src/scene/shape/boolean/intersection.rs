@@ -282,7 +282,7 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
 #[cfg(test)]
 mod test {
     use super::{shape_intersection, try_shape_intersection, ShapeIntersection};
-    use common::pures::{Affine, Vec2};
+    use common::{pures::Affine, types::Coord};
 
     use crate::{
         scene::shape::{
@@ -315,7 +315,7 @@ mod test {
             c_shape_coords,
             Affine::identity()
                 .reflect_origin()
-                .translate(Vec2::new(0.0, -0.07)),
+                .translate(Coord::new(0.0, -0.07)),
         );
 
         let merged = shape_intersection(&a, &b);

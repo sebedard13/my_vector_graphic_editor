@@ -1,4 +1,5 @@
 use common::types::Coord;
+use common::pures::Vec2;
 
 use super::curve2::{IntersectionPoint, IntersectionResult};
 

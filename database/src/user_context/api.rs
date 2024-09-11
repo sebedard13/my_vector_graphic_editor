@@ -29,7 +29,7 @@ impl SceneUserContext {
             for coord_id in &selected_shape.coords {
                 let (coord_id, coord) = {
                     let coord = shape.coord_select_mut(*coord_id).expect("not 404");
-                    let res_vec2 = coord.coord().c + movement.c;
+                    let res_vec2 = coord.coord() + Coord::from(movement);
                     (coord.id, Coord::new(res_vec2.x, res_vec2.y))
                 };
 
@@ -84,7 +84,7 @@ impl SceneUserContext {
         }
 
         let fixed_length = camera.transform_to_length2d(ScreenLength2d::new(10.0, 10.0));
-        if point_in_radius(&pos.c, &min_coord.c, &fixed_length.c) {
+        if point_in_radius(pos, min_coord, fixed_length) {
             let shape = vgc_data
                 .shape_select_mut(min_shape_index)
                 .expect("Shape is valid because it was selected");

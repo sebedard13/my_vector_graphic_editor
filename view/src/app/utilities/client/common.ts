@@ -7,26 +7,11 @@ import {
 } from "wasm-client";
 
 export class Coord implements CoordCl {
-    public c: { x: number; y: number };
-
-    public get x(): number {
-        return this.c.x;
-    }
-
-    public get y(): number {
-        return this.c.y;
-    }
-
-    public set x(x: number) {
-        this.c.x = x;
-    }
-
-    public set y(y: number) {
-        this.c.y = y;
-    }
-
+    public x: number;
+    public y: number;
     constructor(x: number, y: number) {
-        this.c = { x, y };
+        this.x = x;
+        this.y = y;
     }
 }
 
@@ -47,10 +32,10 @@ export class ScreenRect implements ScreenRectCl {
     public bottom_right: ScreenCoord;
 
     constructor(screenRectCl: ScreenRectCl) {
-        this.top_left = new ScreenCoord(screenRectCl.top_left.c.x, screenRectCl.top_left.c.y);
+        this.top_left = new ScreenCoord(screenRectCl.top_left.x, screenRectCl.top_left.y);
         this.bottom_right = new ScreenCoord(
-            screenRectCl.bottom_right.c.x,
-            screenRectCl.bottom_right.c.y,
+            screenRectCl.bottom_right.x,
+            screenRectCl.bottom_right.y,
         );
     }
 

@@ -1,6 +1,9 @@
 use polynomen::Poly;
 
-use common::{pures::Vec2, types::Coord};
+use common::{
+    pures::Vec2,
+    types::{Coord, Vector},
+};
 
 /// Find the closest point on a curve defined by p0, cp0, cp1, p1
 /// It return the t value of the curve, the distance and the closest point
@@ -13,10 +16,10 @@ pub fn t_closest(
     cp1: &Coord,
     p1: &Coord,
 ) -> (f32, f32, Coord) {
-    let a = -1.0 * p0.c + 3.0 * cp0.c - 3.0 * cp1.c + p1.c;
-    let b = 3.0 * p0.c - 6.0 * cp0.c + 3.0 * cp1.c;
-    let c = -3.0 * p0.c + 3.0 * cp0.c;
-    let d = p0.c - coord.c;
+    let a = -1.0 * p0 + 3.0 * cp0 - 3.0 * cp1 + p1;
+    let b = 3.0 * p0 - 6.0 * cp0 + 3.0 * cp1;
+    let c = -3.0 * p0 + 3.0 * cp0;
+    let d = p0 - coord;
 
     // function of approximate distance between coord and curve for t
     //d(t):=(a_x*t^(3)+b_x*t^(2)+c_x*t+d_x)^(2)+(a_y*t^(3)+b_y*t^(2)+c_y*t+d_y)^(2)
@@ -75,7 +78,7 @@ pub fn t_closest(
         .filter(|&&x| (0.0..=1.0).contains(&x))
         .for_each(|&t| {
             let curve_coord = cubic_bezier(t as f32, &p0, &cp0, &cp1, &p1);
-            let distance = coord.c.approx_distance(curve_coord.c);
+            let distance = coord.approx_distance(&curve_coord);
             if distance < min_distance {
                 min_distance = distance;
                 min_t = t as f32;
@@ -95,21 +98,22 @@ pub fn cubic_bezier(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) ->
 }
 
 /// Evaluate the derivative or the slope at t of curve defined by p0, cp0, cp1, p1
-fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Coord {
-    3.0 * (1.0 - t) * (1.0 - t) * (cp0 - p0)
+fn cubic_bezier_derivative(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vector {
+    (3.0 * (1.0 - t) * (1.0 - t) * (cp0 - p0)
         + 6.0 * (1.0 - t) * t * (cp1 - cp0)
-        + 3.0 * t * t * (p1 - cp1)
+        + 3.0 * t * t * (p1 - cp1))
+        .into()
 }
 
 /// Return the normalized tangent vector at t of curve defined by p0, cp0, cp1, p1
 /// Panic if no tangent vector found by having the same point for p0, cp0, cp1 and p1
-pub fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec2 {
+pub fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vector {
     if p0 == p1 && p0 == cp0 && p0 == cp1 {
-        return p0.c - &Vec2 { x: 0.1, y: 0.1 };
+        return Vector { x: 0.1, y: 0.1 };
     }
 
-    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1).c;
-    if tangent_vector != (Vec2 { x: 0.0, y: 0.0 }) {
+    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
+    if tangent_vector != (Vector { x: 0.0, y: 0.0 }) {
         //Normalize vector
         return tangent_vector.normal();
     }
@@ -117,8 +121,8 @@ pub fn tangent_vector(t: f32, p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) 
     //Exception with (t = 1 and cp1 == p1) or (t = 0 and cp0 == p0)
     let t = t.clamp(0.0001, 0.9999);
 
-    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1).c;
-    if tangent_vector != (Vec2 { x: 0.0, y: 0.0 }) {
+    let tangent_vector = cubic_bezier_derivative(t, p0, cp0, cp1, p1);
+    if tangent_vector != (Vector { x: 0.0, y: 0.0 }) {
         //Normalize vector
         return tangent_vector.normal();
     }
@@ -193,9 +197,9 @@ pub fn add_smooth_result(
 }
 
 pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
-    let mut vec_line = p1.c - p0.c;
-    let mut vec_cp0 = cp0.c - p0.c;
-    let mut vec_cp1 = cp1.c - p0.c;
+    let mut vec_line = p1 - p0;
+    let mut vec_cp0 = cp0 - p0;
+    let mut vec_cp1 = cp1 - p0;
 
     vec_line.normalize();
     vec_cp0.normalize();
@@ -219,7 +223,7 @@ mod test {
     use crate::math::curve::is_line;
 
     use super::{add_smooth_result, cubic_bezier, tangent_cornor_pts, tangent_vector};
-    use common::{pures::Vec2, types::Coord};
+    use common::{types::Coord, types::Vector};
 
     #[test]
     fn tangent_vector_same() {
@@ -233,7 +237,7 @@ mod test {
         assert!(!tangent.x.is_nan());
         assert!(!tangent.y.is_nan());
 
-        assert_ne!(tangent, Vec2 { x: 0.0, y: 0.0 });
+        assert_ne!(tangent, Vector { x: 0.0, y: 0.0 });
     }
 
     #[test]
@@ -270,7 +274,7 @@ mod test {
 
         assert_eq!(t, 0.5);
         assert_eq!(distance, 0.176776695297);
-        assert_eq!(closest.c, Vec2 { x: 0.125, y: 0.125 });
+        assert_eq!(closest, Coord { x: 0.125, y: 0.125 });
     }
 
     #[test]
@@ -297,55 +301,55 @@ mod test {
             add_smooth_result(&p0, &cp0, &cp1, &p1, 0.5);
 
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.0, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
+            Coord,
+            cubic_bezier(0.0, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.125, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.25, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
+            Coord,
+            cubic_bezier(0.125, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.25, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.25, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.5, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
+            Coord,
+            cubic_bezier(0.25, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.5, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.375, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.75, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
+            Coord,
+            cubic_bezier(0.375, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.75, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(1.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
+            Coord,
+            cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(1.0, &p0, &cp0_rtn, &cp1l_rtn, &p1_rtn)
         );
 
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
+            Coord,
+            cubic_bezier(0.5, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.625, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.25, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
+            Coord,
+            cubic_bezier(0.625, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.25, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.5, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
+            Coord,
+            cubic_bezier(0.75, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.5, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(0.875, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(0.75, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
+            Coord,
+            cubic_bezier(0.875, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(0.75, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
         assert_approx_eq!(
-            &Coord,
-            &cubic_bezier(1.0, &p0, &cp0, &cp1, &p1),
-            &cubic_bezier(1.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
+            Coord,
+            cubic_bezier(1.0, &p0, &cp0, &cp1, &p1),
+            cubic_bezier(1.0, &p1_rtn, &cp1r_rtn, &cp2_rtn, &p1)
         );
     }
 
@@ -364,7 +368,7 @@ mod test {
         let (_, _, p1_rtn2, _, _) =
             add_smooth_result(&p1_rtn, &cp1r_rtn, &cp2_rtn, &p1, (i2 - i1) / (1.0 - i1));
 
-        assert_approx_eq!(&Coord, &cubic_bezier(0.75, &p0, &cp0, &cp1, &p1), &p1_rtn2);
+        assert_approx_eq!(Coord, cubic_bezier(0.75, &p0, &cp0, &cp1, &p1), p1_rtn2);
     }
 
     #[test]
@@ -442,7 +446,7 @@ mod test {
     }
 
     #[test]
-    fn is_line_bug02(){
+    fn is_line_bug02() {
         let p0 = Coord::new(90.0, 0.0);
         let cp0 = Coord::new(50.9618149, 0.0);
         let cp1 = Coord::new(65.5751038, 0.0);

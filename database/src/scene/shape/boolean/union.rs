@@ -429,11 +429,11 @@ mod test {
         for i in 0..ag.data.len() {
             let coord = ag.data[i].coord;
             assert!(
-                valid_values.iter().any(|v| (v - coord.x()).abs() < 0.0001)
-                    && valid_values.iter().any(|v| (v - coord.y()).abs() < 0.0001),
+                valid_values.iter().any(|v| (v - coord.x).abs() < 0.0001)
+                    && valid_values.iter().any(|v| (v - coord.y).abs() < 0.0001),
                 "Invalid value ({}, {})",
-                coord.x(),
-                coord.y()
+                coord.x,
+                coord.y
             );
         }
     }

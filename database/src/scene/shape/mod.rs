@@ -28,11 +28,7 @@ pub struct Shape {
 impl Shape {
     pub fn render(&self, renderer: &mut dyn DrawingContext) -> Result<(), String> {
         let transform = renderer.get_transform()?;
-        let coords: Vec<Coord> = self
-            .path
-            .iter()
-            .map(|c| c.coord.transform(&transform))
-            .collect();
+        let coords: Vec<Coord> = self.path.iter().map(|c| transform * c.coord).collect();
         renderer.set_fill(&self.color)?;
         renderer.start_shape(&coords[0])?;
         for i in (1..(coords.len() - 1)).step_by(3) {
@@ -184,7 +180,7 @@ impl Shape {
     }
 
     pub fn new_circle(center: Coord, radius: Length2d) -> Self {
-        let transform = Affine::identity().scale(radius.c).translate(center.c);
+        let transform = Affine::identity().scale(radius).translate(center);
 
         //https://spencermortensen.com/articles/bezier-circle/
         let a = 1.000_055_19;
@@ -219,11 +215,11 @@ impl Shape {
         for i in 0..self.path.len() {
             let coord = self.path[i].coord;
             if i == 0 {
-                write!(&mut path, "M {} {} ", coord.x(), coord.y()).expect("Write should be ok");
+                write!(&mut path, "M {} {} ", coord.x, coord.y).expect("Write should be ok");
             } else if (i - 1) % 3 == 0 {
-                write!(&mut path, "C {} {} ", coord.x(), coord.y()).expect("Write should be ok");
+                write!(&mut path, "C {} {} ", coord.x, coord.y).expect("Write should be ok");
             } else {
-                write!(&mut path, "{} {} ", coord.x(), coord.y()).expect("Write should be ok");
+                write!(&mut path, "{} {} ", coord.x, coord.y).expect("Write should be ok");
             }
         }
         write!(&mut path, "Z").expect("Write should be ok");
@@ -237,10 +233,10 @@ impl Shape {
         for curve_index in 0..self.curves_len() {
             let curve = self.curve_select(curve_index).expect("Curve should exist");
 
-            let t_intersections = curve.intersection_with_y(coord.y());
+            let t_intersections = curve.intersection_with_y(coord.y);
             for t in t_intersections {
-                let x = curve.cubic_bezier(t).x();
-                if x > coord.x() {
+                let x = curve.cubic_bezier(t).x;
+                if x > coord.x {
                     count += 1;
                 }
             }
@@ -254,11 +250,12 @@ impl Shape {
 
     ///Creates a new shape from a string of path coordinates.
     /// # Example
-    /// ```
+    /// 
+    /// ```rust
     /// use database::Shape;
     /// let shape = Shape::quick_from_string("M 0 0 C 1.000 1.000 2 2 0 0 Z");
     /// assert_eq!(shape.curves_len(), 1);
-    /// assert_eq! (shape.curve_select(0).unwrap().cp0.coord().x(), 1.0);
+    /// assert_eq! (shape.curve_select(0).unwrap().cp0.coord().x, 1.0);
     /// ```
     pub fn quick_from_string(string: &str) -> Self {
         let coords = string_to_coords(string);
