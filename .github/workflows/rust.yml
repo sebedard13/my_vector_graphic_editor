@@ -29,8 +29,6 @@ jobs:
       working-directory: ./wasm_client
       run: wasm-pack build
     - uses: actions/setup-node@v1
-      with:
-        node-version: lts/*
     - name: npm install
       run: npm ci
     - name: Frontend test
