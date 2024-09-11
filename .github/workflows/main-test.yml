@@ -1,4 +1,4 @@
-name: Rust
+name: Main Test
 
 on:
   push:
@@ -19,8 +19,10 @@ jobs:
     - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: 1.79
+
     - name: Run test
       run: cargo test --workspace --exclude desktop
+
     - name: Build Wasm lib
       uses: jetli/wasm-pack-action@v0.4.0
       with:
@@ -28,6 +30,7 @@ jobs:
     - name: Buid wasm-client js package
       working-directory: ./wasm_client
       run: wasm-pack build
+
     - uses: actions/setup-node@v4
       with:
         node-version: latest
@@ -36,7 +39,11 @@ jobs:
       run: npm ci
     - name: install angular cli
       run: npm install -g @angular/cli@18.1.2
+
     - name: Frontend test
       working-directory: ./view
       run: ng test
+    - name: Frontend Build
+      working-directory: ./view
+      run: ng build
         
