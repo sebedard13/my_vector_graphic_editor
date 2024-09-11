@@ -21,10 +21,10 @@ jobs:
         rust-version: 1.79
     # - name: Run test
     #   run: cargo test
-    # - name: Build Wasm lib
-    #   uses: jetli/wasm-pack-action@v0.4.0
-    #   with:
-    #     version: v0.12.1
+    - name: Build Wasm lib
+      uses: jetli/wasm-pack-action@v0.4.0
+      with:
+        version: v0.12.1
     - name: Buid wasm-client js package
       working-directory: ./wasm_client
       run: wasm-pack build
