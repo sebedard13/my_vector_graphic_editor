@@ -19,18 +19,19 @@ jobs:
     - uses: hecrj/setup-rust-action@v2
       with:
         rust-version: 1.79
-    # - name: Run test
-    #   run: cargo test
+    - name: Run test
+      run: cargo test --workspace --exclude desktop
     - name: Build Wasm lib
       uses: jetli/wasm-pack-action@v0.4.0
       with:
         version: v0.12.1
     - name: Buid wasm-client js package
-      working-directory: ./wasm_client
       run: wasm-pack build
     - uses: actions/setup-node@v1
     - name: npm install
+      working-directory: ./view
       run: npm ci
     - name: Frontend test
+      working-directory: ./view
       run: ng test
         
