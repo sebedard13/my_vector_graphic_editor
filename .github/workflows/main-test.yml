@@ -1,0 +1,49 @@
+name: Main Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: hecrj/setup-rust-action@v2
+      with:
+        rust-version: 1.79
+
+    - name: Run test
+      run: cargo test --workspace --exclude desktop
+
+    - name: Build Wasm lib
+      uses: jetli/wasm-pack-action@v0.4.0
+      with:
+        version: v0.12.1
+    - name: Buid wasm-client js package
+      working-directory: ./wasm_client
+      run: wasm-pack build
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: latest
+    - name: npm install
+      working-directory: ./view
+      run: npm ci
+    - name: install angular cli
+      run: npm install -g @angular/cli@18.1.2
+
+    - name: Frontend test
+      working-directory: ./view
+      run: ng test
+    - name: Frontend Build
+      working-directory: ./view
+      run: ng build
+        
