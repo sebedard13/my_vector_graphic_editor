@@ -34,6 +34,8 @@ jobs:
     - name: npm install
       working-directory: ./view
       run: npm ci
+    - name: install angular cli
+      run: npm install -g @angular/cli@18.1.2
     - name: Frontend test
       working-directory: ./view
       run: ng test
