@@ -28,7 +28,9 @@ jobs:
     - name: Buid wasm-client js package
       working-directory: ./wasm_client
       run: wasm-pack build
-    - uses: actions/setup-node@v1
+    - uses: actions/setup-node@v4
+      with:
+        node-version: latest
     - name: npm install
       working-directory: ./view
       run: npm ci
