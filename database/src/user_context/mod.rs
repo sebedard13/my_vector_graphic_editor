@@ -2,17 +2,17 @@ use camera::Camera;
 use common::{pures::Affine, Rgba};
 use serde::{Deserialize, Serialize};
 
-use crate::{DbCoord, DrawingContext, Scene, Shape};
+use crate::{DbCoord, DrawingContext, RenderOption, Scene, Shape};
 
 pub mod api;
 pub mod camera;
 mod ui;
 pub mod user_selection;
 
-#[derive(Debug)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct SceneUserContext {
     pub scene: Scene,
+    pub render_options: RenderOption,
     pub camera: Camera,
 }
 
@@ -20,11 +20,16 @@ impl SceneUserContext {
     pub fn new(width: f32, height: f32) -> Self {
         let scene = Scene::new();
         let camera = Camera::new(scene.max_rect().center(), width, height);
-        Self { scene, camera }
+        let render_options = RenderOption::default();
+        Self {
+            scene,
+            render_options,
+            camera,
+        }
     }
 
     pub fn scene_render<T: DrawingContext>(&self, drawing_context: &mut T) -> Result<(), String> {
-        self.scene.render(drawing_context)
+        self.scene.render_with_options(drawing_context, self.render_options.clone())
     }
 }
 
@@ -54,6 +59,11 @@ impl Default for SceneUserContext {
         scene.shape_insert(shape2);
 
         let camera = Camera::new(scene.max_rect().center(), 750.0, 500.0);
-        Self { scene, camera }
+        let render_options = RenderOption::default();
+        Self {
+            scene,
+            render_options,
+            camera,
+        }
     }
 }
