@@ -3,8 +3,8 @@ use common::{
     types::{Coord, ScreenRect},
     Rgba,
 };
-use transparent_grid::render_transparent_grid;
-//use transparent_grid::render_transparent_grid;
+use serde::{Deserialize, Serialize};
+
 
 use crate::{LayerId, Scene};
 
@@ -37,7 +37,7 @@ pub trait DrawingContext {
     fn end(&mut self) -> Result<(), String>;
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct RenderOption {
     /// If set, only render the layers up to this layer not included
     pub to_layer: Option<LayerId>,
@@ -59,7 +59,8 @@ impl Scene {
     ) -> Result<(), String> {
         renderer.create()?;
         renderer.fill_background(&self.background)?;
-        render_transparent_grid(renderer)?;
+        //use transparent_grid::render_transparent_grid;
+        //render_transparent_grid(renderer)?;
 
         for layer in self.layers.iter().rev() {
             if let Some(to_layer) = options.to_layer {

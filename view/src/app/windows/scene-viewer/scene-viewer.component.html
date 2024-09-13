@@ -32,7 +32,7 @@
             </div>
         </div>
         <div class="row layer-actions">
-            <button class="show-layer p-1 flex center" (click)="node.hideLayer = !node.hideLayer">
+            <button class="show-layer p-1 flex center" (click)="toggleShowLayer(node)">
                 <fa-icon [icon]="node.hideLayer ? Icon.hideLayer : Icon.showLayer"></fa-icon>
             </button>
             <!-- <button class="edit-layer p-1 flex center" (click)="node.lockEdit = !node.lockEdit">

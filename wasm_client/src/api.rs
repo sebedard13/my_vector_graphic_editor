@@ -57,6 +57,19 @@ impl SceneClient {
             .layer_move_at(id_to_move.into(), id_position.into())
     }
 
+    pub fn hide_layer(&mut self, id_to_hide: usize) -> Result<(), String> {
+        let skip_layers = &mut self.scene_context.render_options.skip_layers;
+        if (skip_layers.iter().find(|&x| *x == id_to_hide.into())).is_none() {
+            skip_layers.push(id_to_hide.into());
+        }
+        Ok(())
+    }
 
-    
+    pub fn show_layer(&mut self, id_to_show: usize) -> Result<(), String> {
+        self.scene_context
+            .render_options
+            .skip_layers
+            .retain(|&x| x != id_to_show.into());
+        Ok(())
+    }
 }

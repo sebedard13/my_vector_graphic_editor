@@ -125,7 +125,6 @@ export class SceneViewerComponent {
             this.treeData.next(treeView);
         });
 
-        console.log($event);
         if ($event.dropPoint.x - $event.previousContainer.element.nativeElement.offsetLeft < 20) {
             //level = 0;
         }
@@ -133,5 +132,17 @@ export class SceneViewerComponent {
 
     protected trackByFn(index: number, item: MergedTreeViewModel) {
         return item.layer_id;
+    }
+
+    protected toggleShowLayer(node: MergedTreeViewModel) {
+        node.hideLayer = node.hideLayer == undefined ? true : !node.hideLayer;
+
+        this.scenes.currentSceneNow((scene) => {
+            if (node.hideLayer) {
+                scene.sceneClient.hide_layer(node.layer_id);
+            } else {
+                scene.sceneClient.show_layer(node.layer_id);
+            }
+        });
     }
 }
