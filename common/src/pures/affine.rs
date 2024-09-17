@@ -194,7 +194,7 @@ impl<T: Vec2> Mul<T> for Affine {
     type Output = T;
 
     fn mul(self, rhs: T) -> T {
-        let mut rtn = rhs.clone();
+        let mut rtn = rhs;
         rtn.set_x(self.m00 * rhs.x() + self.m01 * rhs.y() + self.m02);
         rtn.set_y(self.m10 * rhs.x() + self.m11 * rhs.y() + self.m12);
         rtn
