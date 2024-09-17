@@ -382,10 +382,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                             point_a.rel_coord = Some(*b_curve.p0);
                         }
 
-                        if point_a.t == 0.0 && point_b.t == 0.0 {
-                            point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
-                            point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
-                        } else if point_a.t == 0.0 || point_b.t == 0.0 {
+                        if point_a.t == 0.0 || point_b.t == 0.0 {
                             //Will flip later if neccesary
                             point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
                             point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
