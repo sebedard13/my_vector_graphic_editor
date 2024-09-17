@@ -91,7 +91,7 @@ pub struct MockDrawingContext {
 #[cfg(test)]
 impl Default for MockDrawingContext {
     fn default() -> Self {
-        use common::types::{ScreenCoord, ScreenRect};
+        use common::types::ScreenCoord;
         Self {
             transform: Affine::identity(),
             max_view: ScreenRect {

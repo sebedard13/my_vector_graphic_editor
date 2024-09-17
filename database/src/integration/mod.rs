@@ -56,7 +56,7 @@ fn test_shape_select_with_move() {
     assert_eq!(result.is_some(), true);
     assert_eq!(result.unwrap().id, postition_id);
 
-    db.layer_move_at(object_id, postition_id);
+    let _ = db.layer_move_at(object_id, postition_id);
 
     let result = db.shape_select_contains_mut(&Coord::new(-0.3, -0.3));
     assert_eq!(result.is_some(), true);
