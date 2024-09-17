@@ -54,8 +54,8 @@ impl Shape {
     pub fn handle_join(&mut self, curve_index_p1: usize) {
         let index_p1 = (curve_index_p1 * 3 + 3) % self.path.len();
         let len = self.path.len();
-        self.path[(index_p1 - 1) % len] = self.path[index_p1].clone();
-        self.path[(index_p1 + 1) % len] = self.path[index_p1].clone();
+        self.path[(index_p1 - 1) % len] = self.path[index_p1];
+        self.path[(index_p1 + 1) % len] = self.path[index_p1];
     }
 
     pub fn handle_separate(&mut self, curve_index_p1: usize) {
@@ -99,7 +99,7 @@ impl Shape {
         let left_handle_free = curve.left_handle_free();
         let right_handle_free = curve.right_handle_free();
 
-        let new_coords = vec![p1, p1.clone(), p1.clone()];
+        let new_coords = vec![p1, p1, p1];
         self.path.splice(index_cp1..index_cp1, new_coords);
 
         //for a straight line no handle
@@ -119,7 +119,7 @@ impl Shape {
 
     pub fn curve_insert_line(&mut self, curve_index: usize, coord: Coord) {
         let p1: DbCoord = coord.into();
-        let new_coords = vec![p1.clone(), p1.clone(), p1];
+        let new_coords = vec![p1, p1, p1];
         let index_cp1 = (curve_index * 3 + 2) % self.path.len();
         self.path.splice(index_cp1..index_cp1, new_coords);
     }

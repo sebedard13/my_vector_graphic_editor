@@ -136,6 +136,12 @@ impl Scene {
     // }
 }
 
+impl Default for Shape {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Shape {
     pub fn new() -> Self {
         Shape {
@@ -183,14 +189,14 @@ impl Shape {
         let transform = Affine::identity().scale(radius).translate(center);
 
         //https://spencermortensen.com/articles/bezier-circle/
-        let a = 1.000_055_19;
+        let a = 1.000_055_2;
         let b = 0.553_426_86;
         let c = 0.998_735_85;
 
         let start = coord::DbCoord::new(0.0, a);
 
         let coords = vec![
-            start.clone(),
+            start,
             DbCoord::new(b, c),
             DbCoord::new(c, b),
             DbCoord::new(a, 0.0),

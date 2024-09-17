@@ -56,7 +56,7 @@ fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Err
     }
 
     let merged_shapes = do_intersection(&ag, &bg, a, b);
-    return Ok(ShapeIntersection::New(merged_shapes));
+    Ok(ShapeIntersection::New(merged_shapes))
 }
 
 fn handle_touching_shape(

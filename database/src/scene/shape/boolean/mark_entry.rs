@@ -92,7 +92,7 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
         .collect();
     intersection.sort_by(|a, b| a.1.next.unwrap().cmp(&b.1.next.unwrap()));
 
-    for (i, (index_in_shape, _)) in (&intersection).into_iter().enumerate() {
+    for (i, (index_in_shape, _)) in intersection.iter().enumerate() {
         let index_in_shape = *index_in_shape;
         match shape.data[index_in_shape].intersect {
             IntersectionType::Intersection => {
@@ -186,8 +186,7 @@ fn handle_non_intersection(shape: &mut GreinerShape, other: &GreinerShape) -> Re
             // );
             shape.data[extracted.index_c0].intersect = IntersectionType::Common;
             shape.data[extracted.index_c1].intersect = IntersectionType::Common;
-        } else {
-        }
+        } 
     }
     Ok(())
 }

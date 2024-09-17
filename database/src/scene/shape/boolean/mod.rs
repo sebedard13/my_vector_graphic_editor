@@ -280,7 +280,7 @@ impl CoordOfIntersection {
             prev: None,
             entry: false,
             intersect: IntersectionType::Intersection,
-            coord: coord,
+            coord,
             rel_coord: None,
         }
     }
@@ -294,14 +294,14 @@ impl CoordOfIntersection {
             prev: None,
             entry: false,
             intersect: IntersectionType::None,
-            coord: coord,
+            coord,
             rel_coord: None,
         }
     }
 
     pub fn coord_ptr(&self) -> DbCoord {
         match &self.rel_coord {
-            Some(rel_coord) => rel_coord.clone(),
+            Some(rel_coord) => *rel_coord,
             None => DbCoord::new(self.coord.x, self.coord.y),
         }
     }
@@ -488,7 +488,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
         match current_cp0.1 {
             Some(cp0) => {
-                let mut cp0 = CoordOfIntersection::from_existing(&cp0);
+                let mut cp0 = CoordOfIntersection::from_existing(cp0);
                 result[current_index].next = Some(result.len());
                 cp0.prev = Some(current_index);
                 result.push(cp0);
@@ -505,7 +505,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
         match current_cp1.1 {
             Some(cp1) => {
-                let mut cp1 = CoordOfIntersection::from_existing(&cp1);
+                let mut cp1 = CoordOfIntersection::from_existing(cp1);
                 result[current_index].next = Some(result.len());
                 cp1.prev = Some(current_index);
                 result.push(cp1);
@@ -520,7 +520,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
             }
         }
 
-        let mut p1 = CoordOfIntersection::from_existing(&current_p1.1);
+        let mut p1 = CoordOfIntersection::from_existing(current_p1.1);
         result[current_index].next = Some(result.len());
         p1.prev = Some(current_index);
         result.push(p1);
@@ -535,8 +535,8 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     compress_coord_ptr(&mut result, start_a);
 
-    let shape = GreinerShape::new(result, start_a, intersections.len());
-    shape
+    
+    GreinerShape::new(result, start_a, intersections.len())
 }
 
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
@@ -563,17 +563,17 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
             list[i_cp1].coord = list[i_p1].coord;
 
             if list[i_p0].rel_coord.is_some() {
-                list[i_cp0].rel_coord = list[i_p0].rel_coord.clone();
+                list[i_cp0].rel_coord = list[i_p0].rel_coord;
             } else {
                 let rc = Some(list[i_p0].coord_ptr());
-                list[i_p0].rel_coord = rc.clone();
+                list[i_p0].rel_coord = rc;
                 list[i_cp0].rel_coord = rc;
             }
             if list[i_p1].rel_coord.is_some() {
-                list[i_cp1].rel_coord = list[i_p1].rel_coord.clone();
+                list[i_cp1].rel_coord = list[i_p1].rel_coord;
             } else {
                 let rc = Some(list[i_p1].coord_ptr());
-                list[i_p1].rel_coord = rc.clone();
+                list[i_p1].rel_coord = rc;
                 list[i_cp1].rel_coord = rc;
             }
         }

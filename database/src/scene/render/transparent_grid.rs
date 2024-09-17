@@ -100,7 +100,7 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
                     corner2.into(),
                     corner3.into(),
                 ],
-                to_normal_scene_mat.clone(),
+                to_normal_scene_mat,
             );
 
             let shape_to_render = match shape.intersection(&scene_view_shape) {
