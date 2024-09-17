@@ -70,27 +70,21 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d1cx = 3.0 * (cp0x - p0x);
     let d1cy = 3.0 * (cp0y - p0y);
 
-    Poly::new_from_coeffs(&[d1cx / d1ax, d1bx / d1ax, 1.0])
-        .real_roots()
-        .map(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d1cx / d1ax, d1bx / d1ax, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            
-        });
+        }
+    }
 
-    Poly::new_from_coeffs(&[d1cy / d1ay, d1by / d1ay, 1.0])
-        .real_roots()
-        .map(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d1cy / d1ay, d1by / d1ay, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            
-        });
+        }
+    }
 
     // for second derivative
     let d2ax = 6.0 * (-p0x + 3.0 * cp0x - 3.0 * cp1x + p1x);
@@ -98,27 +92,21 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d2bx = 6.0 * (p0x - 2.0 * cp0x + cp1x);
     let d2by = 6.0 * (p0y - 2.0 * cp0y + cp1y);
 
-    Poly::new_from_coeffs(&[d2bx / d2ax, 1.0])
-        .real_roots()
-        .map(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d2bx / d2ax, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            
-        });
+        }
+    }
 
-    Poly::new_from_coeffs(&[d2by / d2ay, 1.0])
-        .real_roots()
-        .map(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d2by / d2ay, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            
-        });
+        }
+    }
 
     vec.sort_by(|a, b| a.partial_cmp(b).expect("No Nan value possible"));
     vec.into_iter().map(|x| x as f32).collect()
@@ -250,28 +238,28 @@ fn intersection_simple(
 fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
 
-    if &todo[0].c1_p0 == &todo[0].c2_p0 {
+    if todo[0].c1_p0 == todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 0.0,
         });
     }
-    if &todo[0].c1_p1 == &todo[0].c2_p1 {
+    if todo[0].c1_p1 == todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
             t2: 1.0,
         });
     }
-    if &todo[0].c1_p0 == &todo[0].c2_p1 {
+    if todo[0].c1_p0 == todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 1.0,
         });
     }
-    if &todo[0].c1_p1 == &todo[0].c2_p0 {
+    if todo[0].c1_p1 == todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
@@ -310,7 +298,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
 
             let mut is_present = false;
             for r in &res {
-                if &rtn.coord == &r.coord {
+                if rtn.coord == r.coord {
                     is_present = true;
                     break;
                 }

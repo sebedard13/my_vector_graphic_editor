@@ -66,21 +66,11 @@ enum IntersectionType {
 
 impl IntersectionType {
     pub fn is_intersection(&self) -> bool {
-        match self {
-            IntersectionType::Intersection => true,
-            IntersectionType::CommonIntersection => true,
-            IntersectionType::UnspecifiedCommonIntersection => true,
-            _ => false,
-        }
+        matches!(self, IntersectionType::Intersection | IntersectionType::CommonIntersection | IntersectionType::UnspecifiedCommonIntersection)
     }
 
     pub fn is_common(&self) -> bool {
-        match self {
-            IntersectionType::Common => true,
-            IntersectionType::CommonIntersection => true,
-            IntersectionType::IntersectionCommon => true,
-            _ => false,
-        }
+        matches!(self, IntersectionType::Common | IntersectionType::CommonIntersection | IntersectionType::IntersectionCommon)
     }
 }
 
@@ -354,7 +344,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 IntersectionResult::Pts(intersection_points) => {
                     for point in intersection_points {
                         //continue if point is already in the list
-                        if intersections_a.iter().any(|x| &x.coord == &point.coord) {
+                        if intersections_a.iter().any(|x| x.coord == point.coord) {
                             continue;
                         }
 

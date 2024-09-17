@@ -156,8 +156,8 @@ impl Shape {
         assert_eq!((coords.len() - 1) % 3, 0);
         let mut shape = Shape::new();
 
-        for i in 0..coords.len() {
-            shape.path.push(coords[i].transform(&transform));
+        for coord in &coords {
+            shape.path.push(coord.transform(&transform));
         }
 
         shape
@@ -172,10 +172,10 @@ impl Shape {
 
         shape.path.push(coords[0].transform(&transform));
         shape.path.push(coords[0].transform(&transform));
-        for i in 1..coords.len() {
-            shape.path.push(coords[i].transform(&transform));
-            shape.path.push(coords[i].transform(&transform));
-            shape.path.push(coords[i].transform(&transform));
+        for coord in coords.iter().skip(1) {
+            shape.path.push(coord.transform(&transform));
+            shape.path.push(coord.transform(&transform));
+            shape.path.push(coord.transform(&transform));
         }
 
         shape.path.push(coords[0].transform(&transform));

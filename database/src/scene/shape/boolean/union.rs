@@ -101,12 +101,12 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
     let mut intersections_done = vec![false; ag.intersections_len];
     
 
-    for i in 0..ag.intersections_len {
+    for (i, intersection_done) in intersections_done.iter_mut().enumerate().take(ag.intersections_len) {
         let current = &ag.data[i];
         if !(current.intersect == IntersectionType::Intersection
             || current.intersect == IntersectionType::CommonIntersection)
         {
-            intersections_done[i] = true;
+            *intersection_done = true;
         }
     }
 
