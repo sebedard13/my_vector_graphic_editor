@@ -33,9 +33,9 @@ fn create_shape_from_infinite_lines(
     let l1v_coord = Coord::from(*l1v) * distance_max * 4.0 + l1;
     let l2v_coord = Coord::from(*l2v) * distance_max * 4.0 + l2;
 
-    let min_inf = Coord::min(&Coord::min(&Coord::min(&l1v_coord, &l2v_coord), &l1), &l2)
+    let min_inf = Coord::min(&Coord::min(&Coord::min(&l1v_coord, &l2v_coord), l1), l2)
         + Coord::new(-distance_max, -distance_max) * 2.0;
-    let max_inf = Coord::max(&Coord::max(&Coord::max(&l1v_coord, &l2v_coord), &l1), &l2)
+    let max_inf = Coord::max(&Coord::max(&Coord::max(&l1v_coord, &l2v_coord), l1), l2)
         + Coord::new(distance_max, distance_max) * 2.0;
 
     let (b0, b1, b2, b4) = {
@@ -56,8 +56,8 @@ fn create_shape_from_infinite_lines(
         }
     };
 
-    let vertices = [l2v_coord, *l2, *l1, l1v_coord, b0, b1, b2, b4];
-    vertices
+    
+    [l2v_coord, *l2, *l1, l1v_coord, b0, b1, b2, b4]
 }
 
 fn contains_point(vertices: &[Coord; 8], point: &Coord) -> bool {
@@ -67,11 +67,9 @@ fn contains_point(vertices: &[Coord; 8], point: &Coord) -> bool {
         let v1 = &vertices[i];
         let v2 = &vertices[(i + 1) % vertices.len()];
 
-        if f32::abs(point.y() - v2.y()) <= PRECISION && f32::abs(point.y() - v1.y()) <= PRECISION {
-            if v1.x().min(v2.x()) <= point.x() && point.x() <= v1.x().max(v2.x()) {
-                count += 1;
-                continue;
-            }
+        if f32::abs(point.y() - v2.y()) <= PRECISION && f32::abs(point.y() - v1.y()) <= PRECISION && v1.x().min(v2.x()) <= point.x() && point.x() <= v1.x().max(v2.x()) {
+            count += 1;
+            continue;
         }
 
         if f32::abs(point.y() - v2.y()) <= PRECISION || f32::abs(point.y() - v1.y()) <= PRECISION {

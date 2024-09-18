@@ -30,7 +30,7 @@ pub trait Vec2:
 
     fn normal(&self) -> Self {
         let norm = self.norm();
-        let mut copy = self.clone();
+        let mut copy = *self;
         copy.set_y(copy.y() / norm);
         copy.set_x(copy.x() / norm);
         copy
@@ -60,14 +60,14 @@ pub trait Vec2:
     }
 
     fn min(a: &Self, b: &Self) -> Self {
-        let mut copy = a.clone();
+        let mut copy = *a;
         copy.set_x(a.x().min(b.x()));
         copy.set_y(a.y().min(b.y()));
         copy
     }
 
     fn max(a: &Self, b: &Self) -> Self {
-        let mut copy = a.clone();
+        let mut copy = *a;
         copy.set_x(a.x().max(b.x()));
         copy.set_y(a.y().max(b.y()));
         copy

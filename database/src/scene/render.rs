@@ -73,7 +73,7 @@ impl Scene {
                 continue;
             }
 
-            if options.only_layers.len() == 0 || options.only_layers.contains(&layer.id) {
+            if options.only_layers.is_empty() || options.only_layers.contains(&layer.id) {
                 layer.value.render(renderer)?;
             }
         }
@@ -91,7 +91,7 @@ pub struct MockDrawingContext {
 #[cfg(test)]
 impl Default for MockDrawingContext {
     fn default() -> Self {
-        use common::types::{ScreenCoord, ScreenRect};
+        use common::types::ScreenCoord;
         Self {
             transform: Affine::identity(),
             max_view: ScreenRect {

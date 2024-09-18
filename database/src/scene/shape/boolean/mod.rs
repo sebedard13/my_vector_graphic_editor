@@ -66,21 +66,11 @@ enum IntersectionType {
 
 impl IntersectionType {
     pub fn is_intersection(&self) -> bool {
-        match self {
-            IntersectionType::Intersection => true,
-            IntersectionType::CommonIntersection => true,
-            IntersectionType::UnspecifiedCommonIntersection => true,
-            _ => false,
-        }
+        matches!(self, IntersectionType::Intersection | IntersectionType::CommonIntersection | IntersectionType::UnspecifiedCommonIntersection)
     }
 
     pub fn is_common(&self) -> bool {
-        match self {
-            IntersectionType::Common => true,
-            IntersectionType::CommonIntersection => true,
-            IntersectionType::IntersectionCommon => true,
-            _ => false,
-        }
+        matches!(self, IntersectionType::Common | IntersectionType::CommonIntersection | IntersectionType::IntersectionCommon)
     }
 }
 
@@ -280,7 +270,7 @@ impl CoordOfIntersection {
             prev: None,
             entry: false,
             intersect: IntersectionType::Intersection,
-            coord: coord,
+            coord,
             rel_coord: None,
         }
     }
@@ -294,14 +284,14 @@ impl CoordOfIntersection {
             prev: None,
             entry: false,
             intersect: IntersectionType::None,
-            coord: coord,
+            coord,
             rel_coord: None,
         }
     }
 
     pub fn coord_ptr(&self) -> DbCoord {
         match &self.rel_coord {
-            Some(rel_coord) => rel_coord.clone(),
+            Some(rel_coord) => *rel_coord,
             None => DbCoord::new(self.coord.x, self.coord.y),
         }
     }
@@ -354,7 +344,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                 IntersectionResult::Pts(intersection_points) => {
                     for point in intersection_points {
                         //continue if point is already in the list
-                        if intersections_a.iter().any(|x| &x.coord == &point.coord) {
+                        if intersections_a.iter().any(|x| x.coord == point.coord) {
                             continue;
                         }
 
@@ -382,10 +372,7 @@ fn find_intersecions(a: &Shape, b: &Shape) -> (Vec<CoordOfIntersection>, Vec<Coo
                             point_a.rel_coord = Some(*b_curve.p0);
                         }
 
-                        if point_a.t == 0.0 && point_b.t == 0.0 {
-                            point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
-                            point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
-                        } else if point_a.t == 0.0 || point_b.t == 0.0 {
+                        if point_a.t == 0.0 || point_b.t == 0.0 {
                             //Will flip later if neccesary
                             point_a.intersect = IntersectionType::UnspecifiedCommonIntersection;
                             point_b.intersect = IntersectionType::UnspecifiedCommonIntersection;
@@ -491,7 +478,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
         match current_cp0.1 {
             Some(cp0) => {
-                let mut cp0 = CoordOfIntersection::from_existing(&cp0);
+                let mut cp0 = CoordOfIntersection::from_existing(cp0);
                 result[current_index].next = Some(result.len());
                 cp0.prev = Some(current_index);
                 result.push(cp0);
@@ -508,7 +495,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
         match current_cp1.1 {
             Some(cp1) => {
-                let mut cp1 = CoordOfIntersection::from_existing(&cp1);
+                let mut cp1 = CoordOfIntersection::from_existing(cp1);
                 result[current_index].next = Some(result.len());
                 cp1.prev = Some(current_index);
                 result.push(cp1);
@@ -523,7 +510,7 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
             }
         }
 
-        let mut p1 = CoordOfIntersection::from_existing(&current_p1.1);
+        let mut p1 = CoordOfIntersection::from_existing(current_p1.1);
         result[current_index].next = Some(result.len());
         p1.prev = Some(current_index);
         result.push(p1);
@@ -538,8 +525,8 @@ fn create_shape(shape: &Shape, mut intersections: Vec<CoordOfIntersection>) -> G
 
     compress_coord_ptr(&mut result, start_a);
 
-    let shape = GreinerShape::new(result, start_a, intersections.len());
-    shape
+    
+    GreinerShape::new(result, start_a, intersections.len())
 }
 
 fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
@@ -566,17 +553,17 @@ fn compress_coord_ptr(list: &mut Vec<CoordOfIntersection>, start_a: usize) {
             list[i_cp1].coord = list[i_p1].coord;
 
             if list[i_p0].rel_coord.is_some() {
-                list[i_cp0].rel_coord = list[i_p0].rel_coord.clone();
+                list[i_cp0].rel_coord = list[i_p0].rel_coord;
             } else {
                 let rc = Some(list[i_p0].coord_ptr());
-                list[i_p0].rel_coord = rc.clone();
+                list[i_p0].rel_coord = rc;
                 list[i_cp0].rel_coord = rc;
             }
             if list[i_p1].rel_coord.is_some() {
-                list[i_cp1].rel_coord = list[i_p1].rel_coord.clone();
+                list[i_cp1].rel_coord = list[i_p1].rel_coord;
             } else {
                 let rc = Some(list[i_p1].coord_ptr());
-                list[i_p1].rel_coord = rc.clone();
+                list[i_p1].rel_coord = rc;
                 list[i_cp1].rel_coord = rc;
             }
         }

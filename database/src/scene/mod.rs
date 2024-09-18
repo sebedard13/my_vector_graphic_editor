@@ -45,6 +45,12 @@ pub struct Scene {
     layers: Vec<Layer>,
 }
 
+impl Default for Scene {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Scene {
     pub fn new() -> Self {
         Scene {

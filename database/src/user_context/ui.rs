@@ -46,7 +46,7 @@ impl SceneUserContext {
 
             //Draw coord
             for db_coord in shape.path.iter() {
-                let coord_state = shape_selected.coord_state(&selected, db_coord.id);
+                let coord_state = shape_selected.coord_state(selected, db_coord.id);
                 let color = match coord_state {
                     CoordState::Hover => Rgba::new(0x0E, 0x90, 0xAA, 255),
                     CoordState::Selected => Rgba::new(0x3A, 0xD1, 0xEF, 255),

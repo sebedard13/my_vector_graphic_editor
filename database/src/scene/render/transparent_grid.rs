@@ -11,6 +11,7 @@ use super::DrawingContext;
 const F_WIDTH: f32 = 45.0; // px
 const I_WIDTH: i32 = F_WIDTH as i32; // px
 
+#[allow(dead_code)]
 pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(), String> {
     let transform = renderer.get_transform()?;
     let max_view = renderer.get_max_view()?;
@@ -100,7 +101,7 @@ pub fn render_transparent_grid(renderer: &mut impl DrawingContext) -> Result<(),
                     corner2.into(),
                     corner3.into(),
                 ],
-                to_normal_scene_mat.clone(),
+                to_normal_scene_mat,
             );
 
             let shape_to_render = match shape.intersection(&scene_view_shape) {

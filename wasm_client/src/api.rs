@@ -1,5 +1,5 @@
 use common::Rgba;
-use database::{SceneUserContext, TreeViewModel};
+use database::{LayerId, SceneUserContext, TreeViewModel};
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -59,7 +59,7 @@ impl SceneClient {
 
     pub fn hide_layer(&mut self, id_to_hide: usize) -> Result<(), String> {
         let skip_layers = &mut self.scene_context.render_options.skip_layers;
-        if (skip_layers.iter().find(|&x| *x == id_to_hide.into())).is_none() {
+        if !skip_layers.iter().any(|x| *x == LayerId::from(id_to_hide)) {
             skip_layers.push(id_to_hide.into());
         }
         Ok(())

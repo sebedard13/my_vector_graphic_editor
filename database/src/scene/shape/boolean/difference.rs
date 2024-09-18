@@ -64,7 +64,6 @@ fn try_shape_difference(a: &Shape, b: &Shape) -> Result<ShapeDifference, Error> 
     Ok(ShapeDifference::New(merged_shapes))
 }
 
-
 fn handle_touching_shape(
     ag: &GreinerShape,
     bg: &GreinerShape,
@@ -108,12 +107,16 @@ fn handle_touching_shape(
 fn do_difference(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Vec<Shape> {
     let mut intersections_done = vec![false; ag.intersections_len];
 
-    for i in 0..ag.intersections_len {
+    for (i, intersection_done) in intersections_done
+        .iter_mut()
+        .enumerate()
+        .take(ag.intersections_len)
+    {
         let current = &ag.data[i];
         if !(current.intersect == IntersectionType::Intersection
             || (current.intersect == IntersectionType::CommonIntersection && !current.entry))
         {
-            intersections_done[i] = true;
+            *intersection_done = true;
         }
     }
 

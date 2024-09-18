@@ -52,7 +52,7 @@ pub fn curve_realy_intersect(
         //If vector are next to each other after the sort, then the curves are not intersecting
         let vector_together = vec[0].0 == vec[1].0 || vec[1].0 == vec[2].0;
 
-        return !vector_together || has_a_same_angle;
+        !vector_together || has_a_same_angle
     } else if c1_p1 == n_c1_p1 && c2_p0 == n_c2_p0 || c1_p1 == n_c2_p0 && c2_p0 == n_c1_p1 {
         let lv1 = tangent_vector(0.0, n_c1_p1, n_c1_cp1, n_c1_cp0, n_c1_p0);
         let lv2 = tangent_vector(0.0, n_c2_p0, n_c2_cp0, n_c2_cp1, n_c2_p1);
@@ -60,8 +60,8 @@ pub fn curve_realy_intersect(
         let point1 = cubic_bezier(0.1, c2_p0, c2_cp0, c2_cp1, c2_p1);
 
         println!("{:?} {:?} {:?} {:?} {:?} {:?}", point0, point1, n_c1_p1, lv1, n_c2_p0, lv2);
-        let res = points_are_different_side(&point0, &point1, n_c1_p1, &lv1, n_c2_p0, &lv2);
-        res
+        
+        points_are_different_side(&point0, &point1, n_c1_p1, &lv1, n_c2_p0, &lv2)
     } else {
         panic!("broo what is this");
     }

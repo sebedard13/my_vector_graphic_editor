@@ -57,9 +57,9 @@ impl Shape {
     pub fn close(&mut self) {
         if !self.is_closed() {
             if let Some(first) = self.path.first() {
-                let first_coord = first.clone();
+                let first_coord = *first;
                 if let Some(last) = self.path.last() {
-                    let last_coord = last.clone();
+                    let last_coord = *last;
                     self.path.push(last_coord);
                     self.path.push(first_coord);
                     self.path.push(first_coord);

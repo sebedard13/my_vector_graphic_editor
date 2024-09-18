@@ -155,27 +155,27 @@ impl Camera {
 
     pub fn transform_to_length2d(&self, movement: ScreenLength2d) -> Length2d {
         let res = movement / self.scaling;
-        let res = Length2d::new(
+        
+
+        Length2d::new(
             res.x / self.get_base_scale().x / 0.5,
             res.y / self.get_base_scale().y / 0.5,
-        );
-
-        res
+        )
     }
 
     pub fn transform_to_length2d_no_scale(&self, length: ScreenLength2d) -> Length2d {
-        let res = Length2d::new(
+        
+
+        Length2d::new(
             length.x / self.get_base_scale().x / 0.5,
             length.y / self.get_base_scale().y / 0.5,
-        );
-
-        res
+        )
     }
 
     pub fn transform_to_length2d_with_rotation(&self, movement: ScreenLength2d) -> Length2d {
         let m = self.get_inverse_transform();
         let result = m * movement - m * ScreenLength2d::new(0.0, 0.0);
-        return Length2d::from(result);
+        Length2d::from(result)
     }
 
     ///  Zooms the camera in or out by the given amount, centered on the given point.

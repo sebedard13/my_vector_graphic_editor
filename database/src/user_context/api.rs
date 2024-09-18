@@ -90,7 +90,6 @@ impl SceneUserContext {
                 .expect("Shape is valid because it was selected");
 
             shape.curve_insert_smooth(min_curve_index, min_t);
-            return;
         }
     }
 
@@ -177,11 +176,11 @@ impl SceneUserContext {
             return Err("Deserialization should be valid".to_string());
         }
 
-        return Ok(scene_user_context_data.unwrap());
+        Ok(scene_user_context_data.unwrap())
     }
 
     pub fn save(&self) -> Result<Vec<u8>, String> {
         let vec = postcard::to_allocvec(self).map_err(|_| "Serizalization should be valid")?;
-        return Ok(vec);
+        Ok(vec)
     }
 }

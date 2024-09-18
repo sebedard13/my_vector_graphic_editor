@@ -136,6 +136,12 @@ impl Scene {
     // }
 }
 
+impl Default for Shape {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Shape {
     pub fn new() -> Self {
         Shape {
@@ -150,8 +156,8 @@ impl Shape {
         assert_eq!((coords.len() - 1) % 3, 0);
         let mut shape = Shape::new();
 
-        for i in 0..coords.len() {
-            shape.path.push(coords[i].transform(&transform));
+        for coord in &coords {
+            shape.path.push(coord.transform(&transform));
         }
 
         shape
@@ -166,10 +172,10 @@ impl Shape {
 
         shape.path.push(coords[0].transform(&transform));
         shape.path.push(coords[0].transform(&transform));
-        for i in 1..coords.len() {
-            shape.path.push(coords[i].transform(&transform));
-            shape.path.push(coords[i].transform(&transform));
-            shape.path.push(coords[i].transform(&transform));
+        for coord in coords.iter().skip(1) {
+            shape.path.push(coord.transform(&transform));
+            shape.path.push(coord.transform(&transform));
+            shape.path.push(coord.transform(&transform));
         }
 
         shape.path.push(coords[0].transform(&transform));
@@ -183,14 +189,14 @@ impl Shape {
         let transform = Affine::identity().scale(radius).translate(center);
 
         //https://spencermortensen.com/articles/bezier-circle/
-        let a = 1.000_055_19;
+        let a = 1.000_055_2;
         let b = 0.553_426_86;
         let c = 0.998_735_85;
 
         let start = coord::DbCoord::new(0.0, a);
 
         let coords = vec![
-            start.clone(),
+            start,
             DbCoord::new(b, c),
             DbCoord::new(c, b),
             DbCoord::new(a, 0.0),
