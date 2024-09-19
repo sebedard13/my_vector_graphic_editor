@@ -43,20 +43,20 @@ impl SceneUserContext {
         selected: &mut UserSelection,
         mouse_position: ScreenCoord,
     ) {
-        let vgc_data = &mut self.scene;
+        let scene = &mut self.scene;
         let camera = &mut self.camera;
         let pos = camera.project(mouse_position);
 
         log::debug!("hover_coord: {:?}", selected.hover_coord);
         if selected.hover_coord.is_some() {
             let hover_coord = selected.hover_coord.take().unwrap();
-            let shape = vgc_data
+            let shape = scene
                 .shape_select_mut(hover_coord.shape_index)
                 .expect("Not 404");
             shape.coord_delete(hover_coord.id).expect("Not 404");
 
             if shape.is_empty() {
-                vgc_data.layer_delete(hover_coord.shape_index);
+                scene.layer_delete(hover_coord.shape_index);
                 selected.remove_shape(hover_coord.shape_index);
             }
             return;
@@ -70,7 +70,7 @@ impl SceneUserContext {
         let mut min_t = 0.0;
 
         for shape_selected in &selected.shapes {
-            let shape = vgc_data.shape_select(shape_selected.shape_index).unwrap();
+            let shape = scene.shape_select(shape_selected.shape_index).unwrap();
 
             let (curve_index, t, distance, coord) = shape.closest_curve(&pos);
 
@@ -85,7 +85,7 @@ impl SceneUserContext {
 
         let fixed_length = camera.transform_to_length2d(ScreenLength2d::new(10.0, 10.0));
         if point_in_radius(pos, min_coord, fixed_length) {
-            let shape = vgc_data
+            let shape = scene
                 .shape_select_mut(min_shape_index)
                 .expect("Shape is valid because it was selected");
 

@@ -6,6 +6,7 @@ use crate::{DbCoord, DrawingContext, RenderOption, Scene, Shape};
 
 pub mod api;
 pub mod camera;
+mod commands;
 mod ui;
 pub mod user_selection;
 

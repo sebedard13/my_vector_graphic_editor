@@ -4,6 +4,7 @@ use common::pures::Affine;
 use common::types::Coord;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum CoordType {
     P0,
     CP0,
@@ -63,6 +64,8 @@ impl Shape {
                     self.path.remove(index); // P0
                     self.path.remove(index); // CPr
                     self.path.remove(index); // CPl of P0
+                    let len = self.path.len();
+                    self.path[len - 1] = self.path[0]; //Change to the first P0
                 } else {
                     self.path.remove(index); //P0
                     self.path.remove(index); //CPr
@@ -116,7 +119,7 @@ impl Shape {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 pub struct DbCoord {
     pub id: CoordId,
     pub(in super::super) coord: Coord,

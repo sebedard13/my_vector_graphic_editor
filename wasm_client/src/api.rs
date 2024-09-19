@@ -54,7 +54,7 @@ impl SceneClient {
     pub fn move_layer(&mut self, id_to_move: usize, id_position: usize) -> Result<(), String> {
         self.scene_context
             .scene
-            .layer_move_at(id_to_move.into(), id_position.into())
+            .layer_move_before(id_to_move.into(), id_position.into())
     }
 
     pub fn hide_layer(&mut self, id_to_hide: usize) -> Result<(), String> {
