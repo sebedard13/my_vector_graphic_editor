@@ -56,7 +56,7 @@ fn try_shape_intersection(a: &Shape, b: &Shape) -> Result<ShapeIntersection, Err
     }
 
     let merged_shapes = do_intersection(&ag, &bg, a, b);
-    return Ok(ShapeIntersection::New(merged_shapes));
+    Ok(ShapeIntersection::New(merged_shapes))
 }
 
 fn handle_touching_shape(
@@ -77,7 +77,10 @@ fn handle_touching_shape(
         ));
     }
 
-    if count_intersections == 0 && ag.intersections_len * 3 == ag.len() && bg.intersections_len * 3 == bg.len() {
+    if count_intersections == 0
+        && ag.intersections_len * 3 == ag.len()
+        && bg.intersections_len * 3 == bg.len()
+    {
         return Err(anyhow::anyhow!(
             "Only common intersections and free points. Is it the same shape?"
         ));
@@ -104,13 +107,17 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
     let mut intersections_done = vec![false; ag.intersections_len];
     let mut shapes = Vec::new();
 
-    for i in 0..ag.intersections_len {
+    for (i, intersection_done) in intersections_done
+        .iter_mut()
+        .enumerate()
+        .take(ag.intersections_len)
+    {
         let current = &ag.data[i];
         if !(current.intersect == IntersectionType::Intersection
             || (current.intersect == IntersectionType::IntersectionCommon && !current.entry)
             || (current.intersect == IntersectionType::CommonIntersection && current.entry))
         {
-            intersections_done[i] = true;
+            *intersection_done = true;
         }
     }
 
@@ -453,7 +460,7 @@ mod test {
     }
 
     #[test]
-    fn bug2_intersection_trans(){
+    fn bug2_intersection_trans() {
         //a "M 0 630 C 0 630 0 675 0 675 C 0 675 45 675 45 675 C 45 675 45 630 45 630 C 45 630 0 630 0 630 Z" and b "M 0 672.5 C 0 672.5 724.5002 672.5 724.5002 672.5 C 724.5002 672.5 724.5002 172.5 724.5002 172.5 C 724.5002 172.5 -0.000011444092 172.5 -0.000011444092 172.5 C -0.000011444092 172.5 0 672.5 0 672.5 Z"
         let a = Shape::quick_from_string("M 0 630 C 0 630 0 675 0 675 C 0 675 45 675 45 675 C 45 675 45 630 45 630 C 45 630 0 630 0 630 Z");
         let b = Shape::quick_from_string("M 0 672.5 C 0 672.5 724.5002 672.5 724.5002 672.5 C 724.5002 672.5 724.5002 172.5 724.5002 172.5 C 724.5002 172.5 -0.000011444092 172.5 -0.000011444092 172.5 C -0.000011444092 172.5 0 672.5 0 672.5 Z");
@@ -468,6 +475,5 @@ mod test {
         };
 
         verify_intersection(merged, a, b);
-    
     }
 }

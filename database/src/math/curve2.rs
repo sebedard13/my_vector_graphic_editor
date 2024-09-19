@@ -12,13 +12,13 @@ use super::line_intersection::line_intersection;
 
 #[allow(dead_code)]
 pub fn bounding_box(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Rect {
-    let extremities = extremites(&p0, &cp0, &cp1, &p1);
+    let extremities = extremites(p0, cp0, cp1, p1);
 
     let mut min = Coord::new(f32::MAX, f32::MAX);
     let mut max = Coord::new(f32::MIN, f32::MIN);
 
     for t in extremities {
-        let value = cubic_bezier(t, &p0, &cp0, &cp1, &p1);
+        let value = cubic_bezier(t, p0, cp0, cp1, p1);
 
         min = Coord::min(&min, &value);
         max = Coord::max(&max, &value);
@@ -70,27 +70,21 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d1cx = 3.0 * (cp0x - p0x);
     let d1cy = 3.0 * (cp0y - p0y);
 
-    Poly::new_from_coeffs(&vec![d1cx / d1ax, d1bx / d1ax, 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d1cx / d1ax, d1bx / d1ax, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            Some(())
-        });
+        }
+    }
 
-    Poly::new_from_coeffs(&vec![d1cy / d1ay, d1by / d1ay, 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d1cy / d1ay, d1by / d1ay, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            Some(())
-        });
+        }
+    }
 
     // for second derivative
     let d2ax = 6.0 * (-p0x + 3.0 * cp0x - 3.0 * cp1x + p1x);
@@ -98,27 +92,21 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d2bx = 6.0 * (p0x - 2.0 * cp0x + cp1x);
     let d2by = 6.0 * (p0y - 2.0 * cp0y + cp1y);
 
-    Poly::new_from_coeffs(&vec![d2bx / d2ax, 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d2bx / d2ax, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            Some(())
-        });
+        }
+    }
 
-    Poly::new_from_coeffs(&vec![d2by / d2ay, 1.0])
-        .real_roots()
-        .and_then(|roots| {
-            for root in roots {
-                if root > 0.0 && root < 1.0 {
-                    vec.push(root);
-                }
+    if let Some(roots) = Poly::new_from_coeffs(&[d2by / d2ay, 1.0]).real_roots() {
+        for root in roots {
+            if root > 0.0 && root < 1.0 {
+                vec.push(root);
             }
-            Some(())
-        });
+        }
+    }
 
     vec.sort_by(|a, b| a.partial_cmp(b).expect("No Nan value possible"));
     vec.into_iter().map(|x| x as f32).collect()
@@ -184,7 +172,7 @@ pub fn intersection(
     }
 
     let res = intersection_simple(c1_p0, c1_cp0, c1_cp1, c1_p1, c2_p0, c2_cp0, c2_cp1, c2_p1);
-    if res.len() == 0 {
+    if res.is_empty() {
         return IntersectionResult::None;
     }
     IntersectionResult::Pts(res)
@@ -250,28 +238,28 @@ fn intersection_simple(
 fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<IntersectionPoint>, String> {
     let mut res: Vec<IntersectionPoint> = Vec::new();
 
-    if &todo[0].c1_p0 == &todo[0].c2_p0 {
+    if todo[0].c1_p0 == todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 0.0,
         });
     }
-    if &todo[0].c1_p1 == &todo[0].c2_p1 {
+    if todo[0].c1_p1 == todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
             t2: 1.0,
         });
     }
-    if &todo[0].c1_p0 == &todo[0].c2_p1 {
+    if todo[0].c1_p0 == todo[0].c2_p1 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p0,
             t1: 0.0,
             t2: 1.0,
         });
     }
-    if &todo[0].c1_p1 == &todo[0].c2_p0 {
+    if todo[0].c1_p1 == todo[0].c2_p0 {
         res.push(IntersectionPoint {
             coord: todo[0].c1_p1,
             t1: 1.0,
@@ -281,7 +269,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
 
     let mut max_todo = 0;
     let mut i = 0;
-    while todo.len() > 0 {
+    while !todo.is_empty() {
         max_todo = max_todo.max(todo.len());
         // println!("i: {} todo: {}", i, todo.len());
         if i > 50_000 {
@@ -310,7 +298,7 @@ fn intersection_recsv(todo: &mut Vec<IntersectionToDo>) -> Result<Vec<Intersecti
 
             let mut is_present = false;
             for r in &res {
-                if &rtn.coord == &r.coord {
+                if rtn.coord == r.coord {
                     is_present = true;
                     break;
                 }
@@ -440,7 +428,7 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
         return Vec::new();
     }
 
-    let poly = Poly::new_from_coeffs(&vec![coeff0, coeff1, coeff2, coeff3]);
+    let poly = Poly::new_from_coeffs(&[coeff0, coeff1, coeff2, coeff3]);
 
     let croots = poly.complex_roots();
 
@@ -531,7 +519,7 @@ pub fn curves_overlap(
         }
     }
 
-    return Overlap::None;
+    Overlap::None
 }
 
 #[cfg(test)]

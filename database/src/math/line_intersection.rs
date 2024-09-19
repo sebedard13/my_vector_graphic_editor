@@ -55,7 +55,7 @@ pub fn line_intersection(
         - c1_p1.y() * c2_p0.x())
         / div;
 
-    if 0.0 > t1 || t1 > 1.0 || 0.0 > t2 || t2 > 1.0 {
+    if !(0.0..=1.0).contains(&t1) || !(0.0..=1.0).contains(&t2) {
         return IntersectionResult::None;
     }
 
@@ -78,15 +78,15 @@ pub fn line_intersection(
         t2 = 1.0;
     }
 
-    return IntersectionResult::Pts(vec![IntersectionPoint {
+    IntersectionResult::Pts(vec![IntersectionPoint {
         coord: line_eval(c1_p0, c1_p1, t1),
         t1,
         t2,
-    }]);
+    }])
 }
 
 fn line_eval(c0: &Coord, c1: &Coord, t: f32) -> Coord {
-    return (1.0 - t) * c0 + t * c1;
+    (1.0 - t) * c0 + t * c1
 }
 
 #[cfg(test)]

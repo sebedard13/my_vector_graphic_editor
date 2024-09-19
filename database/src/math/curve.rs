@@ -77,7 +77,7 @@ pub fn t_closest(
         .iter()
         .filter(|&&x| (0.0..=1.0).contains(&x))
         .for_each(|&t| {
-            let curve_coord = cubic_bezier(t as f32, &p0, &cp0, &cp1, &p1);
+            let curve_coord = cubic_bezier(t as f32, p0, cp0, cp1, p1);
             let distance = coord.approx_distance(&curve_coord);
             if distance < min_distance {
                 min_distance = distance;
@@ -145,8 +145,8 @@ pub fn tangent_cornor_pts(
     cp3: &Coord,
     p2: &Coord,
 ) -> (Coord, Coord) {
-    let tangent_vector_l = tangent_vector(1.0, &p0, &cp0, &cp1, &p1);
-    let tangent_vector_r = tangent_vector(0.0, &p1, &cp2, &cp3, &p2);
+    let tangent_vector_l = tangent_vector(1.0, p0, cp0, cp1, p1);
+    let tangent_vector_r = tangent_vector(0.0, p1, cp2, cp3, p2);
 
     let tangent_vector = (tangent_vector_l + tangent_vector_r).normal();
 
@@ -209,8 +209,8 @@ pub fn is_line(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> bool {
     let cp1_is_line = vec_cp1.vector_direction_equal(&vec_line);
     let cp0_is_nan = cp0 == p0;
     let cp1_is_nan = cp1 == p0;
-    let res = (cp0_is_line || cp0_is_nan) && (cp1_is_line || cp1_is_nan);
-    return res;
+    
+    (cp0_is_line || cp0_is_nan) && (cp1_is_line || cp1_is_nan)
 }
 
 #[cfg(test)]

@@ -58,6 +58,7 @@ impl SceneClient {
 }
 
 #[wasm_bindgen]
+#[derive(Default)]
 pub struct UserSelectionClient {
     #[wasm_bindgen(skip)]
     pub selection: UserSelection,
