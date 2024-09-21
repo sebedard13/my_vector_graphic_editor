@@ -7,6 +7,7 @@ use crate::Scene;
 mod change_color;
 mod move_coords;
 mod remove_coord;
+mod add_coord;
 
 pub trait Command: Any {
     fn execute(&mut self, scene: &mut Scene) -> Result<()>;

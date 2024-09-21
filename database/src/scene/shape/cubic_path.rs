@@ -82,16 +82,16 @@ impl Shape {
     }
 
     /// Cut curve_index at t without chnaging the curve by replacing the handles
-    pub fn curve_insert_smooth(&mut self, curve_index: usize, t: f32) {
+    pub fn curve_insert_smooth(&mut self, curve_index: usize, t: f32) -> (CoordId, CoordId, CoordId) {
         let curve = self.curve_select(curve_index).expect("Curve should exist");
 
         let (cp0, cp1l, p1, cp1r, cp2) = curve.add_smooth_result(t);
 
-        let cp0 = cp0.into();
+        let cp0 = cp0;
         let cp1l = cp1l.into();
         let p1: DbCoord = p1.into();
         let cp1r = cp1r.into();
-        let cp2 = cp2.into();
+        let cp2 = cp2;
 
         let index_cp1 = (curve_index * 3 + 2) % self.path.len();
 
@@ -109,12 +109,14 @@ impl Shape {
         }
         //left has separate handle
         if left_handle_free {
-            self.path[index_cp1 - 1] = cp0;
+            self.path[index_cp1 - 1].coord = cp0;
         }
         //right has separate handle
         if right_handle_free {
-            self.path[index_cp1 + 3] = cp2;
+            self.path[index_cp1 + 3].coord = cp2;
         }
+
+        (cp1l.id, p1.id, cp1r.id)
     }
 
     pub fn curve_insert_line(&mut self, curve_index: usize, coord: Coord) {
