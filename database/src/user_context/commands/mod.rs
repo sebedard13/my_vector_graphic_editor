@@ -8,6 +8,7 @@ mod change_color;
 mod move_coords;
 mod remove_coord;
 mod add_coord;
+mod toogle_handle;
 
 pub trait Command: Any {
     fn execute(&mut self, scene: &mut Scene) -> Result<()>;

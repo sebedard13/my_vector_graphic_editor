@@ -2,7 +2,10 @@ use common::types::Coord;
 
 use crate::{CoordId, Curve, DbCoord, Shape};
 
-use super::{coord::CoordType, curve};
+use super::{
+    coord::CoordType,
+    curve::{self},
+};
 
 impl Shape {
     pub fn curves_len(&self) -> usize {
@@ -54,8 +57,27 @@ impl Shape {
     pub fn handle_join(&mut self, curve_index_p1: usize) {
         let index_p1 = (curve_index_p1 * 3 + 3) % self.path.len();
         let len = self.path.len();
-        self.path[(index_p1 - 1) % len] = self.path[index_p1];
-        self.path[(index_p1 + 1) % len] = self.path[index_p1];
+        if self.is_closed() {
+            
+            let index_cpl = {
+                if (index_p1 - 1) % len == len - 1 {
+                    len - 2
+                } else {
+                    index_p1 - 1
+                }
+            };
+            self.path[index_cpl] = self.path[index_p1];
+            let index_cpr ={
+                if (index_p1 + 1) % len == 0 {
+                    1
+                }else {
+                    index_p1 + 1
+                }
+            };
+            self.path[index_cpr] = self.path[index_p1];
+        }else {
+           unimplemented!("handle_join");
+        }
     }
 
     pub fn handle_separate(&mut self, curve_index_p1: usize) {
@@ -82,7 +104,11 @@ impl Shape {
     }
 
     /// Cut curve_index at t without chnaging the curve by replacing the handles
-    pub fn curve_insert_smooth(&mut self, curve_index: usize, t: f32) -> (CoordId, CoordId, CoordId) {
+    pub fn curve_insert_smooth(
+        &mut self,
+        curve_index: usize,
+        t: f32,
+    ) -> (CoordId, CoordId, CoordId) {
         let curve = self.curve_select(curve_index).expect("Curve should exist");
 
         let (cp0, cp1l, p1, cp1r, cp2) = curve.add_smooth_result(t);
