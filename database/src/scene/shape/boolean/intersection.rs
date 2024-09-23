@@ -131,11 +131,8 @@ fn do_intersection(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) 
         let first_intersection = &ag.data[i];
         intersections_done[i] = true;
 
-        let mut merged = Shape {
-            id: a.id,
-            path: vec![first_intersection.coord_ptr()],
-            color: a.color.clone(),
-        };
+        let mut merged = a.clone();
+        merged.path = vec![first_intersection.coord_ptr()];
 
         let mut current = first_intersection;
         let mut current_shape = ag;

@@ -99,9 +99,12 @@ fn handle_touching_shape(
 
 fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shape {
     let mut intersections_done = vec![false; ag.intersections_len];
-    
 
-    for (i, intersection_done) in intersections_done.iter_mut().enumerate().take(ag.intersections_len) {
+    for (i, intersection_done) in intersections_done
+        .iter_mut()
+        .enumerate()
+        .take(ag.intersections_len)
+    {
         let current = &ag.data[i];
         if !(current.intersect == IntersectionType::Intersection
             || current.intersect == IntersectionType::CommonIntersection)
@@ -120,11 +123,8 @@ fn do_union(ag: &GreinerShape, bg: &GreinerShape, a: &Shape, _b: &Shape) -> Shap
     let max_visit_count = (ag.len() + bg.len()) * 2;
     let mut visit_count = 0;
 
-    let mut merged = Shape {
-        id: a.id,
-        path: vec![first_intersection.coord_ptr()],
-        color: a.color.clone(),
-    };
+    let mut merged = a.clone();
+    merged.path = vec![first_intersection.coord_ptr()];
 
     let mut current = first_intersection;
     let mut current_shape = ag;

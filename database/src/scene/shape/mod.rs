@@ -18,11 +18,21 @@ pub mod coord;
 pub mod cubic_path;
 pub mod curve;
 
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Stroke{
+    pub size:f32,
+    pub color: Rgba,
+}
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shape {
     pub id: LayerId,
     pub path: Vec<DbCoord>,
     pub color: Rgba,
+    pub stroke: Option<Stroke>
+
 }
 
 impl Shape {
@@ -148,6 +158,7 @@ impl Shape {
             id: LayerId::null(),
             path: Vec::new(),
             color: Rgba::transparent(),
+            stroke: None
         }
     }
 
