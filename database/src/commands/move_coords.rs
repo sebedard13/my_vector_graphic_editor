@@ -1,10 +1,8 @@
-
 use super::Command;
 use crate::{CoordId, LayerId};
 use anyhow::{Ok, Result};
 use common::types::Coord;
 use std::any::Any;
-
 
 #[derive(Clone, Debug)]
 pub struct MoveCoords {
@@ -21,8 +19,15 @@ impl MoveCoords {
             end_pos,
         }
     }
-}
 
+    pub fn boxed(
+        selection: Vec<(LayerId, Vec<CoordId>)>,
+        start_pos: Coord,
+        end_pos: Coord,
+    ) -> Box<Self> {
+        Box::new(Self::new(selection, start_pos, end_pos))
+    }
+}
 
 impl Command for MoveCoords {
     fn execute(&mut self, scene: &mut crate::Scene) -> Result<()> {
@@ -74,4 +79,3 @@ impl Command for MoveCoords {
         self
     }
 }
-

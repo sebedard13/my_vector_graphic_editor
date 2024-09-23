@@ -20,6 +20,10 @@ impl ChangeColor {
             old_colors: None,
         }
     }
+
+    pub fn boxed(shape_index: Vec<LayerId>, color: Rgba) -> Box<dyn Command> {
+        Box::new(Self::new(shape_index, color))
+    }
 }
 
 impl Command for ChangeColor {
@@ -72,15 +76,11 @@ impl Command for ChangeColor {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use common::Rgba;
 
-    use crate::{
-        user_context::commands::CommandsHandler,
-        Scene, Shape,
-    };
+    use crate::{commands::CommandsHandler, Scene, Shape};
 
     use super::ChangeColor;
 
@@ -98,22 +98,34 @@ mod test {
         let res = command_handler.execute(Box::new(change_color));
 
         assert!(res.is_ok());
-        assert_eq!(command_handler.scene().shape_select(id).unwrap().color, Rgba::white());
+        assert_eq!(
+            command_handler.scene().shape_select(id).unwrap().color,
+            Rgba::white()
+        );
 
         let res = command_handler.undo();
 
         assert!(res.is_ok());
-        assert_eq!(command_handler.scene().shape_select(id).unwrap().color, Rgba::black());
+        assert_eq!(
+            command_handler.scene().shape_select(id).unwrap().color,
+            Rgba::black()
+        );
         assert_eq!(*command_handler.scene(), expected);
 
         let res = command_handler.redo();
 
         assert!(res.is_ok());
-        assert_eq!(command_handler.scene().shape_select(id).unwrap().color, Rgba::white());
+        assert_eq!(
+            command_handler.scene().shape_select(id).unwrap().color,
+            Rgba::white()
+        );
 
         let res = command_handler.undo();
 
         assert!(res.is_ok());
-        assert_eq!(command_handler.scene().shape_select(id).unwrap().color, Rgba::black());
+        assert_eq!(
+            command_handler.scene().shape_select(id).unwrap().color,
+            Rgba::black()
+        );
     }
 }

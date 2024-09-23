@@ -17,7 +17,7 @@ impl SceneUserContext {
         for shape_selected in &selected.shapes {
             let shape = self
                 .scene()
-                .shape_select(shape_selected.shape_index)
+                .shape_select(shape_selected.shape_id)
                 .expect("not 404");
 
             let t = ctx.get_transform()?;
@@ -97,7 +97,7 @@ impl SceneUserContext {
         for shape_selected in &selected.shapes {
             let shape = self
                 .scene()
-                .shape_select(shape_selected.shape_index)
+                .shape_select(shape_selected.shape_id)
                 .expect("not 404");
 
             let (_, _, distance, coord) = shape.closest_curve(&pos);

@@ -19,6 +19,10 @@ impl ToggleHandle {
             cp_to_undo: None,
         }
     }
+
+    pub fn boxed(shape_index: LayerId, curve: CoordId) -> Box<Self> {
+        Box::new(Self::new(shape_index, curve))
+    }
 }
 
 impl Command for ToggleHandle {
@@ -75,7 +79,7 @@ mod test {
         types::{Coord, Length2d},
     };
 
-    use crate::{user_context::commands::Command, DbCoord, Scene, Shape};
+    use crate::{commands::Command, DbCoord, Scene, Shape};
 
     use super::ToggleHandle;
 

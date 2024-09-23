@@ -23,6 +23,10 @@ impl AddCoord {
             cp_to_undo: None,
         }
     }
+
+    pub fn boxed(shape_index: LayerId, curve: usize, t: f32) -> Box<Self> {
+        Box::new(Self::new(shape_index, curve, t))
+    }
 }
 
 impl Command for AddCoord {
@@ -66,7 +70,7 @@ mod test {
 
     use common::{pures::Affine, types::{Coord, Length2d}};
 
-    use crate::{user_context::commands::Command, DbCoord, Scene, Shape};
+    use crate::{commands::Command, DbCoord, Scene, Shape};
 
     use super::AddCoord;
 

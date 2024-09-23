@@ -48,13 +48,16 @@ impl SceneClient {
     }
 
     pub fn get_tree_view(&self) -> Vec<TreeViewModel> {
-        self.scene_context.scene.get_tree_view()
+        self.scene_context.scene().get_tree_view()
     }
 
     pub fn move_layer(&mut self, id_to_move: usize, id_position: usize) -> Result<(), String> {
         self.scene_context
-            .scene
-            .layer_move_before(id_to_move.into(), id_position.into())
+            .command_handler.execute(database::commands::MoveLayer::boxed(
+                id_to_move.into(),
+                id_position.into(),
+            )).map_err(|e| format!("{:?}", e))?;
+        Ok(())
     }
 
     pub fn hide_layer(&mut self, id_to_hide: usize) -> Result<(), String> {

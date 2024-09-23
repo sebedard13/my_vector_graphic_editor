@@ -1,5 +1,5 @@
+use crate::commands::CommandsHandler;
 use camera::Camera;
-use commands::CommandsHandler;
 use common::{pures::Affine, Rgba};
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,7 @@ use crate::{DbCoord, DrawingContext, RenderOption, Scene, Shape};
 
 pub mod api;
 pub mod camera;
-mod commands;
+
 mod ui;
 pub mod user_selection;
 
@@ -35,7 +35,8 @@ impl SceneUserContext {
     }
 
     pub fn scene_render<T: DrawingContext>(&self, drawing_context: &mut T) -> Result<(), String> {
-        self.scene().render_with_options(drawing_context, self.render_options.clone())
+        self.scene()
+            .render_with_options(drawing_context, self.render_options.clone())
     }
 }
 

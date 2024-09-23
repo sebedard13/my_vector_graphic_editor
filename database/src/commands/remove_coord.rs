@@ -23,6 +23,10 @@ impl RemoveCoord {
             shape_position: None,
         }
     }
+
+    pub fn boxed(shape: LayerId, coord: CoordId) -> Box<Self> {
+        Box::new(Self::new(shape, coord))
+    }
 }
 
 impl Command for RemoveCoord {
@@ -65,7 +69,7 @@ impl Command for RemoveCoord {
 mod test {
     use common::types::{Coord, Length2d};
 
-    use crate::{user_context::commands::CommandsHandler, Scene};
+    use crate::{commands::CommandsHandler, Scene};
 
     use super::*;
 
@@ -110,9 +114,14 @@ mod test {
         let expected = scene.clone();
         let mut commands_handler = CommandsHandler::from(scene);
 
-        let index_to_remove = vec![6,3,0,0];
+        let index_to_remove = vec![6, 3, 0, 0];
         for i in index_to_remove {
-            let coord_id = commands_handler.scene().shape_select(shape_id).unwrap().path[i].id;
+            let coord_id = commands_handler
+                .scene()
+                .shape_select(shape_id)
+                .unwrap()
+                .path[i]
+                .id;
 
             let command = RemoveCoord::new(shape_id, coord_id);
             commands_handler.execute(Box::new(command)).unwrap();
@@ -126,5 +135,4 @@ mod test {
 
         assert_eq!(expected, *commands_handler.scene());
     }
-
 }

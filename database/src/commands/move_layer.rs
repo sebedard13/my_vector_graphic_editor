@@ -19,6 +19,10 @@ impl MoveLayer {
             undo_pos: None,
         }
     }
+
+    pub fn boxed(layer: LayerId, move_to: LayerId) -> Box<Self> {
+        Box::new(Self::new(layer, move_to))
+    }
 }
 
 impl Command for MoveLayer {
