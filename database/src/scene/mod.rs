@@ -108,15 +108,15 @@ impl Scene {
 
     pub fn layer_move_before(
         &mut self,
-        id_to_move: LayerId,
-        id_position: LayerId,
+        layer: LayerId,
+        layer_after: LayerId,
     ) -> Result<(), String> {
         let index_position = self
             .layers
             .iter()
-            .position(|l| l.id == id_position)
+            .position(|l| l.id == layer_after)
             .ok_or("id_position not found")?;
-        self.layer_move_at(id_to_move, index_position)?;
+        self.layer_move_at(layer, index_position)?;
         Ok(())
     }
 
