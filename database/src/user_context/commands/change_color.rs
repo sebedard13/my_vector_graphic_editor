@@ -5,7 +5,7 @@ use anyhow::{Ok, Result};
 use common::Rgba;
 use std::any::Any;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ChangeColor {
     shapes: Vec<LayerId>,
     color: Rgba,

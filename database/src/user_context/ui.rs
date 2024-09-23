@@ -16,7 +16,7 @@ impl SceneUserContext {
     ) -> Result<(), String> {
         for shape_selected in &selected.shapes {
             let shape = self
-                .scene
+                .scene()
                 .shape_select(shape_selected.shape_index)
                 .expect("not 404");
 
@@ -96,7 +96,7 @@ impl SceneUserContext {
 
         for shape_selected in &selected.shapes {
             let shape = self
-                .scene
+                .scene()
                 .shape_select(shape_selected.shape_index)
                 .expect("not 404");
 

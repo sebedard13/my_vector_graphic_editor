@@ -6,7 +6,7 @@ use common::types::Coord;
 use std::any::Any;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MoveCoords {
     selection: Vec<(LayerId, Vec<CoordId>)>,
     start_pos: Coord,

@@ -1,17 +1,25 @@
 #![allow(dead_code)]
-use std::any::Any;
+use std::{any::Any, fmt::Debug};
 
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 
 use crate::Scene;
+mod add_coord;
 mod change_color;
 mod move_coords;
-mod remove_coord;
-mod add_coord;
-mod toogle_handle;
 mod move_layer;
+mod remove_coord;
+mod toggle_handle;
 
-pub trait Command: Any {
+pub use add_coord::AddCoord;
+pub use change_color::ChangeColor;
+pub use move_coords::MoveCoords;
+pub use move_layer::MoveLayer;
+pub use remove_coord::RemoveCoord;
+pub use toggle_handle::ToggleHandle;
+
+pub trait Command: Any + Debug {
     fn execute(&mut self, scene: &mut Scene) -> Result<()>;
     fn undo(&mut self, scene: &mut Scene) -> Result<()>;
 
@@ -22,9 +30,12 @@ pub trait Command: Any {
     fn as_any(&self) -> &dyn Any;
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CommandsHandler {
     scene: Scene,
+    #[serde(skip)]
     stack: Vec<Box<dyn Command>>,
+    #[serde(skip)]
     index: usize,
 }
 
@@ -43,11 +54,15 @@ impl CommandsHandler {
         &self.scene
     }
 
+    pub fn unsafe_scene_mut(&mut self) -> &mut Scene {
+        &mut self.scene
+    }
+
     pub fn execute(&mut self, mut command: Box<dyn Command>) -> Result<()> {
         command.execute(&mut self.scene)?;
         self.stack.truncate(self.index);
         if let Some(&prev_command) = self.stack.last().as_ref() {
-            if let Some(merged) = prev_command.merge(command.as_ref()){
+            if let Some(merged) = prev_command.merge(command.as_ref()) {
                 let merged_command = merged?;
 
                 self.stack.pop();

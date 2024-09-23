@@ -4,14 +4,14 @@ use crate::{CoordId, DbCoord, LayerId};
 use anyhow::{Context, Ok, Result};
 use std::any::Any;
 
-#[derive(Clone)]
-pub struct ToogleHandle {
+#[derive(Clone, Debug)]
+pub struct ToggleHandle {
     shapes: LayerId,
     coord: CoordId,
     cp_to_undo: Option<(DbCoord, DbCoord)>,
 }
 
-impl ToogleHandle {
+impl ToggleHandle {
     pub fn new(shape_index: LayerId, curve: CoordId) -> Self {
         Self {
             shapes: shape_index,
@@ -21,7 +21,7 @@ impl ToogleHandle {
     }
 }
 
-impl Command for ToogleHandle {
+impl Command for ToggleHandle {
     fn execute(&mut self, scene: &mut crate::Scene) -> Result<()> {
         let shape = scene
             .shape_select_mut(self.shapes)
@@ -77,7 +77,7 @@ mod test {
 
     use crate::{user_context::commands::Command, DbCoord, Scene, Shape};
 
-    use super::ToogleHandle;
+    use super::ToggleHandle;
 
     #[test]
     fn undo_is_valid() {
@@ -87,7 +87,7 @@ mod test {
         let expected = shape.path.clone();
         let shape_id = scene.shape_insert(shape);
 
-        let mut command = ToogleHandle::new(shape_id, coord_id);
+        let mut command = ToggleHandle::new(shape_id, coord_id);
         command.execute(&mut scene).unwrap();
 
         let new_shape = scene.shape_select(shape_id).unwrap();
@@ -116,7 +116,7 @@ mod test {
         let coord_id = shape.path[0].id;
         let shape_id = scene.shape_insert(shape);
 
-        let mut command = ToogleHandle::new(shape_id, coord_id);
+        let mut command = ToggleHandle::new(shape_id, coord_id);
         command.execute(&mut scene).unwrap();
 
         let new_shape = scene.shape_select(shape_id).unwrap();

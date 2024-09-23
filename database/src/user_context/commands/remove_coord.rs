@@ -4,8 +4,8 @@ use crate::{CoordId, LayerId, Shape};
 use anyhow::{Context, Error, Ok, Result};
 use std::any::Any;
 
-#[derive(Clone)]
-pub struct RemoveCoords {
+#[derive(Clone, Debug)]
+pub struct RemoveCoord {
     shape: LayerId,
     coord: CoordId,
 
@@ -14,7 +14,7 @@ pub struct RemoveCoords {
     shape_position: Option<usize>,
 }
 
-impl RemoveCoords {
+impl RemoveCoord {
     pub fn new(shape: LayerId, coord: CoordId) -> Self {
         Self {
             shape,
@@ -25,7 +25,7 @@ impl RemoveCoords {
     }
 }
 
-impl Command for RemoveCoords {
+impl Command for RemoveCoord {
     fn execute(&mut self, scene: &mut crate::Scene) -> Result<()> {
         let shape = scene.shape_select_mut(self.shape).expect("not 404");
         self.shape_undo = Some(shape.clone());
@@ -85,7 +85,7 @@ mod test {
             let shape_id = scene.shape_insert(shape);
             let expected = scene.clone();
 
-            let mut command = RemoveCoords::new(shape_id, coord_id);
+            let mut command = RemoveCoord::new(shape_id, coord_id);
             command.execute(&mut scene).unwrap();
 
             let new_shape = scene.shape_select(shape_id).unwrap();
@@ -114,7 +114,7 @@ mod test {
         for i in index_to_remove {
             let coord_id = commands_handler.scene().shape_select(shape_id).unwrap().path[i].id;
 
-            let command = RemoveCoords::new(shape_id, coord_id);
+            let command = RemoveCoord::new(shape_id, coord_id);
             commands_handler.execute(Box::new(command)).unwrap();
         }
 

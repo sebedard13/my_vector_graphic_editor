@@ -109,7 +109,7 @@ impl SceneUserContext {
     }
 
     pub fn draw_shape(&mut self, selected: &mut UserSelection) {
-        let vgc_data = &mut self.scene;
+        let scene = &mut self.command_handler.unsafe_scene_mut();
         let camera = &mut self.camera;
         if selected.mouse_position.is_none() {
             return;
@@ -122,8 +122,8 @@ impl SceneUserContext {
         shape.color = selected.color.clone();
 
         if selected.shapes.is_empty() {
-            let id = vgc_data.shape_insert(shape);
-            vgc_data.layer_move_top(id);
+            let id = scene.shape_insert(shape);
+            scene.layer_move_top(id);
             selected.shapes.push(SelectedShape::new(id));
             return;
         }
@@ -136,7 +136,7 @@ impl SceneUserContext {
         let shape_selected = &selected.shapes[0];
 
         let result = {
-            let selected_shape = vgc_data
+            let selected_shape = scene
                 .shape_select(shape_selected.shape_index)
                 .expect("Not 404");
             log::debug!(
@@ -150,7 +150,7 @@ impl SceneUserContext {
             selected_shape.union(&shape)
         };
         log::info!("{}", dbg_str!("Union good"));
-        let selected_shape = vgc_data
+        let selected_shape = scene
             .shape_select_mut(shape_selected.shape_index)
             .expect("Not 404");
         match result {

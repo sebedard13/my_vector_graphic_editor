@@ -102,7 +102,7 @@ impl UserSelection {
         let mut colors = Vec::new();
         for shape_selected in shapes {
             let shape = shape_selected.shape_index;
-            let shape = match canvas_context.scene.shape_select(shape) {
+            let shape = match canvas_context.scene().shape_select(shape) {
                 Some(shape) => shape,
                 None => continue,
             };
@@ -119,7 +119,7 @@ impl UserSelection {
     pub fn change_hover(&mut self, canvas_context: &SceneUserContext, cursor_position: Coord) {
         'shape_loop: for shape_selected in &mut self.shapes {
             let shape = canvas_context
-                .scene
+                .scene()
                 .shape_select(shape_selected.shape_index)
                 .unwrap();
             let db_coords = &shape.path;
@@ -145,7 +145,7 @@ impl UserSelection {
 
         if selected_shapes.is_empty() {
             //Add shape
-            let closest_shapes = canvas_context.scene.shape_select_contains(&start_press);
+            let closest_shapes = canvas_context.scene().shape_select_contains(&start_press);
 
             if let Some(shape) = closest_shapes {
                 let pos = selected_shapes
@@ -173,7 +173,7 @@ impl UserSelection {
 
             for selected_shape in selected_shapes {
                 let shape = canvas_context
-                    .scene
+                    .scene()
                     .shape_select(selected_shape.shape_index)
                     .unwrap();
                 let coords = &shape.path;
@@ -198,7 +198,7 @@ impl UserSelection {
         //Coord
         for shape_selected in &mut self.shapes {
             let shape = canvas_context
-                .scene
+                .scene()
                 .shape_select(shape_selected.shape_index)
                 .unwrap();
             let db_coords = &shape.path;
@@ -228,7 +228,7 @@ impl UserSelection {
             }
         }
 
-        let shape = canvas_context.scene.shape_select_contains(&start_press);
+        let shape = canvas_context.scene().shape_select_contains(&start_press);
 
         if let Some(shape) = shape {
             let shapes = &mut self.shapes;

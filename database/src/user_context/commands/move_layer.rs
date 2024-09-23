@@ -4,7 +4,7 @@ use crate::LayerId;
 use anyhow::{Context, Error, Ok, Result};
 use std::any::Any;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MoveLayer {
     layer: LayerId,
     move_to: LayerId,
