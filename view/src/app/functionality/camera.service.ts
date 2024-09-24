@@ -98,7 +98,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(rotateMinus5);
 
         const flipX = this.eventsService.keydown$
-            .pipe(filter((event) => event.key == "z"))
+            .pipe(filter((event) => event.key == "x"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
                     const flip = scene.sceneClient.camera_get_reflect_x();
@@ -108,7 +108,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(flipX);
 
         const flipY = this.eventsService.keydown$
-            .pipe(filter((event) => event.key == "x"))
+            .pipe(filter((event) => event.key == "y"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
                     const flip = scene.sceneClient.camera_get_reflect_y();

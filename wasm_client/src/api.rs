@@ -75,4 +75,14 @@ impl SceneClient {
             .retain(|&x| x != id_to_show.into());
         Ok(())
     }
+
+    pub fn undo(&mut self) -> Result<(), String> {
+        self.scene_context.command_handler.undo().map_err(|e| format!("{:?}", e))?;
+        Ok(())
+    }
+
+    pub fn redo(&mut self) -> Result<(), String> {
+        self.scene_context.command_handler.redo().map_err(|e| format!("{:?}", e))?;
+        Ok(())
+    }
 }
