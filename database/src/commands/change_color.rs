@@ -3,6 +3,7 @@ use super::Command;
 use crate::LayerId;
 use anyhow::{Ok, Result};
 use common::Rgba;
+use macros::boxed;
 use std::any::Any;
 
 #[derive(Clone, Debug)]
@@ -13,16 +14,13 @@ pub struct ChangeColor {
 }
 
 impl ChangeColor {
+    #[boxed]
     pub fn new(shape_index: Vec<LayerId>, color: Rgba) -> Self {
         Self {
             shapes: shape_index,
             color,
             old_colors: None,
         }
-    }
-
-    pub fn boxed(shape_index: Vec<LayerId>, color: Rgba) -> Box<dyn Command> {
-        Box::new(Self::new(shape_index, color))
     }
 }
 

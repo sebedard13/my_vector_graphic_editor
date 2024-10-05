@@ -2,6 +2,7 @@
 use super::Command;
 use crate::LayerId;
 use anyhow::{Context, Error, Ok, Result};
+use macros::boxed;
 use std::any::Any;
 
 #[derive(Clone, Debug)]
@@ -12,16 +13,13 @@ pub struct MoveLayer {
 }
 
 impl MoveLayer {
+    #[boxed]
     pub fn new(layer: LayerId, move_to: LayerId) -> Self {
         Self {
             layer,
             move_to,
             undo_pos: None,
         }
-    }
-
-    pub fn boxed(layer: LayerId, move_to: LayerId) -> Box<Self> {
-        Box::new(Self::new(layer, move_to))
     }
 }
 

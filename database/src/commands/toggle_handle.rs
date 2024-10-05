@@ -2,6 +2,7 @@
 use super::Command;
 use crate::{CoordId, DbCoord, LayerId};
 use anyhow::{Context, Ok, Result};
+use macros::boxed;
 use std::any::Any;
 
 #[derive(Clone, Debug)]
@@ -12,16 +13,13 @@ pub struct ToggleHandle {
 }
 
 impl ToggleHandle {
+    #[boxed]
     pub fn new(shape_index: LayerId, curve: CoordId) -> Self {
         Self {
             shapes: shape_index,
             coord: curve,
             cp_to_undo: None,
         }
-    }
-
-    pub fn boxed(shape_index: LayerId, curve: CoordId) -> Box<Self> {
-        Box::new(Self::new(shape_index, curve))
     }
 }
 

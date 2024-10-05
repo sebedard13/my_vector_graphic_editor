@@ -2,6 +2,7 @@
 use super::Command;
 use crate::{CoordId, LayerId, Shape};
 use anyhow::{Context, Error, Ok, Result};
+use macros::boxed;
 use std::any::Any;
 
 #[derive(Clone, Debug)]
@@ -15,6 +16,7 @@ pub struct RemoveCoord {
 }
 
 impl RemoveCoord {
+    #[boxed]
     pub fn new(shape: LayerId, coord: CoordId) -> Self {
         Self {
             shape,
@@ -22,10 +24,6 @@ impl RemoveCoord {
             shape_undo: None,
             shape_position: None,
         }
-    }
-
-    pub fn boxed(shape: LayerId, coord: CoordId) -> Box<Self> {
-        Box::new(Self::new(shape, coord))
     }
 }
 

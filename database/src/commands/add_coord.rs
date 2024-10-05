@@ -2,6 +2,7 @@
 use super::Command;
 use crate::{CoordId, DbCoord, LayerId};
 use anyhow::{Context, Error, Ok, Result};
+use macros::boxed;
 use std::any::Any;
 
 #[derive(Clone, Debug)]
@@ -14,6 +15,7 @@ pub struct AddCoord {
 }
 
 impl AddCoord {
+    #[boxed]
     pub fn new(shape_index: LayerId, curve: usize, t: f32) -> Self {
         Self {
             shapes: shape_index,
@@ -22,10 +24,6 @@ impl AddCoord {
             coord_to_undo: None,
             cp_to_undo: None,
         }
-    }
-
-    pub fn boxed(shape_index: LayerId, curve: usize, t: f32) -> Box<Self> {
-        Box::new(Self::new(shape_index, curve, t))
     }
 }
 
