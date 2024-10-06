@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use super::Command;
 use crate::{CoordId, DbCoord, LayerId};
 use anyhow::{Context, Error, Ok, Result};
@@ -32,9 +31,9 @@ impl Command for AddCoord {
         let shape = scene
             .shape_select_mut(self.shapes)
             .context("Shape not found")?;
-        let changed_curve = shape.curve_select(self.curve).context("Curve not found")?; 
+        let changed_curve = shape.curve_select(self.curve).context("Curve not found")?;
         self.cp_to_undo = Some((changed_curve.cp0.clone(), changed_curve.cp1.clone()));
-        
+
         let coord_ids = shape.curve_insert_smooth(self.curve, self.t);
         self.coord_to_undo = Some(coord_ids.1);
         Ok(())
@@ -44,7 +43,9 @@ impl Command for AddCoord {
         let shape = scene
             .shape_select_mut(self.shapes)
             .context("Shape not found")?;
-        shape.coord_delete(self.coord_to_undo.take().context("No coord to undo")?).map_err(Error::msg)?;
+        shape
+            .coord_delete(self.coord_to_undo.take().context("No coord to undo")?)
+            .map_err(Error::msg)?;
 
         if let Some((cp0, cp1)) = self.cp_to_undo.take() {
             shape.coord_set(cp0.id, cp0.coord());
@@ -64,16 +65,18 @@ impl Command for AddCoord {
 
 #[cfg(test)]
 mod test {
-   
 
-    use common::{pures::Affine, types::{Coord, Length2d}};
+    use common::{
+        pures::Affine,
+        types::{Coord, Length2d},
+    };
 
     use crate::{commands::Command, DbCoord, Scene, Shape};
 
     use super::AddCoord;
 
     #[test]
-    fn undo_is_valid() {
+    fn given_square_when_add_coord_in_path() {
         let mut scene = Scene::new();
         let shape = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.5, 0.5));
         let expected = shape.path.clone();
@@ -95,7 +98,15 @@ mod test {
     #[test]
     fn given_square_when_add_coord() {
         let mut scene = Scene::new();
-        let shape = Shape::new_from_lines(vec![DbCoord::new(0.0, 0.0), DbCoord::new(1.0, 0.0), DbCoord::new(1.0, 1.0), DbCoord::new(0.0, 1.0)], Affine::identity());
+        let shape = Shape::new_from_lines(
+            vec![
+                DbCoord::new(0.0, 0.0),
+                DbCoord::new(1.0, 0.0),
+                DbCoord::new(1.0, 1.0),
+                DbCoord::new(0.0, 1.0),
+            ],
+            Affine::identity(),
+        );
         let expected = shape.path.clone();
         let shape_id = scene.shape_insert(shape);
 

@@ -73,3 +73,36 @@ impl Command for MoveCoords {
         self
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::{commands::Command, Scene, Shape};
+    use common::types::{Coord, Length2d};
+
+    use super::MoveCoords;
+
+    #[test]
+    fn given_square_when_move_coords() {
+        let mut scene = Scene::new();
+        let shape = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.5, 0.5));
+        let shape_id = scene.shape_insert(shape);
+        let shape = scene.shape_select(shape_id).unwrap();
+        let coord_id = shape.path[0].id;
+        let selection = vec![(shape_id, vec![coord_id])];
+        let start_pos = shape.path[0].coord();
+        let end_pos = shape.path[0].coord() + Coord::new(0.5, 0.5);
+
+        let mut command = MoveCoords::new(selection, start_pos, end_pos);
+        command.execute(&mut scene).unwrap();
+
+        let new_shape = scene.shape_select(shape_id).unwrap();
+        let new_coord = new_shape.path[0].coord();
+        assert_eq!(new_coord, end_pos);
+
+        command.undo(&mut scene).unwrap();
+
+        let new_shape = scene.shape_select(shape_id).unwrap();
+        let new_coord = new_shape.path[0].coord();
+        assert_eq!(new_coord, start_pos);
+    }
+}

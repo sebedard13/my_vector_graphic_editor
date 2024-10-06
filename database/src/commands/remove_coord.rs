@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use super::Command;
 use crate::{CoordId, LayerId, Shape};
 use anyhow::{Context, Error, Ok, Result};

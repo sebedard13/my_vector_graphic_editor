@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use super::Command;
 use crate::{CoordId, DbCoord, LayerId};
 use anyhow::{Context, Ok, Result};
@@ -82,7 +81,7 @@ mod test {
     use super::ToggleHandle;
 
     #[test]
-    fn undo_is_valid() {
+    fn given_circle_when_toggle_coord() {
         let mut scene = Scene::new();
         let shape = Shape::new_circle(Coord::new(0.0, 0.0), Length2d::new(0.5, 0.5));
         let coord_id = shape.path[0].id;
@@ -103,7 +102,7 @@ mod test {
     }
 
     #[test]
-    fn given_square_when_add_coord() {
+    fn given_square_when_toggle_coord() {
         let mut scene = Scene::new();
         let shape = Shape::new_from_lines(
             vec![

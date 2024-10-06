@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::{any::Any, fmt::Debug};
 
 use anyhow::Result;

@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use super::Command;
 use crate::LayerId;
 use anyhow::{Ok, Result};
@@ -83,7 +82,7 @@ mod test {
     use super::ChangeColor;
 
     #[test]
-    fn undo_is_valid() {
+    fn given_shape_when_change_color() {
         let mut scene = Scene::new();
         let mut s = Shape::new();
         s.color = Rgba::black();
