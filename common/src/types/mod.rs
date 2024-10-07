@@ -29,10 +29,6 @@ pub struct ScreenCoord {
 }
 
 impl ScreenCoord {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
     pub fn new(x: f32, y: f32) -> ScreenCoord {
         ScreenCoord { x, y }
     }
@@ -86,10 +82,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
+   
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> Rect {
         Rect {
             top_left: Coord::new(x0, y0),
@@ -176,10 +169,6 @@ pub struct ScreenRect {
 }
 
 impl ScreenRect {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
     pub fn new(x0: f32, y0: f32, x1: f32, y1: f32) -> ScreenRect {
         ScreenRect {
             top_left: ScreenCoord::new(x0, y0),
@@ -216,10 +205,6 @@ pub struct ScreenLength2d {
 }
 
 impl ScreenLength2d {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
     pub fn new(x: f32, y: f32) -> ScreenLength2d {
         ScreenLength2d { x, y }
     }
@@ -263,10 +248,7 @@ pub struct Length2d {
 }
 
 impl Length2d {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
+    
     pub fn new(x: f32, y: f32) -> Length2d {
         Length2d { x, y }
     }

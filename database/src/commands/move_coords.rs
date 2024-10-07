@@ -60,7 +60,7 @@ impl Command for MoveCoords {
 
     fn merge(&self, futur: &dyn Command) -> Option<Result<Box<dyn Command>>> {
         if let Some(other) = futur.as_any().downcast_ref::<MoveCoords>() {
-            if self.selection == other.selection && self.start_pos == other.start_pos {
+            if self.selection == other.selection {
                 let new_end_pos = self.end_pos + other.end_pos - other.start_pos;
                 let new_self = MoveCoords::new(self.selection.clone(), self.start_pos, new_end_pos);
                 return Some(Ok(Box::new(new_self)));

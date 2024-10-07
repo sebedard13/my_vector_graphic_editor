@@ -116,6 +116,11 @@ export class CanvasComponent implements AfterViewInit {
         this.eventService.mouseDown.next(event);
     }
 
+    @HostListener("mouseup", ["$event"])
+    public onMouseUp(event: MouseEvent) {
+        this.eventService.mouseUp.next(event);
+    }
+
     @HostListener("mouseenter", ["$event"])
     public onMouseEnter(event: MouseEvent) {
         this.eventService.mouseEnter.next(event);

@@ -1,4 +1,4 @@
-use common::Rgba;
+use common::{types::ScreenCoord, Rgba};
 use database::{LayerId, SceneUserContext, TreeViewModel};
 use js_sys::Uint8Array;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -15,10 +15,11 @@ impl SceneClient {
     pub fn move_coords_of(
         &mut self,
         selected: &UserSelectionClient,
-        movement: common::types::ScreenLength2d,
+        start: ScreenCoord,
+        end: ScreenCoord,
     ) {
         self.scene_context
-            .move_coords_of(&selected.selection, movement);
+            .move_coords_of(&selected.selection, start, end);
     }
 
     pub fn add_or_remove_coord(

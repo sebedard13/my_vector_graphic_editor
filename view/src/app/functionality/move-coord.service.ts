@@ -4,7 +4,7 @@ import { ScenesService } from "../scene/scenes.service";
 import { Subscription, filter } from "rxjs";
 import { SelectionService } from "../scene/selection.service";
 import { Functionality } from "./functionality";
-import { ScreenCoord, ScreenLength2d } from "../utilities/client/common";
+import { ScreenCoord } from "../utilities/client/common";
 
 @Injectable({
     providedIn: "root",
@@ -15,6 +15,7 @@ export class MoveCoordService extends Functionality {
     private scenesService!: ScenesService;
     private selectionService!: SelectionService;
 
+    private startPress: ScreenCoord | undefined;
     constructor() {
         super();
         this.eventsService = inject(EventsService);
@@ -28,15 +29,31 @@ export class MoveCoordService extends Functionality {
             return;
         }
 
+        const startPress = this.eventsService.mouseDown$.subscribe((event) => {
+            if (event.buttons === 1) {
+                this.startPress = new ScreenCoord(event.offsetX, event.offsetY);
+            }
+        });
+
         const movePoint = this.eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
                 if (event.buttons === 1) {
+                    if (!this.startPress) {
+                        return;
+                    }
+                    const end = new ScreenCoord(event.offsetX, event.offsetY);
                     scene.sceneClient.move_coords_of(
                         this.selectionService.selection,
-                        new ScreenLength2d(event.movementX, event.movementY),
+                        this.startPress,
+                        end,
                     );
+                    this.startPress = end;
                 }
             });
+        });
+
+        const endPress = this.eventsService.mouseUp$.subscribe(() => {
+            this.startPress = undefined;
         });
 
         const selecShape = this.eventsService.mouseDown$
@@ -60,7 +77,9 @@ export class MoveCoordService extends Functionality {
             });
 
         this.subscriptions.push(selecShape);
+        this.subscriptions.push(startPress);
         this.subscriptions.push(movePoint);
+        this.subscriptions.push(endPress);
     }
 
     desactivate(): void {

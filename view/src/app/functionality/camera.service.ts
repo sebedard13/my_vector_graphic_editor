@@ -56,7 +56,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(zoomEvent);
 
         const moveEvent = this.eventsService.mouseMove$
-            .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
+            .pipe(filter((event) => event.buttons == 4 || (event.altKey && event.buttons == 1)))
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
                     scene.sceneClient.camera_pan_by(

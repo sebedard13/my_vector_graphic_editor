@@ -95,3 +95,32 @@ impl CommandsHandler {
         Ok(())
     }
 }
+
+
+#[cfg(test)]
+mod tests{
+    use common::Rgba;
+
+    use crate::{Scene, Shape};
+
+    use super::{ChangeColor, CommandsHandler};
+
+
+    #[test]
+    fn when_2_commands_then_merge_simpler(){
+        let mut scene = Scene::new();
+        let mut s = Shape::new();
+        s.color = Rgba::black();
+        let id = scene.shape_insert(s);
+       
+
+        let mut command_handler = CommandsHandler::from(scene);
+        let change_color1 = ChangeColor::new(vec![id], Rgba::white());
+        command_handler.execute(Box::new(change_color1)).unwrap();
+
+        let change_color2 = ChangeColor::new(vec![id], Rgba::red());
+        command_handler.execute(Box::new(change_color2)).unwrap();
+
+        assert_eq!(command_handler.stack.len(), 1);
+    }
+}

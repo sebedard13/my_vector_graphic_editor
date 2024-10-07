@@ -5,10 +5,9 @@ use common::{
 };
 use serde::{Deserialize, Serialize};
 
-
 use crate::{LayerId, Scene};
 
-#[cfg(feature = "tiny-skia_renderer")]
+#[cfg(feature = "tiny-skia-renderer")]
 mod tiny_skia;
 
 mod transparent_grid;

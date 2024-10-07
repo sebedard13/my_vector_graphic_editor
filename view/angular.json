@@ -100,6 +100,7 @@
         "schematicCollections": ["@angular-eslint/schematics"],
         "cache": {
             "enabled": false
-        }
+        },
+        "analytics": "05e78051-7a4b-481a-ac74-95e52852112f"
     }
 }

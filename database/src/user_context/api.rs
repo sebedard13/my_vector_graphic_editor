@@ -1,4 +1,3 @@
-use common::pures::Vec2;
 use common::types::{Coord, ScreenLength2d};
 use common::{dbg_str, Rgba};
 use common::{math::point_in_radius, types::ScreenCoord};
@@ -20,8 +19,15 @@ impl SceneUserContext {
             log::error!("{:?}", e)
         }
     }
-    pub fn move_coords_of(&mut self, selected: &UserSelection, movement: ScreenLength2d) {
-        let movement = self.camera.transform_to_length2d_with_rotation(movement);
+    pub fn move_coords_of(
+        &mut self,
+        selected: &UserSelection,
+        start: ScreenCoord,
+        end: ScreenCoord,
+    ) {
+        let start = self.camera.project(start);
+        let end = self.camera.project(end);
+        log::debug!("start: {:?}, end: {:?}", start, end);
 
         if let Err(e) = self.command_handler.execute(MoveCoords::boxed(
             selected
@@ -29,8 +35,8 @@ impl SceneUserContext {
                 .iter()
                 .map(|s| (s.shape_id, s.coords.clone()))
                 .collect(),
-            Coord::new(0.0, 0.0),
-            Coord::new(movement.x(), movement.y()),
+            start,
+            end,
         )) {
             log::error!("{:?}", e)
         }

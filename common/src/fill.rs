@@ -29,6 +29,50 @@ impl Rgba {
         Rgba::new(0, 0, 0, 0)
     }
 
+    pub fn red() -> Rgba {
+        Rgba::new(255, 0, 0, 255)
+    }
+
+    pub fn green() -> Rgba {
+        Rgba::new(0, 255, 0, 255)
+    }
+
+    pub fn blue() -> Rgba {
+        Rgba::new(0, 0, 255, 255)
+    }
+
+    pub fn orange() -> Rgba {
+        Rgba::new(255, 165, 0, 255)
+    }
+
+    pub fn yellow() -> Rgba {
+        Rgba::new(255, 255, 0, 255)
+    }
+
+    pub fn purple() -> Rgba {
+        Rgba::new(128, 0, 128, 255)
+    }
+
+    pub fn pink() -> Rgba {
+        Rgba::new(255, 192, 203, 255)
+    }
+
+    pub fn cyan() -> Rgba {
+        Rgba::new(0, 255, 255, 255)
+    }
+
+    pub fn teal() -> Rgba {
+        Rgba::new(0, 128, 128, 255)
+    }
+
+    pub fn brown() -> Rgba {
+        Rgba::new(165, 42, 42, 255)
+    }
+
+    pub fn gray() -> Rgba {
+        Rgba::new(128, 128, 128, 255)
+    }
+
     ///
     /// ```rust
     /// use common::Rgba;

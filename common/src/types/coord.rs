@@ -21,10 +21,7 @@ pub struct Coord {
 }
 
 impl Coord {
-    #[cfg_attr(
-        all(feature = "bindgen", not(feature = "ts")),
-        wasm_bindgen(constructor)
-    )]
+   
     pub fn new(x: f32, y: f32) -> Coord {
         Coord { x, y }
     }
