@@ -8,7 +8,7 @@ pub mod render;
 pub mod shape;
 pub mod tree_view;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 enum LayerType {
     Shape(shape::Shape),
     Folder,
@@ -30,14 +30,14 @@ impl LayerType {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 struct Layer {
     pub id: LayerId,
     pub name: String,
     pub value: LayerType,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Scene {
     pub background: Rgba,
 
@@ -77,6 +77,10 @@ impl Scene {
         None
     }
 
+    pub fn layer_position(&self, index: LayerId) -> Option<usize> {
+        self.layers.iter().position(|l| l.id == index)
+    }
+
     pub fn layer_delete(&mut self, index: LayerId) {
         self.layers.retain(|l| l.id != index);
     }
@@ -102,15 +106,28 @@ impl Scene {
         }
     }
 
-    pub fn layer_move_at(&mut self, id_to_move: LayerId, id_position: LayerId) -> Result<(), String> {
-        let index_to_move = self.layers.iter().position(|l| l.id == id_to_move).ok_or("id_to_move not found")?;
+    pub fn layer_move_before(
+        &mut self,
+        layer: LayerId,
+        layer_after: LayerId,
+    ) -> Result<(), String> {
         let index_position = self
             .layers
             .iter()
-            .position(|l| l.id == id_position)
+            .position(|l| l.id == layer_after)
             .ok_or("id_position not found")?;
+        self.layer_move_at(layer, index_position)?;
+        Ok(())
+    }
+
+    pub fn layer_move_at(&mut self, id_to_move: LayerId, index: usize) -> Result<(), String> {
+        let index_to_move = self
+            .layers
+            .iter()
+            .position(|l| l.id == id_to_move)
+            .ok_or("id_to_move not found")?;
         let layer = self.layers.remove(index_to_move);
-        self.layers.insert(index_position, layer);
+        self.layers.insert(index, layer);
         Ok(())
     }
 

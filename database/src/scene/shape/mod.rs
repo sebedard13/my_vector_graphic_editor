@@ -18,21 +18,18 @@ pub mod coord;
 pub mod cubic_path;
 pub mod curve;
 
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Stroke{
-    pub size:f32,
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct Stroke {
+    pub size: f32,
     pub color: Rgba,
 }
 
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Shape {
     pub id: LayerId,
     pub path: Vec<DbCoord>,
     pub color: Rgba,
-    pub stroke: Option<Stroke>
-
+    pub stroke: Option<Stroke>,
 }
 
 impl Shape {
@@ -42,7 +39,7 @@ impl Shape {
         renderer.set_fill(&self.color)?;
         if let Some(stroke) = &self.stroke {
             renderer.set_stroke(&stroke.color, stroke.size as f64)?;
-        }else{
+        } else {
             renderer.set_stroke(&Rgba::transparent(), 0.0)?;
         }
         renderer.start_shape(&coords[0])?;
@@ -163,7 +160,7 @@ impl Shape {
             id: LayerId::null(),
             path: Vec::new(),
             color: Rgba::transparent(),
-            stroke: None
+            stroke: None,
         }
     }
 
@@ -179,7 +176,7 @@ impl Shape {
         shape
     }
 
-    //List of coordinates of lines. It will close the shape.
+    ///List of coordinates of lines. It will close the shape.
     pub fn new_from_lines(coords: Vec<coord::DbCoord>, transform: Affine) -> Self {
         let mut shape = Shape::new();
         if coords.is_empty() {
@@ -272,7 +269,7 @@ impl Shape {
 
     ///Creates a new shape from a string of path coordinates.
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// use database::Shape;
     /// let shape = Shape::quick_from_string("M 0 0 C 1.000 1.000 2 2 0 0 Z");

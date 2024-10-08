@@ -33,7 +33,10 @@ export class SelectionService {
 
         eventsService.mouseMove$.subscribe((event) => {
             this.scenesService.currentSceneNow((scene) => {
-                const pt = scene.sceneClient.camera_project({ x: event.offsetX, y: event.offsetY } as ScreenCoord);
+                const pt = scene.sceneClient.camera_project({
+                    x: event.offsetX,
+                    y: event.offsetY,
+                } as ScreenCoord);
 
                 //selection
                 this.selection.set_mouse_position(pt);
@@ -49,6 +52,23 @@ export class SelectionService {
             this.selection.clear_to_level("None");
             this.selectionHasChanged.next();
         });
+
+        eventsService.keydown$
+            .pipe(filter((event) => event.key == "z" && event.ctrlKey))
+            .subscribe(() => {
+                this.scenesService.currentSceneNow((scene) => {
+                    scene.sceneClient.undo();
+                });
+            });
+
+        eventsService.keydown$
+            .pipe(filter((event) => event.key == "Z" && event.ctrlKey && event.shiftKey))
+            .subscribe(() => {
+                console.log("redo");
+                this.scenesService.currentSceneNow((scene) => {
+                    scene.sceneClient.redo();
+                });
+            });
     }
 
     public set_color(color: Rgba) {
