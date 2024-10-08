@@ -5,12 +5,15 @@ import {
     DestroyRef,
     ElementRef,
     OnDestroy,
+    computed,
     inject,
 } from "@angular/core";
 import { Button, toolsbarSvgBtn } from "../../interface/buttons";
 import { EventsService } from "../../scene/events.service";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 import { filter } from "rxjs";
+import { SelectionService } from "src/app/scene/selection.service";
+import { Rgba } from "src/app/utilities/client/common";
 @Component({
     selector: "app-tools-bar",
     templateUrl: "./tools-bar.component.html",
@@ -24,6 +27,7 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
     private readonly eventService = inject(EventsService);
     private readonly destroyRef = inject(DestroyRef);
     private readonly elementRef = inject(ElementRef);
+    private readonly selectionService = inject(SelectionService);
 
     private readonly mapKeybinds: Map<string, number> = new Map([
         ["Digit1", 0],
@@ -37,6 +41,18 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
         ["Digit9", 8],
         ["Digit0", 9],
     ]);
+
+    protected selectedColor = toSignal(this.selectionService.selectedColor$, { initialValue: [] });
+    protected fillColor = computed(() => {
+        const value = this.selectedColor();
+        return value.length === 1
+            ? new Rgba(value[0].r, value[0].g, value[0].b, value[0].a)
+            : new Rgba(0, 0, 0, 0);
+    });
+    protected fillColorInvalid = computed(() => {
+        const value = this.selectedColor();
+        return value.length > 1;
+    });
 
     ngAfterViewInit(): void {
         const startIndex = 0;
@@ -66,5 +82,9 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
         for (const button of this.buttons) {
             button.functionality?.desactivate();
         }
+    }
+
+    protected changeColor(color: Rgba) {
+        this.selectionService.set_color(color);
     }
 }

@@ -40,6 +40,11 @@ impl Shape {
         let transform = renderer.get_transform()?;
         let coords: Vec<Coord> = self.path.iter().map(|c| transform * c.coord).collect();
         renderer.set_fill(&self.color)?;
+        if let Some(stroke) = &self.stroke {
+            renderer.set_stroke(&stroke.color, stroke.size as f64)?;
+        }else{
+            renderer.set_stroke(&Rgba::transparent(), 0.0)?;
+        }
         renderer.start_shape(&coords[0])?;
         for i in (1..(coords.len() - 1)).step_by(3) {
             let cp0 = coords[i];

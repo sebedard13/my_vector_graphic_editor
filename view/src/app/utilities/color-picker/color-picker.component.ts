@@ -5,11 +5,13 @@ import {
     DestroyRef,
     ElementRef,
     ViewChild,
+    effect,
     inject,
+    input,
+    output,
 } from "@angular/core";
 import { BehaviorSubject, fromEvent } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { SelectionService } from "src/app/scene/selection.service";
 import { Rgba } from "../client/common";
 
 @Component({
@@ -20,44 +22,42 @@ import { Rgba } from "../client/common";
 })
 export class ColorPickerComponent implements AfterViewInit {
     private _destory = inject(DestroyRef);
-    @ViewChild("colorInput") colorInput!: ElementRef<HTMLInputElement>;
+    @ViewChild("colorInput") colorInputElement!: ElementRef<HTMLInputElement>;
     @ViewChild("canvasInvalidColor")
     canvasInvalidColor!: ElementRef<HTMLCanvasElement>;
+
+    public color = output<Rgba>();
+    public colorInput = input<Rgba | undefined>();
+    public invalidColor = input<boolean>(false);
 
     private lastColor: string = "#000000";
 
     private colorValue = new BehaviorSubject<string>("#000000");
-    private colorIsValid = new BehaviorSubject<boolean>(true);
 
-    protected colorIsValid$ = this.colorIsValid.asObservable();
     protected colorValue$ = this.colorValue.asObservable();
 
-    constructor(private selectionService: SelectionService) {
-        selectionService.selectedColor$.subscribe((selected) => {
-            if (selected.length == 0) {
-                this.colorValue.next(this.lastColor);
-                this.colorIsValid.next(true);
-            } else if (selected.length == 1) {
-                const rgba = new Rgba(selected[0].r, selected[0].g, selected[0].b, selected[0].a);
-                this.colorValue.next(rgba.toCSSHex());
+    constructor() {
+        effect(() => {
+            const selected = this.colorInput();
 
-                this.colorIsValid.next(true);
-            } else {
-                this.colorValue.next("#000000");
-                this.colorIsValid.next(false);
+            if (selected == undefined) {
+                this.colorValue.next(this.lastColor);
+            } else if (selected) {
+                const rgba = selected;
+                this.colorValue.next(rgba.toCSSHex());
             }
         });
     }
 
     ngAfterViewInit(): void {
-        fromEvent(this.colorInput.nativeElement, "input")
+        fromEvent(this.colorInputElement.nativeElement, "input")
             .pipe(takeUntilDestroyed(this._destory))
             .subscribe((event) => {
                 const target = event.target as HTMLInputElement;
                 const color = target.value;
 
                 this.lastColor = color;
-                this.selectionService.set_color(Rgba.fromCSSHex(color));
+                this.color.emit(Rgba.fromCSSHex(color));
             });
 
         const ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {

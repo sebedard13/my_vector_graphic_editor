@@ -11,5 +11,10 @@
             ><fa-icon [icon]="button.icon"></fa-icon
         ></label>
     </div>
-    <app-color-picker class="w-100"></app-color-picker>
+    <app-color-picker
+        class="w-100"
+        (color)="changeColor($event)"
+        [colorInput]="fillColor()"
+        [invalidColor]="fillColorInvalid()"
+    ></app-color-picker>
 </div>
