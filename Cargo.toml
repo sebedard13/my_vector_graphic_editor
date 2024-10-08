@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["common", "desktop", "database", "wasm_client"]
+members = ["common", "desktop", "database", "wasm_client", "macros", "macros-test"]
 
 [profile.profiling]
 inherits = "release"

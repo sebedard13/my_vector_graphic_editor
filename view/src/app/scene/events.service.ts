@@ -23,6 +23,9 @@ export class EventsService {
     public mouseLeave = new Subject<MouseEvent>();
     public mouseLeave$ = this.mouseLeave.asObservable();
 
+    public mouseUp = new Subject<MouseEvent>();
+    public mouseUp$ = this.mouseUp.asObservable();
+
     constructor() {
         document.addEventListener("keydown", (event: KeyboardEvent) => {
             this.keydown.next(event);

@@ -16,7 +16,7 @@ pub struct UserSelection {
 
 #[derive(Debug, Default)]
 pub struct SelectedShape {
-    pub shape_index: LayerId,
+    pub shape_id: LayerId,
     pub coords: Vec<CoordId>,
 }
 
@@ -101,8 +101,8 @@ impl UserSelection {
 
         let mut colors = Vec::new();
         for shape_selected in shapes {
-            let shape = shape_selected.shape_index;
-            let shape = match canvas_context.scene.shape_select(shape) {
+            let shape = shape_selected.shape_id;
+            let shape = match canvas_context.scene().shape_select(shape) {
                 Some(shape) => shape,
                 None => continue,
             };
@@ -119,8 +119,8 @@ impl UserSelection {
     pub fn change_hover(&mut self, canvas_context: &SceneUserContext, cursor_position: Coord) {
         'shape_loop: for shape_selected in &mut self.shapes {
             let shape = canvas_context
-                .scene
-                .shape_select(shape_selected.shape_index)
+                .scene()
+                .shape_select(shape_selected.shape_id)
                 .unwrap();
             let db_coords = &shape.path;
             for db_coord in db_coords {
@@ -131,8 +131,7 @@ impl UserSelection {
                         .camera
                         .transform_to_length2d(ScreenLength2d::new(12.0, 12.0)),
                 ) {
-                    self.hover_coord =
-                        Some(HoverCoord::new(shape_selected.shape_index, db_coord.id));
+                    self.hover_coord = Some(HoverCoord::new(shape_selected.shape_id, db_coord.id));
                     continue 'shape_loop;
                 }
             }
@@ -145,12 +144,12 @@ impl UserSelection {
 
         if selected_shapes.is_empty() {
             //Add shape
-            let closest_shapes = canvas_context.scene.shape_select_contains(&start_press);
+            let closest_shapes = canvas_context.scene().shape_select_contains(&start_press);
 
             if let Some(shape) = closest_shapes {
                 let pos = selected_shapes
                     .iter()
-                    .position(|shape_selected| shape_selected.shape_index == shape.id);
+                    .position(|shape_selected| shape_selected.shape_id == shape.id);
 
                 match pos {
                     Some(index) => {
@@ -173,8 +172,8 @@ impl UserSelection {
 
             for selected_shape in selected_shapes {
                 let shape = canvas_context
-                    .scene
-                    .shape_select(selected_shape.shape_index)
+                    .scene()
+                    .shape_select(selected_shape.shape_id)
                     .unwrap();
                 let coords = &shape.path;
                 for db_coord in coords {
@@ -198,8 +197,8 @@ impl UserSelection {
         //Coord
         for shape_selected in &mut self.shapes {
             let shape = canvas_context
-                .scene
-                .shape_select(shape_selected.shape_index)
+                .scene()
+                .shape_select(shape_selected.shape_id)
                 .unwrap();
             let db_coords = &shape.path;
             for db_coord in db_coords {
@@ -228,13 +227,13 @@ impl UserSelection {
             }
         }
 
-        let shape = canvas_context.scene.shape_select_contains(&start_press);
+        let shape = canvas_context.scene().shape_select_contains(&start_press);
 
         if let Some(shape) = shape {
             let shapes = &mut self.shapes;
             let pos = shapes
                 .iter()
-                .position(|shape_selected| shape_selected.shape_index == shape.id);
+                .position(|shape_selected| shape_selected.shape_id == shape.id);
 
             match pos {
                 Some(index) => {
@@ -258,7 +257,7 @@ impl UserSelection {
         let shapes = &mut self.shapes;
         let pos = shapes
             .iter()
-            .position(|shape_selected| shape_selected.shape_index == shape_index);
+            .position(|shape_selected| shape_selected.shape_id == shape_index);
 
         if let Some(index) = pos {
             shapes.remove(index);
@@ -275,7 +274,7 @@ pub enum CoordState {
 impl SelectedShape {
     pub fn new(shape_index: LayerId) -> Self {
         Self {
-            shape_index,
+            shape_id: shape_index,
             coords: Vec::new(),
         }
     }

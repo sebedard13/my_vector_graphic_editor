@@ -53,7 +53,7 @@ impl SceneClient {
     }
 
     pub fn debug_string(&self) -> String {
-        self.scene_context.scene.debug_string()
+        self.scene_context.scene().debug_string()
     }
 }
 

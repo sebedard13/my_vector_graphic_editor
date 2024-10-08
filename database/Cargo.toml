@@ -14,8 +14,15 @@ serde.workspace = true
 tsify-next.workspace = true
 wasm-bindgen.workspace = true
 
+tiny-skia = { version = "0.11.4", optional = true }
+
 common = { path = "../common" }
+macros = { path = "../macros" }
 
 [dev-dependencies]
 float-cmp = "0.9.0"
 env_logger = "0.11.5"
+
+[features]
+default = []
+tiny-skia-renderer = ["tiny-skia"]

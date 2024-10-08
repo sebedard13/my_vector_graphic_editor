@@ -1,3 +1,4 @@
+use crate::commands::CommandsHandler;
 use camera::Camera;
 use common::{pures::Affine, Rgba};
 use serde::{Deserialize, Serialize};
@@ -6,12 +7,13 @@ use crate::{DbCoord, DrawingContext, RenderOption, Scene, Shape};
 
 pub mod api;
 pub mod camera;
+
 mod ui;
 pub mod user_selection;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SceneUserContext {
-    pub scene: Scene,
+    pub command_handler: CommandsHandler,
     pub render_options: RenderOption,
     pub camera: Camera,
 }
@@ -22,14 +24,19 @@ impl SceneUserContext {
         let camera = Camera::new(scene.max_rect().center(), width, height);
         let render_options = RenderOption::default();
         Self {
-            scene,
+            command_handler: CommandsHandler::from(scene),
             render_options,
             camera,
         }
     }
 
+    pub fn scene(&self) -> &Scene {
+        &self.command_handler.scene()
+    }
+
     pub fn scene_render<T: DrawingContext>(&self, drawing_context: &mut T) -> Result<(), String> {
-        self.scene.render_with_options(drawing_context, self.render_options.clone())
+        self.scene()
+            .render_with_options(drawing_context, self.render_options.clone())
     }
 }
 
@@ -61,7 +68,7 @@ impl Default for SceneUserContext {
         let camera = Camera::new(scene.max_rect().center(), 750.0, 500.0);
         let render_options = RenderOption::default();
         Self {
-            scene,
+            command_handler: CommandsHandler::from(scene),
             render_options,
             camera,
         }

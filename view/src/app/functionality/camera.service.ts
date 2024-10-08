@@ -56,7 +56,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(zoomEvent);
 
         const moveEvent = this.eventsService.mouseMove$
-            .pipe(filter((event) => event.buttons == 4 || (event.shiftKey && event.buttons == 1)))
+            .pipe(filter((event) => event.buttons == 4 || (event.altKey && event.buttons == 1)))
             .subscribe((event) => {
                 this.sceneService.currentSceneNow((scene) => {
                     scene.sceneClient.camera_pan_by(
@@ -98,7 +98,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(rotateMinus5);
 
         const flipX = this.eventsService.keydown$
-            .pipe(filter((event) => event.key == "z"))
+            .pipe(filter((event) => event.key == "x"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
                     const flip = scene.sceneClient.camera_get_reflect_x();
@@ -108,7 +108,7 @@ export class CameraService extends Functionality {
         this.subscriptions.push(flipX);
 
         const flipY = this.eventsService.keydown$
-            .pipe(filter((event) => event.key == "x"))
+            .pipe(filter((event) => event.key == "y"))
             .subscribe((_) => {
                 this.sceneService.currentSceneNow((scene) => {
                     const flip = scene.sceneClient.camera_get_reflect_y();

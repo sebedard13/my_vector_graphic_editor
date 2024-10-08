@@ -18,7 +18,7 @@ pub mod coord;
 pub mod cubic_path;
 pub mod curve;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Shape {
     pub id: LayerId,
     pub path: Vec<DbCoord>,
@@ -163,7 +163,7 @@ impl Shape {
         shape
     }
 
-    //List of coordinates of lines. It will close the shape.
+    ///List of coordinates of lines. It will close the shape.
     pub fn new_from_lines(coords: Vec<coord::DbCoord>, transform: Affine) -> Self {
         let mut shape = Shape::new();
         if coords.is_empty() {

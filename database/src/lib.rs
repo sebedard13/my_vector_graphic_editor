@@ -2,6 +2,7 @@ mod math;
 mod scene;
 mod user_context;
 
+pub mod commands;
 #[cfg(test)]
 mod integration;
 

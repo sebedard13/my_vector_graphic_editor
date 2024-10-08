@@ -45,7 +45,7 @@ impl SceneClient {
         width: f32,
         height: f32,
     ) -> Result<(), JsValue> {
-        let max_rect = self.scene_context.scene.max_rect();
+        let max_rect = self.scene_context.scene().max_rect();
 
         let scale_x = width / max_rect.width();
         let scale_y = height / max_rect.height();
@@ -69,7 +69,7 @@ impl SceneClient {
             (width, height),
         );
 
-        let max_rect = self.scene_context.scene.max_rect();
+        let max_rect = self.scene_context.scene().max_rect();
 
         let document = web_sys::window().unwrap().document().unwrap();
         let canvas = document.create_element("canvas").unwrap();
@@ -98,7 +98,7 @@ impl SceneClient {
         };
 
         self.scene_context
-            .scene
+            .scene()
             .render_with_options(&mut ctx_2d_renderer, option)
             .map_err(|e| JsValue::from_str(&e))?;
 
