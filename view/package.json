@@ -26,7 +26,6 @@
         "normalize.css": "^8.0.1",
         "rxjs": "^7.8.0",
         "tslib": "^2.3.0",
-        "vitest-webgl-canvas-mock": "^1.1.0",
         "wasm-client": "file:../wasm_client/pkg"
     },
     "devDependencies": {
@@ -47,6 +46,7 @@
         "jsdom": "^25.0.0",
         "prettier": "^3.1.1",
         "typescript": "^5.2.2",
+        "vitest-webgl-canvas-mock": "^1.1.0",
         "vite-plugin-top-level-await": "^1.4.2",
         "vite-plugin-wasm": "^3.3.0",
         "vite-tsconfig-paths": "^4.3.2",
