@@ -1,4 +1,5 @@
 import "@analogjs/vitest-angular/setup-zone";
+import "vitest-webgl-canvas-mock";
 
 import {
     BrowserDynamicTestingModule,
