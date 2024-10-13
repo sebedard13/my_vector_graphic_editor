@@ -13,12 +13,15 @@ import {
 import { BehaviorSubject, fromEvent } from "rxjs";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Rgba } from "../client/common";
+import { AsyncPipe } from "@angular/common";
 
 @Component({
     selector: "app-color-picker",
     templateUrl: "./color-picker.component.html",
     styleUrls: ["./color-picker.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [AsyncPipe],
 })
 export class ColorPickerComponent implements AfterViewInit {
     private _destory = inject(DestroyRef);
@@ -31,6 +34,7 @@ export class ColorPickerComponent implements AfterViewInit {
     public invalidColor = input<boolean>(false);
 
     private lastColor: string = "#000000";
+    protected id = Math.random().toString(36).substring(7);
 
     private colorValue = new BehaviorSubject<string>("#000000");
 
@@ -58,6 +62,7 @@ export class ColorPickerComponent implements AfterViewInit {
 
                 this.lastColor = color;
                 this.color.emit(Rgba.fromCSSHex(color));
+                this.colorValue.next(color);
             });
 
         const ctx = this.canvasInvalidColor.nativeElement.getContext("2d", {

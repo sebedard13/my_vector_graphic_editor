@@ -28,6 +28,9 @@ export class EventsService {
 
     constructor() {
         document.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.target instanceof HTMLInputElement) {
+                return;
+            }
             this.keydown.next(event);
         });
     }

@@ -1,4 +1,4 @@
-<label for="color-picker" [class.is-valid]="!invalidColor()">
+<label [for]="'color-picker' + id" [class.is-valid]="!invalidColor()">
     <div class="color h-100" [style.background-color]="colorValue$ | async"></div>
 
     <div class="invalid-color h-100">
@@ -11,5 +11,5 @@
     type="color"
     name="color"
     [value]="colorValue$ | async"
-    id="color-picker"
+    [id]="'color-picker' + id"
 />

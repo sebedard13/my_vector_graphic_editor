@@ -127,6 +127,16 @@ impl UserSelectionClient {
             .get_selected_colors(&canvas_context.scene_context)
     }
 
+    pub fn get_selected_stroke_sizes(&self, canvas_context: &SceneClient) -> Vec<f32> {
+        self.selection
+            .get_selected_stroke_sizes(&canvas_context.scene_context)
+    }
+
+    pub fn get_selected_stroke_colors(&self, canvas_context: &SceneClient) -> Vec<Rgba> {
+        self.selection
+            .get_selected_stroke_colors(&canvas_context.scene_context)
+    }
+
     pub fn change_hover(&mut self, canvas_context: &SceneClient, cursor_position: Coord) {
         self.selection
             .change_hover(&canvas_context.scene_context, cursor_position)

@@ -18,10 +18,16 @@ pub mod coord;
 pub mod cubic_path;
 pub mod curve;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Stroke {
     pub size: f32,
     pub color: Rgba,
+}
+
+impl Stroke {
+    pub fn new(size: f32, color: Rgba) -> Self {
+        Stroke { size, color }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -29,7 +35,7 @@ pub struct Shape {
     pub id: LayerId,
     pub path: Vec<DbCoord>,
     pub color: Rgba,
-    pub stroke: Option<Stroke>,
+    pub stroke: Stroke,
 }
 
 impl Shape {
@@ -37,11 +43,15 @@ impl Shape {
         let transform = renderer.get_transform()?;
         let coords: Vec<Coord> = self.path.iter().map(|c| transform * c.coord).collect();
         renderer.set_fill(&self.color)?;
-        if let Some(stroke) = &self.stroke {
-            renderer.set_stroke(&stroke.color, stroke.size as f64)?;
-        } else {
+        if self.stroke.size == 0.0 {
             renderer.set_stroke(&Rgba::transparent(), 0.0)?;
+        } else {
+            renderer.set_stroke(
+                &self.stroke.color,
+                transform.scale_length(self.stroke.size) as f64,
+            )?;
         }
+
         renderer.start_shape(&coords[0])?;
         for i in (1..(coords.len() - 1)).step_by(3) {
             let cp0 = coords[i];
@@ -160,7 +170,7 @@ impl Shape {
             id: LayerId::null(),
             path: Vec::new(),
             color: Rgba::transparent(),
-            stroke: None,
+            stroke: Stroke::new(0.0, Rgba::black()),
         }
     }
 

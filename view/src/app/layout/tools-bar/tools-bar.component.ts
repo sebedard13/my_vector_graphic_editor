@@ -47,7 +47,7 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
         const value = this.selectedColor();
         return value.length === 1
             ? new Rgba(value[0].r, value[0].g, value[0].b, value[0].a)
-            : new Rgba(0, 0, 0, 0);
+            : undefined;
     });
     protected fillColorInvalid = computed(() => {
         const value = this.selectedColor();

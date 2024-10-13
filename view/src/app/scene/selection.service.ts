@@ -64,7 +64,6 @@ export class SelectionService {
         eventsService.keydown$
             .pipe(filter((event) => event.key == "Z" && event.ctrlKey && event.shiftKey))
             .subscribe(() => {
-                console.log("redo");
                 this.scenesService.currentSceneNow((scene) => {
                     scene.sceneClient.redo();
                 });

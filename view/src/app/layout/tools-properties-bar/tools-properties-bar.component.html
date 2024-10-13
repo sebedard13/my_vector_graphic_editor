@@ -1,0 +1,10 @@
+<div class="p-1 row gap-2 center-ai">
+    Stroke
+    <div class="row center-ai gap-1 "><app-number-input></app-number-input> px</div>
+
+    <app-color-picker
+        (color)="changeStrokeColor($event)"
+        [colorInput]="strokeColor()"
+        [invalidColor]="strokeColorInvalid()"
+    ></app-color-picker>
+</div>

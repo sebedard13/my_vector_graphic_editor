@@ -1,4 +1,4 @@
-use crate::commands::CommandsHandler;
+use crate::{commands::CommandsHandler, scene::shape::Stroke};
 use camera::Camera;
 use common::{pures::Affine, Rgba};
 use serde::{Deserialize, Serialize};
@@ -52,6 +52,7 @@ impl Default for SceneUserContext {
             Affine::identity(),
         );
         shape1.color = Rgba::new(128, 0, 0, 255);
+        shape1.stroke = Stroke::new(0.02, Rgba::new(0, 255, 0, 255));
         scene.shape_insert(shape1);
 
         let mut shape2 = Shape::new_from_lines(
