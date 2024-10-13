@@ -4,7 +4,10 @@ app-color-picker {
 }
 
 app-number-input {
-    width: 30px;
+    width: 45px;
     font-size: 70%;
-    text-align: end;
+
+    + span {
+        font-size: 70%;
+    }
 }

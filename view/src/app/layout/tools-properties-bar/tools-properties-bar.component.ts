@@ -19,6 +19,8 @@ export class ToolsPropertiesBarComponent {
     private readonly selectionService = inject(SelectionService);
     private readonly sceneService = inject(ScenesService);
 
+    private lastSelectedStrokedSize = 0;
+
     private readonly selectedStrokeColors$ = this.selectionService.selectionHasChanged.pipe(
         map(() => {
             return this.sceneService.currentScene();
@@ -48,9 +50,21 @@ export class ToolsPropertiesBarComponent {
         }),
         filter((scene) => scene !== null),
         map((scene) => {
-            return this.selectionService.selection.get_selected_stroke_sizes(scene!.sceneClient);
+            const stokes = this.selectionService.selection.get_selected_stroke_sizes(
+                scene!.sceneClient,
+            );
+            if (stokes.length > 1) {
+                return NaN;
+            }
+
+            if (stokes.length === 0) {
+                return this.lastSelectedStrokedSize;
+            }
+
+            return stokes[0] * scene!.sceneClient.camera_get_base_scale().x;
         }),
     );
+    protected strokeSize = toSignal(this.selectedStrokeSize, { initialValue: 0 });
 
     protected changeStrokeColor(color: Rgba): void {
         this.sceneService.currentSceneNow((scene) => {
@@ -61,6 +75,9 @@ export class ToolsPropertiesBarComponent {
 
     protected changeStrokeSize(size: number): void {
         this.sceneService.currentSceneNow((scene) => {
+            let basescale = scene.sceneClient.camera_get_base_scale();
+            this.lastSelectedStrokedSize = size;
+            size = size / basescale.x;
             scene.sceneClient.set_stroke_size_of(this.selectionService.selection, size);
             this.selectionService.selectionHasChanged.next();
         });

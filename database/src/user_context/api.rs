@@ -2,7 +2,10 @@ use common::types::{Coord, ScreenLength2d};
 use common::{dbg_str, Rgba};
 use common::{math::point_in_radius, types::ScreenCoord};
 
-use crate::commands::{AddCoord, ChangeColor, ChangeStrokeColor, MoveCoords, RemoveCoord, ToggleHandle};
+use crate::commands::{
+    AddCoord, ChangeColor, ChangeStrokeColor, ChangeStrokeSize, MoveCoords, RemoveCoord,
+    ToggleHandle,
+};
 use crate::scene::shape::boolean::ShapeUnion;
 use crate::user_context::user_selection::SelectedShape;
 use crate::{LayerId, Shape};
@@ -28,7 +31,6 @@ impl SceneUserContext {
     ) {
         let start = self.camera.project(start);
         let end = self.camera.project(end);
-        log::debug!("start: {:?}, end: {:?}", start, end);
 
         if let Err(e) = self.command_handler.execute(MoveCoords::boxed(
             selected
@@ -186,15 +188,14 @@ impl SceneUserContext {
     }
 }
 
-
 impl SceneUserContext {
     pub fn set_stroke_size_of(&mut self, selected: &UserSelection, size: f64) {
-        // if let Err(e) = self.command_handler.execute(ChangeStrokeSize::boxed(
-        //     selected.shapes.iter().map(|s| s.shape_id).collect(),
-        //     size,
-        // )) {
-        //     log::error!("{:?}", e)
-        // }
+        if let Err(e) = self.command_handler.execute(ChangeStrokeSize::boxed(
+            selected.shapes.iter().map(|s| s.shape_id).collect(),
+            size as f32,
+        )) {
+            log::error!("{:?}", e)
+        }
     }
 
     pub fn set_stroke_color_of(&mut self, selected: &UserSelection, fill: Rgba) {
