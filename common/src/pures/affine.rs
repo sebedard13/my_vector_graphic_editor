@@ -79,6 +79,13 @@ impl Affine {
         Coord::new(self.m00, self.m11)
     }
 
+    pub fn scale_length(&self, scale: f32) -> f32 {
+        let c0 = *self * Coord::new(0.0, 0.0);
+        let c1 = *self * Coord::new(scale, 0.0);
+        let dist = c0.distance(&c1);
+        dist
+    }
+
     pub fn get_translation(&self) -> Coord {
         Coord::new(self.m02, self.m12)
     }

@@ -12,6 +12,8 @@ pub struct UserSelection {
     pub mouse_position: Option<Coord>,
     pub hover_coord: Option<HoverCoord>,
     pub color: Rgba,
+    pub stroke_size: f32,
+    pub stroke_color: Rgba,
 }
 
 #[derive(Debug, Default)]
@@ -114,6 +116,48 @@ impl UserSelection {
         }
 
         colors
+    }
+
+    pub fn get_selected_stroke_sizes(&self, canvas_context: &SceneUserContext) -> Vec<f32> {
+        let shapes = &self.shapes;
+
+        if shapes.is_empty() {
+            return vec![];
+        }
+
+        let mut stroke_sizes = Vec::new();
+        for shape_selected in shapes {
+            let shape = shape_selected.shape_id;
+            let shape = match canvas_context.scene().shape_select(shape) {
+                Some(shape) => shape,
+                None => continue,
+            };
+
+            stroke_sizes.push(shape.stroke.size);
+        }
+
+        stroke_sizes
+    }
+
+    pub fn get_selected_stroke_colors(&self, canvas_context: &SceneUserContext) -> Vec<Rgba> {
+        let shapes = &self.shapes;
+
+        if shapes.is_empty() {
+            return vec![];
+        }
+
+        let mut stroke_colors = Vec::new();
+        for shape_selected in shapes {
+            let shape = shape_selected.shape_id;
+            let shape = match canvas_context.scene().shape_select(shape) {
+                Some(shape) => shape,
+                None => continue,
+            };
+
+            stroke_colors.push(shape.stroke.color.clone());
+        }
+
+        stroke_colors
     }
 
     pub fn change_hover(&mut self, canvas_context: &SceneUserContext, cursor_position: Coord) {

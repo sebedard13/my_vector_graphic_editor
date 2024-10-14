@@ -1,10 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
+import { FormsModule } from "@angular/forms";
 
 @Component({
     selector: "app-number-input",
     templateUrl: "./number-input.component.html",
     styleUrl: "./number-input.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: true,
+    imports: [FormsModule],
 })
 export class NumberInputComponent {
     @Input() id!: string;

@@ -11,6 +11,7 @@ import { CameraService } from "./functionality/camera.service";
 import { ModalComponent, ModalService } from "./modal.service";
 import { map } from "rxjs";
 import { DebugService } from "./scene/debug.service";
+import { ToolsPropertiesBarComponent } from "./layout/tools-properties-bar/tools-properties-bar.component";
 
 @Component({
     selector: "app-root",

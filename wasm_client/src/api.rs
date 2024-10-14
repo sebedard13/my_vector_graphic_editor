@@ -12,6 +12,16 @@ impl SceneClient {
             .set_color_of(&mut selected.selection, color);
     }
 
+    pub fn set_stroke_size_of(&mut self, selected: &mut UserSelectionClient, size: f64) {
+        self.scene_context
+            .set_stroke_size_of(&mut selected.selection, size);
+    }
+
+    pub fn set_stroke_color_of(&mut self, selected: &mut UserSelectionClient, fill: Rgba) {
+        self.scene_context
+            .set_stroke_color_of(&mut selected.selection, fill);
+    }
+
     pub fn move_coords_of(
         &mut self,
         selected: &UserSelectionClient,
@@ -54,10 +64,12 @@ impl SceneClient {
 
     pub fn move_layer(&mut self, id_to_move: usize, id_position: usize) -> Result<(), String> {
         self.scene_context
-            .command_handler.execute(database::commands::MoveLayer::boxed(
+            .command_handler
+            .execute(database::commands::MoveLayer::boxed(
                 id_to_move.into(),
                 id_position.into(),
-            )).map_err(|e| format!("{:?}", e))?;
+            ))
+            .map_err(|e| format!("{:?}", e))?;
         Ok(())
     }
 
@@ -78,12 +90,18 @@ impl SceneClient {
     }
 
     pub fn undo(&mut self) -> Result<(), String> {
-        self.scene_context.command_handler.undo().map_err(|e| format!("{:?}", e))?;
+        self.scene_context
+            .command_handler
+            .undo()
+            .map_err(|e| format!("{:?}", e))?;
         Ok(())
     }
 
     pub fn redo(&mut self) -> Result<(), String> {
-        self.scene_context.command_handler.redo().map_err(|e| format!("{:?}", e))?;
+        self.scene_context
+            .command_handler
+            .redo()
+            .map_err(|e| format!("{:?}", e))?;
         Ok(())
     }
 }

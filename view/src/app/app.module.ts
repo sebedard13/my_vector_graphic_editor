@@ -14,24 +14,26 @@ import { NewSceneComponent } from "./new-scene/new-scene.component";
 import { NumberInputComponent } from "./utilities/number-input/number-input.component";
 import { FormsModule } from "@angular/forms";
 import { SceneViewerComponent } from "./windows/scene-viewer/scene-viewer.component";
+import { ToolsPropertiesBarComponent } from "./layout/tools-properties-bar/tools-properties-bar.component";
 
 @NgModule({
     declarations: [
         AppComponent,
         ToolsBarComponent,
         CanvasComponent,
-        ColorPickerComponent,
         MouseInfoComponent,
         MenuBarComponent,
         SceneViewComponent,
         NewSceneComponent,
-        NumberInputComponent,
     ],
     imports: [
         BrowserModule,
         FontAwesomeModule,
         FormsModule,
         SceneViewerComponent,
+        ToolsPropertiesBarComponent,
+        ColorPickerComponent,
+        NumberInputComponent,
     ],
     providers: [EventsService, provideExperimentalZonelessChangeDetection()],
     bootstrap: [AppComponent],

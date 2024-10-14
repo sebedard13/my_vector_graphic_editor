@@ -156,24 +156,18 @@ impl From<Coord> for DbCoord {
 
 #[cfg(test)]
 mod tests {
-    use common::Rgba;
-
-    use crate::*;
-
     use super::*;
 
     #[test]
     fn given_a_shape_not_closed_when_delete_coord_p0_then_1_elment() {
-        let mut shape = Shape {
-            id: LayerId::new(),
-            path: vec![
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-            ],
-            color: Rgba::new(0, 0, 0, 0),
-        };
+        let mut shape = Shape::new();
+        shape.path = vec![
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+        ];
+
         let id3 = shape.path[3].id;
 
         shape.coord_delete(shape.path[0].id).unwrap();
@@ -184,16 +178,13 @@ mod tests {
 
     #[test]
     fn given_a_shape_not_closed_when_delete_coord_p1_then_1_elment() {
-        let mut shape = Shape {
-            id: LayerId::new(),
-            path: vec![
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-            ],
-            color: Rgba::new(0, 0, 0, 0),
-        };
+        let mut shape = Shape::new();
+        shape.path = vec![
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+        ];
         let id0 = shape.path[0].id;
 
         shape.coord_delete(shape.path[3].id).unwrap();
@@ -204,16 +195,13 @@ mod tests {
 
     #[test]
     fn given_a_shape_closed_when_delete_coord_p0_then_0_elment() {
-        let mut shape = Shape {
-            id: LayerId::new(),
-            path: vec![
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-            ],
-            color: Rgba::new(0, 0, 0, 0),
-        };
+        let mut shape = Shape::new();
+        shape.path = vec![
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+        ];
         shape.path[3].id = shape.path[0].id;
 
         shape.coord_delete(shape.path[0].id).unwrap();
@@ -240,16 +228,13 @@ mod tests {
 
     #[test]
     fn given_a_shape_closed_when_delete_coord_p1_then_0_elment() {
-        let mut shape = Shape {
-            id: LayerId::new(),
-            path: vec![
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-            ],
-            color: Rgba::new(0, 0, 0, 0),
-        };
+        let mut shape = Shape::new();
+        shape.path = vec![
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+        ];
         shape.path[3].id = shape.path[0].id;
 
         shape.coord_delete(shape.path[3].id).unwrap();
@@ -259,19 +244,16 @@ mod tests {
 
     #[test]
     fn given_a_shape_closed_when_delete_coord_p1_in_middle_then_4_elment() {
-        let mut shape = Shape {
-            id: LayerId::new(),
-            path: vec![
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-                DbCoord::new(0.0, 0.0),
-            ],
-            color: Rgba::new(0, 0, 0, 0),
-        };
+        let mut shape = Shape::new();
+        shape.path = vec![
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+            DbCoord::new(0.0, 0.0),
+        ];
         shape.path[6].id = shape.path[0].id;
         let id2 = shape.path[2].id;
         let id3 = shape.path[3].id;

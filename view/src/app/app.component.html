@@ -4,9 +4,14 @@
         <app-mouse-info></app-mouse-info>
     </div>
     <div class="main h-100 row">
-        <app-tools-bar></app-tools-bar>
+        <div class="h-100 grow">
+            <app-tools-properties-bar></app-tools-properties-bar>
+            <div class="row grow bt">
+                <app-tools-bar></app-tools-bar>
 
-        <app-scene-view class="grow h-100"></app-scene-view>
+                <app-scene-view class="grow h-100"></app-scene-view>
+            </div>
+        </div>
 
         <div class="h-100 bg bl" style="inline-size: 325px">
             <app-scene-viewer></app-scene-viewer>

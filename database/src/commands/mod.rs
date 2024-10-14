@@ -10,6 +10,8 @@ mod move_coords;
 mod move_layer;
 mod remove_coord;
 mod toggle_handle;
+mod change_stroke_color;
+mod change_stroke_size;
 
 pub use add_coord::AddCoord;
 pub use change_color::ChangeColor;
@@ -17,6 +19,8 @@ pub use move_coords::MoveCoords;
 pub use move_layer::MoveLayer;
 pub use remove_coord::RemoveCoord;
 pub use toggle_handle::ToggleHandle;
+pub use change_stroke_color::ChangeStrokeColor;
+pub use change_stroke_size::ChangeStrokeSize;
 
 pub trait Command: Any + Debug {
     fn execute(&mut self, scene: &mut Scene) -> Result<()>;

@@ -2,7 +2,10 @@ use common::types::{Coord, ScreenLength2d};
 use common::{dbg_str, Rgba};
 use common::{math::point_in_radius, types::ScreenCoord};
 
-use crate::commands::{AddCoord, ChangeColor, MoveCoords, RemoveCoord, ToggleHandle};
+use crate::commands::{
+    AddCoord, ChangeColor, ChangeStrokeColor, ChangeStrokeSize, MoveCoords, RemoveCoord,
+    ToggleHandle,
+};
 use crate::scene::shape::boolean::ShapeUnion;
 use crate::user_context::user_selection::SelectedShape;
 use crate::{LayerId, Shape};
@@ -12,6 +15,7 @@ use super::SceneUserContext;
 
 impl SceneUserContext {
     pub fn set_color_of(&mut self, selected: &mut UserSelection, color: Rgba) {
+        selected.color = color.clone();
         if let Err(e) = self.command_handler.execute(ChangeColor::boxed(
             selected.shapes.iter().map(|s| s.shape_id).collect(),
             color,
@@ -27,7 +31,6 @@ impl SceneUserContext {
     ) {
         let start = self.camera.project(start);
         let end = self.camera.project(end);
-        log::debug!("start: {:?}, end: {:?}", start, end);
 
         if let Err(e) = self.command_handler.execute(MoveCoords::boxed(
             selected
@@ -120,6 +123,8 @@ impl SceneUserContext {
 
         let mut shape = Shape::new_circle(mouse_position, radius);
         shape.color = selected.color.clone();
+        shape.stroke.color = selected.stroke_color.clone();
+        shape.stroke.size = selected.stroke_size as f32;
 
         if selected.shapes.is_empty() {
             let id = scene.shape_insert(shape);
@@ -182,5 +187,27 @@ impl SceneUserContext {
     pub fn save(&self) -> Result<Vec<u8>, String> {
         let vec = postcard::to_allocvec(self).map_err(|_| "Serizalization should be valid")?;
         Ok(vec)
+    }
+}
+
+impl SceneUserContext {
+    pub fn set_stroke_size_of(&mut self, selected: &mut UserSelection, size: f64) {
+        selected.stroke_size = size as f32;
+        if let Err(e) = self.command_handler.execute(ChangeStrokeSize::boxed(
+            selected.shapes.iter().map(|s| s.shape_id).collect(),
+            size as f32,
+        )) {
+            log::error!("{:?}", e)
+        }
+    }
+
+    pub fn set_stroke_color_of(&mut self, selected: &mut UserSelection, fill: Rgba) {
+        selected.stroke_color = fill.clone();
+        if let Err(e) = self.command_handler.execute(ChangeStrokeColor::boxed(
+            selected.shapes.iter().map(|s| s.shape_id).collect(),
+            fill,
+        )) {
+            log::error!("{:?}", e)
+        }
     }
 }
