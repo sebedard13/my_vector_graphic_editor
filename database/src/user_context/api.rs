@@ -123,6 +123,8 @@ impl SceneUserContext {
 
         let mut shape = Shape::new_circle(mouse_position, radius);
         shape.color = selected.color.clone();
+        shape.stroke.color = selected.stroke_color.clone();
+        shape.stroke.size = selected.stroke_size as f32;
 
         if selected.shapes.is_empty() {
             let id = scene.shape_insert(shape);
@@ -189,7 +191,8 @@ impl SceneUserContext {
 }
 
 impl SceneUserContext {
-    pub fn set_stroke_size_of(&mut self, selected: &UserSelection, size: f64) {
+    pub fn set_stroke_size_of(&mut self, selected: &mut UserSelection, size: f64) {
+        selected.stroke_size = size as f32;
         if let Err(e) = self.command_handler.execute(ChangeStrokeSize::boxed(
             selected.shapes.iter().map(|s| s.shape_id).collect(),
             size as f32,
@@ -198,7 +201,8 @@ impl SceneUserContext {
         }
     }
 
-    pub fn set_stroke_color_of(&mut self, selected: &UserSelection, fill: Rgba) {
+    pub fn set_stroke_color_of(&mut self, selected: &mut UserSelection, fill: Rgba) {
+        selected.stroke_color = fill.clone();
         if let Err(e) = self.command_handler.execute(ChangeStrokeColor::boxed(
             selected.shapes.iter().map(|s| s.shape_id).collect(),
             fill,

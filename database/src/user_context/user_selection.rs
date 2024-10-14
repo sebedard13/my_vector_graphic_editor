@@ -12,7 +12,7 @@ pub struct UserSelection {
     pub mouse_position: Option<Coord>,
     pub hover_coord: Option<HoverCoord>,
     pub color: Rgba,
-    pub stroke_size: f64,
+    pub stroke_size: f32,
     pub stroke_color: Rgba,
 }
 
