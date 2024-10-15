@@ -78,6 +78,17 @@ impl SceneUserContext {
             ctx.set_stroke(&Rgba::transparent(), 0.0)?;
         }
 
+        let t = ctx.get_transform()?;
+        ctx.set_stroke(&Rgba::black(), 1.0)?;
+        ctx.set_fill(&Rgba::transparent())?;
+        ctx.start_shape(&(t * Coord::new(-1.0, -1.0)))?;
+        ctx.move_line(&(t * Coord::new(1.0, -1.0)))?;
+        ctx.move_line(&(t * Coord::new(1.0, 1.0)))?;
+        ctx.move_line(&(t * Coord::new(-1.0, 1.0)))?;
+        ctx.close_shape()?;
+        ctx.set_stroke(&Rgba::transparent(), 0.0)?;
+        
+
         Ok(())
     }
 
