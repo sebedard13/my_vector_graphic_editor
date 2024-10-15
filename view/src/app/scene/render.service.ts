@@ -13,7 +13,7 @@ export class RenderService {
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;
 
-            const rect = scene.sceneClient.get_render_rect() as ScreenRect;
+            const rect = new ScreenRect(scene.sceneClient.get_render_rect());
             canvas.width = rect.width();
             canvas.height = rect.height();
 
