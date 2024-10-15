@@ -55,6 +55,7 @@ impl SceneUserContext {
 
                 let radius = ScreenLength2d::new(5.0, 5.0);
 
+                //TODO Don't mix buisness logic with rendering Shape with database id and rendering
                 let mut circle =
                     Shape::new_circle(db_coord.coord(), self.camera.transform_to_length2d(radius));
                 circle.color = color;
