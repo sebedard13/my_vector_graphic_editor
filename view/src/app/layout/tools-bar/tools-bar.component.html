@@ -13,7 +13,7 @@
     </div>
 
     <div class="my-2">
-        <button class="action flex center p-2" title="Union">
+        <button class="action flex center p-2" title="Union" (click)="union()">
             <svg
                 class="text"
                 viewBox="0 0 48 48"
@@ -43,7 +43,7 @@
             </svg>
         </button>
 
-        <button class="action flex center p-2" title="Difference">
+        <button class="action flex center p-2" title="Difference" (click)="difference()">
             <svg
                 viewBox="0 0 48 48"
                 version="1.1"
@@ -75,7 +75,7 @@
                 </g>
             </svg>
         </button>
-        <button class="action flex center p-2" title="Intersection">
+        <button class="action flex center p-2" title="Intersection" (click)="intersection()">
             <svg
                 viewBox="0 0 48 48"
                 version="1.1"

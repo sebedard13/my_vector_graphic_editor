@@ -9,6 +9,7 @@ pub mod api;
 pub mod camera;
 
 mod ui;
+mod boolean;
 pub mod user_selection;
 
 #[derive(Debug, Serialize, Deserialize)]

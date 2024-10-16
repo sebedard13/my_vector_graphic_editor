@@ -105,3 +105,21 @@ impl SceneClient {
         Ok(())
     }
 }
+
+#[wasm_bindgen]
+impl SceneClient {
+    pub fn union(&mut self, selected: &mut UserSelectionClient)-> Result<(), String> {
+        self.scene_context.union(&mut selected.selection).map_err(|e| format!("{:?}", e))?;
+        Ok(())
+    }
+
+    pub fn difference(&mut self, selected: &mut UserSelectionClient)-> Result<(), String> {
+        self.scene_context.difference(&mut selected.selection).map_err(|e| format!("{:?}", e))?;
+        Ok(())
+    }
+
+    pub fn intersection(&mut self, selected: &mut UserSelectionClient)-> Result<(), String> {
+        self.scene_context.intersection(&mut selected.selection).map_err(|e| format!("{:?}", e))?;
+        Ok(())
+    }
+}
