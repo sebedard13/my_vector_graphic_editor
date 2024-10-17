@@ -5,6 +5,7 @@ use super::{
 };
 use crate::scene::shape::Shape;
 
+#[derive(Clone, Debug)]
 pub enum ShapeUnion {
     /// A contains fully B
     A,

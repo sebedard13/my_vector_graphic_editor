@@ -1,18 +1,21 @@
-use crate::UserSelection;
+use crate::{commands::Union, UserSelection};
 
 use super::SceneUserContext;
 
 impl SceneUserContext {
-    pub fn union(&self, selected: &mut UserSelection) -> Result<(), String> {
+    pub fn union(&mut self, selected: &mut UserSelection) -> Result<(), String> {
         if selected.shapes.len() == 2 {
-            log::info!("Union selected");
+            let command = Union::boxed(selected.shapes[0].shape_id, selected.shapes[1].shape_id);
+            self.command_handler
+                .execute(command)
+                .map_err(|e| e.to_string())?;
         } else {
             log::warn!("Union requires exactly 2 shapes to be selected");
         }
         Ok(())
     }
 
-    pub fn difference(&self, selected: &mut UserSelection) -> Result<(), String> {
+    pub fn difference(&mut self, selected: &mut UserSelection) -> Result<(), String> {
         if selected.shapes.len() == 2 {
             log::info!("Difference selected");
         } else {
@@ -21,7 +24,7 @@ impl SceneUserContext {
         Ok(())
     }
 
-    pub fn intersection(&self, selected: &mut UserSelection) -> Result<(), String> {
+    pub fn intersection(&mut self, selected: &mut UserSelection) -> Result<(), String> {
         if selected.shapes.len() == 2 {
             log::info!("Intersection selected");
         } else {
