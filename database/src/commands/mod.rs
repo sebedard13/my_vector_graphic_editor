@@ -14,6 +14,7 @@ mod change_stroke_color;
 mod change_stroke_size;
 mod union;
 mod difference;
+mod intersection;
 
 pub use add_coord::AddCoord;
 pub use change_color::ChangeColor;
@@ -25,6 +26,7 @@ pub use change_stroke_color::ChangeStrokeColor;
 pub use change_stroke_size::ChangeStrokeSize;
 pub use union::Union;
 pub use difference::Difference;
+pub use intersection::Intersection;
 
 
 pub trait Command: Any + Debug {

@@ -6,6 +6,7 @@ use super::{
 use crate::scene::shape::Shape;
 use anyhow::Error;
 
+#[derive(Debug, Clone)]
 pub enum ShapeIntersection {
     /// B fully contains A so the result is A
     A,

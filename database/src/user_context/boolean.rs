@@ -1,5 +1,5 @@
 use crate::{
-    commands::{Difference, Union},
+    commands::{Difference, Intersection, Union},
     UserSelection,
 };
 
@@ -33,7 +33,11 @@ impl SceneUserContext {
 
     pub fn intersection(&mut self, selected: &mut UserSelection) -> Result<(), String> {
         if selected.shapes.len() == 2 {
-            log::info!("Intersection selected");
+            let command =
+                Intersection::boxed(selected.shapes[0].shape_id, selected.shapes[1].shape_id);
+            self.command_handler
+                .execute(command)
+                .map_err(|e| e.to_string())?;
         } else {
             log::warn!("Intersection requires exactly 2 shapes to be selected");
         }
