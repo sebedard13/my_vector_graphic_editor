@@ -14,6 +14,7 @@ import { takeUntilDestroyed, toSignal } from "@angular/core/rxjs-interop";
 import { filter } from "rxjs";
 import { SelectionService } from "src/app/scene/selection.service";
 import { Rgba } from "src/app/utilities/client/common";
+import { ScenesService } from "src/app/scene/scenes.service";
 @Component({
     selector: "app-tools-bar",
     templateUrl: "./tools-bar.component.html",
@@ -28,6 +29,7 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
     private readonly destroyRef = inject(DestroyRef);
     private readonly elementRef = inject(ElementRef);
     private readonly selectionService = inject(SelectionService);
+    private readonly scenesService = inject(ScenesService);
 
     private readonly mapKeybinds: Map<string, number> = new Map([
         ["Digit1", 0],
@@ -86,5 +88,23 @@ export class ToolsBarComponent implements AfterViewInit, OnDestroy {
 
     protected changeColor(color: Rgba) {
         this.selectionService.set_color(color);
+    }
+
+    protected union() {
+        this.scenesService.currentSceneNow((scene) => {
+            scene.sceneClient.union(this.selectionService.selection);
+        })
+    }
+
+    protected difference() {
+        this.scenesService.currentSceneNow((scene) => {
+            scene.sceneClient.difference(this.selectionService.selection);
+        })
+    }
+
+    protected intersection() {
+        this.scenesService.currentSceneNow((scene) => {
+            scene.sceneClient.intersection(this.selectionService.selection);
+        })
     }
 }

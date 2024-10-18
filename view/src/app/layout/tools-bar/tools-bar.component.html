@@ -11,6 +11,115 @@
             ><fa-icon [icon]="button.icon"></fa-icon
         ></label>
     </div>
+
+    <div class="my-2">
+        <button class="action flex center p-2" title="Union" (click)="union()">
+            <svg
+                class="text"
+                viewBox="0 0 48 48"
+                version="1.1"
+                id="svg1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:svg="http://www.w3.org/2000/svg"
+            >
+                <defs id="defs1" />
+                <g id="layer1">
+                    <rect
+                        style="stroke-width: 1.18815"
+                        id="rect1"
+                        width="31.416058"
+                        height="29.664232"
+                        x="0"
+                        y="18.335768"
+                    />
+                    <ellipse
+                        id="path1"
+                        cx="29.253929"
+                        cy="19.406727"
+                        rx="18.746071"
+                        ry="19.406727"
+                    />
+                </g>
+            </svg>
+        </button>
+
+        <button class="action flex center p-2" title="Difference" (click)="difference()">
+            <svg
+                viewBox="0 0 48 48"
+                version="1.1"
+                id="svg1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:svg="http://www.w3.org/2000/svg"
+            >
+                <defs id="defs1" />
+                <g id="layer1">
+                    <path
+                        id="rect1"
+                        style="stroke-width: 1.18815"
+                        d="M 0,18.335938 V 48 h 31.416016 v -9.347656 a 18.746071,19.406727 0 0 1 -2.16211,0.160156 18.746071,19.406727 0 0 1 -18.746094,-19.40625 18.746071,19.406727 0 0 1 0.07422,-1.070312 z"
+                    />
+                    <ellipse
+                        id="path1-6"
+                        cx="29.053928"
+                        cy="19.606728"
+                        rx="18.746071"
+                        ry="19.406727"
+                        style="
+                            fill: none;
+                            fill-opacity: 1;
+                            stroke-width: 1.8;
+                            stroke-dasharray: none;
+                            stroke-opacity: 1;
+                        "
+                    />
+                </g>
+            </svg>
+        </button>
+        <button class="action flex center p-2" title="Intersection" (click)="intersection()">
+            <svg
+                viewBox="0 0 48 48"
+                version="1.1"
+                id="svg1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:svg="http://www.w3.org/2000/svg"
+            >
+                <defs id="defs1" />
+                <g id="layer1">
+                    <path
+                        id="rect1"
+                        style="stroke-width: 1.21647"
+                        d="m 10.254049,18.170774 a 19.338407,19.719796 0 0 0 -0.07656,1.087579 19.338407,19.719796 0 0 0 19.33843,19.719311 19.338407,19.719796 0 0 0 2.230428,-0.16274 v -20.64415 z"
+                    />
+                    <rect
+                        style="
+                            fill: none;
+                            stroke-width: 1.8;
+                            stroke-dasharray: none;
+                            stroke-opacity: 1;
+                        "
+                        id="rect1-4"
+                        width="31.416058"
+                        height="29.664232"
+                        x="0.2"
+                        y="18.135767"
+                    />
+                    <ellipse
+                        id="path1-6"
+                        cx="29.053928"
+                        cy="19.606728"
+                        rx="18.746071"
+                        ry="19.406727"
+                        style="
+                            fill: none;
+                            stroke-width: 1.8;
+                            stroke-dasharray: none;
+                            stroke-opacity: 1;
+                        "
+                    />
+                </g>
+            </svg>
+        </button>
+    </div>
     <app-color-picker
         class="w-100"
         (color)="changeColor($event)"

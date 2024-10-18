@@ -7,6 +7,7 @@ use super::{
 };
 use crate::scene::shape::Shape;
 
+#[derive(Debug, Clone)]
 pub enum ShapeDifference {
     /// No change to A
     A,
