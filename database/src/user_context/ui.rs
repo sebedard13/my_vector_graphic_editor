@@ -1,3 +1,4 @@
+use anyhow::Context;
 use common::{
     math::point_in_radius,
     types::{Coord, ScreenLength2d},
@@ -18,7 +19,8 @@ impl SceneUserContext {
             let shape = self
                 .scene()
                 .shape_select(shape_selected.shape_id)
-                .expect("not 404");
+                .context(format!("Shape id {:?} not found", shape_selected.shape_id))
+                .map_err(|e| e.to_string())?;
 
             let t = ctx.get_transform()?;
 
@@ -87,7 +89,6 @@ impl SceneUserContext {
         ctx.move_line(&(t * Coord::new(-1.0, 1.0)))?;
         ctx.close_shape()?;
         ctx.set_stroke(&Rgba::transparent(), 0.0)?;
-        
 
         Ok(())
     }
