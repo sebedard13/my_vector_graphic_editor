@@ -5,6 +5,6 @@
 **/node_modules
 **/pkg
 
-**/*.vgc
+**/*.mvg
 **/*.png
 local/

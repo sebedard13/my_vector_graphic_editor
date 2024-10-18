@@ -79,14 +79,14 @@ export class CanvasComponent implements AfterViewInit {
         try {
             canvasContent.render_main(this.selectionService.selection, this.ctx);
         } catch (e) {
-            //Wasm vgc mostly crash and is irrecoverable
+            //Wasm mostly crash and is irrecoverable
             if (this.renderError < 3) {
                 console.error(e);
                 this.renderError++;
             } else {
                 this.renderSub?.unsubscribe();
-                console.error("Wasm vgc crashed, stopping rendering");
-                alert("Wasm vgc crashed, stopping rendering");
+                console.error("Wasm crashed, stopping rendering");
+                alert("Wasm crashed, stopping rendering");
             }
         }
 

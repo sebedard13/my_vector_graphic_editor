@@ -79,7 +79,7 @@ export class ScenesService {
     public loadSceneFromFile(): void {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = ".vgc";
+        input.accept = ".mvg";
         input.onchange = () => {
             const files = input.files;
             if (files && files.length > 0) {
@@ -90,7 +90,7 @@ export class ScenesService {
                     const canvasContent = SceneClient.load(new Uint8Array(buffer));
                     const scene = new Scene(canvasContent);
                     let filename = file.name;
-                    if (filename.endsWith(".vgc")) {
+                    if (filename.endsWith(".mvg")) {
                         filename = filename.slice(0, -4);
                     }
 
@@ -114,7 +114,7 @@ export class ScenesService {
 
             const a = document.createElement("a");
             a.href = url;
-            a.download = scene.metadata.name + ".vgc";
+            a.download = scene.metadata.name + ".mvg";
             a.click();
         });
     }
