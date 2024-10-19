@@ -37,6 +37,10 @@ Now, I am a student, I worked on it for a year and a half and I am kinda tired o
 - Unselecting a shape without using Esc
 - And many more
 
+## Demo
+
+![Demo](./demo.png)
+
 ## Building
 
 ### Dependencies

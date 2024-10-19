@@ -8,3 +8,6 @@
 **/*.mvg
 **/*.png
 local/
+
+!demo.png
+!Flower-demo.mvg
