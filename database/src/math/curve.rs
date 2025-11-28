@@ -1,4 +1,4 @@
-use roots::{find_roots_sturm, SimpleConvergency};
+use polynomen::Poly;
 
 use common::{
     pures::Vec2,
@@ -42,13 +42,13 @@ pub fn t_closest(
     let df = 2.0 * (c.x * d.x + c.y * d.y) as f64; // 2*c_x*d_x+2*c_y*d_y
 
     //Division by da, because function accept only monic polynomials
-    // find_roots_sturm expects coefficients for monic polynomial x^n + a[0]*x^(n-1) + ... + a[n-1]
-    // So we provide [db/da, dc/da, dd/da, de/da, df/da] for quintic polynomial
-    let coeffs = [db / da, dc / da, dd / da, de / da, df / da];
+    let mut vec = vec![1.0, db / da, dc / da, dd / da, de / da, df / da];
 
-    for i in 0..coeffs.len() {
-        if coeffs[i].is_nan() {
-            log::error!("Nan in coeffs[{}]: {:?}", i, coeffs);
+    vec.reverse();
+
+    for i in 0..vec.len() {
+        if vec[i].is_nan() {
+            log::error!("Nan in vec[{}]: {:?}", i, vec);
             log::debug!(
                 "coord: {:?}, p0: {:?}, cp0: {:?}, cp1: {:?}, p1: {:?}",
                 coord,
@@ -61,25 +61,17 @@ pub fn t_closest(
         }
     }
 
-    // Use Sturm's method to find all real roots
-    let mut convergency = SimpleConvergency { eps: 1e-12, max_iter: 100 };
-    let roots_result = find_roots_sturm(&coeffs, &mut convergency);
-    
-    let mut real_roots: Vec<f64> = roots_result.into_iter().filter_map(|r| r.ok()).collect();
+    let poly = Poly::new_from_coeffs(&vec);
 
-    // Always include endpoints
+    let real_roots_raw = poly.complex_roots();
+
+    let mut real_roots = real_roots_raw.iter().map(|x| x.0).collect::<Vec<f64>>();
+
     real_roots.push(0.0);
     real_roots.push(1.0);
-    
-    // Also sample additional points for robustness
-    // This catches roots the solver might miss in edge cases
-    for i in 1..20 {
-        real_roots.push(i as f64 / 20.0);
-    }
 
-    // First pass: find approximate minimum
     let mut min_distance = std::f32::MAX;
-    let mut min_t = 0.0f64;
+    let mut min_t = 0.0;
     let mut min = Coord::new(0.0, 0.0);
     real_roots
         .iter()
@@ -89,44 +81,12 @@ pub fn t_closest(
             let distance = coord.approx_distance(&curve_coord);
             if distance < min_distance {
                 min_distance = distance;
-                min_t = t;
+                min_t = t as f32;
                 min = curve_coord;
             }
         });
 
-    // Refine the minimum using golden section search
-    let mut lo = (min_t - 0.1).max(0.0);
-    let mut hi = (min_t + 0.1).min(1.0);
-    let golden_ratio = (5.0f64.sqrt() - 1.0) / 2.0;
-    
-    for _ in 0..50 {
-        if hi - lo < 1e-7 {
-            break;
-        }
-        let mid1 = hi - golden_ratio * (hi - lo);
-        let mid2 = lo + golden_ratio * (hi - lo);
-        
-        let d1 = coord.approx_distance(&cubic_bezier(mid1 as f32, p0, cp0, cp1, p1));
-        let d2 = coord.approx_distance(&cubic_bezier(mid2 as f32, p0, cp0, cp1, p1));
-        
-        if d1 < d2 {
-            hi = mid2;
-        } else {
-            lo = mid1;
-        }
-    }
-    
-    let refined_t = (lo + hi) / 2.0;
-    let refined_coord = cubic_bezier(refined_t as f32, p0, cp0, cp1, p1);
-    let refined_distance = coord.approx_distance(&refined_coord);
-    
-    if refined_distance < min_distance {
-        min_t = refined_t;
-        min_distance = refined_distance;
-        min = refined_coord;
-    }
-
-    (min_t as f32, min_distance.sqrt(), min)
+    (min_t, min_distance.sqrt(), min)
 }
 
 /// Evaluate the point at t of curve defined by p0, cp0, cp1, p1
@@ -327,9 +287,7 @@ mod test {
 
         let (t, _, _) = super::t_closest(&coord, &p0, &cp0, &cp1, &p1);
 
-        // Use approximate comparison due to numerical precision differences
-        // between polynomial root finding algorithms
-        assert!((t - 0.45561033).abs() < 0.001, "Expected t ≈ 0.45561033, got {}", t);
+        assert_eq!(t, 0.45561033);
     }
 
     #[test]
