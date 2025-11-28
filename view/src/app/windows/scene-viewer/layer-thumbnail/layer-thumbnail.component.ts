@@ -8,8 +8,7 @@ import { ScenesService } from "src/app/scene/scenes.service";
     templateUrl: "./layer-thumbnail.component.html",
     styleUrl: "./layer-thumbnail.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [AsyncPipe],
+    imports: [AsyncPipe]
 })
 export class LayerThumbnailComponent {
     public layerId = input.required<number>();

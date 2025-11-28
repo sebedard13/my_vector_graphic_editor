@@ -2,7 +2,7 @@ use crate::{pures::Vec2, vec2_op, PRECISION};
 use float_cmp::ApproxEq;
 use serde::{Deserialize, Serialize};
 
-use tsify_next::Tsify;
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use super::{Length2d, ScreenCoord, Vector};

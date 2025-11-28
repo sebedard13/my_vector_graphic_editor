@@ -11,6 +11,7 @@ type OptionCoordView = { x: string; y: string } | null;
     templateUrl: "./mouse-info.component.html",
     styleUrls: ["./mouse-info.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MouseInfoComponent {
     protected zoom$: Observable<string> = this.cameraService.zoom$.pipe(

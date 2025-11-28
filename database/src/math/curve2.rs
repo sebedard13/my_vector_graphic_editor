@@ -4,7 +4,7 @@ use common::{
     types::{Coord, Rect},
     PRECISION,
 };
-use polynomen::Poly;
+use roots::{find_roots_cubic, find_roots_linear, find_roots_quadratic};
 
 use crate::math::curve::{add_smooth_result, cubic_bezier};
 
@@ -70,18 +70,22 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d1cx = 3.0 * (cp0x - p0x);
     let d1cy = 3.0 * (cp0y - p0y);
 
-    if let Some(roots) = Poly::new_from_coeffs(&[d1cx / d1ax, d1bx / d1ax, 1.0]).real_roots() {
-        for root in roots {
-            if root > 0.0 && root < 1.0 {
-                vec.push(root);
+    // For quadratic d1ax*t^2 + d1bx*t + d1cx = 0
+    // find_roots_quadratic takes coefficients (a, b, c) for at^2 + bt + c = 0
+    if d1ax.abs() > f64::EPSILON {
+        let roots_result = find_roots_quadratic(d1ax, d1bx, d1cx);
+        for root in roots_result.as_ref().iter() {
+            if *root > 0.0 && *root < 1.0 {
+                vec.push(*root);
             }
         }
     }
 
-    if let Some(roots) = Poly::new_from_coeffs(&[d1cy / d1ay, d1by / d1ay, 1.0]).real_roots() {
-        for root in roots {
-            if root > 0.0 && root < 1.0 {
-                vec.push(root);
+    if d1ay.abs() > f64::EPSILON {
+        let roots_result = find_roots_quadratic(d1ay, d1by, d1cy);
+        for root in roots_result.as_ref().iter() {
+            if *root > 0.0 && *root < 1.0 {
+                vec.push(*root);
             }
         }
     }
@@ -92,18 +96,22 @@ pub fn extremites(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord) -> Vec<f32> 
     let d2bx = 6.0 * (p0x - 2.0 * cp0x + cp1x);
     let d2by = 6.0 * (p0y - 2.0 * cp0y + cp1y);
 
-    if let Some(roots) = Poly::new_from_coeffs(&[d2bx / d2ax, 1.0]).real_roots() {
-        for root in roots {
-            if root > 0.0 && root < 1.0 {
-                vec.push(root);
+    // For linear d2ax*t + d2bx = 0
+    // find_roots_linear takes coefficients (a, b) for at + b = 0
+    if d2ax.abs() > f64::EPSILON {
+        let roots_result = find_roots_linear(d2ax, d2bx);
+        for root in roots_result.as_ref().iter() {
+            if *root > 0.0 && *root < 1.0 {
+                vec.push(*root);
             }
         }
     }
 
-    if let Some(roots) = Poly::new_from_coeffs(&[d2by / d2ay, 1.0]).real_roots() {
-        for root in roots {
-            if root > 0.0 && root < 1.0 {
-                vec.push(root);
+    if d2ay.abs() > f64::EPSILON {
+        let roots_result = find_roots_linear(d2ay, d2by);
+        for root in roots_result.as_ref().iter() {
+            if *root > 0.0 && *root < 1.0 {
+                vec.push(*root);
             }
         }
     }
@@ -428,24 +436,20 @@ pub fn intersection_with_y(p0: &Coord, cp0: &Coord, cp1: &Coord, p1: &Coord, y: 
         return Vec::new();
     }
 
-    let poly = Poly::new_from_coeffs(&[coeff0, coeff1, coeff2, coeff3]);
-
-    let croots = poly.complex_roots();
+    // find_roots_cubic takes coefficients (a, b, c, d) for at^3 + bt^2 + ct + d = 0
+    let roots_result = find_roots_cubic(coeff3, coeff2, coeff1, coeff0);
 
     let mut vec = Vec::new();
-    for root in croots {
+    for root in roots_result.as_ref().iter() {
         //For the even-odd rule, we don't care if root is at 0.0 or 1.0, because it need to add 2 intersections
-        if 0.0 < (root.0 as f32)
-            && (root.0 as f32) < 1.0
-            && f64::abs(root.1) < (f32::EPSILON as f64)
-        {
+        if 0.0 < (*root as f32) && (*root as f32) < 1.0 {
             if vec
                 .iter()
-                .any(|&x| f32::abs(x - root.0 as f32) < f32::EPSILON)
+                .any(|&x| f32::abs(x - *root as f32) < f32::EPSILON)
             {
                 continue;
             }
-            vec.push(root.0 as f32);
+            vec.push(*root as f32);
         }
     }
     //remove same value in vec

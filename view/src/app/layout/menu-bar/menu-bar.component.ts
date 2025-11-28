@@ -8,6 +8,7 @@ import { RenderService } from "../../scene/render.service";
     selector: "app-menu-bar",
     templateUrl: "./menu-bar.component.html",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class MenuBarComponent {
     constructor(

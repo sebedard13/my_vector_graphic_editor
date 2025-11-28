@@ -9,11 +9,10 @@ import { toSignal } from "@angular/core/rxjs-interop";
 
 @Component({
     selector: "app-tools-properties-bar",
-    standalone: true,
     imports: [ColorPickerComponent, NumberInputComponent],
     templateUrl: "./tools-properties-bar.component.html",
     styleUrl: "./tools-properties-bar.component.scss",
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolsPropertiesBarComponent {
     private readonly selectionService = inject(SelectionService);

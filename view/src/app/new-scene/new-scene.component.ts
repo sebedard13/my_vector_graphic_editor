@@ -8,6 +8,7 @@ import { ScenesService } from "../scene/scenes.service";
     templateUrl: "./new-scene.component.html",
     styleUrl: "./new-scene.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class NewSceneComponent implements ModalComponent {
     public private = new Subject<void>();

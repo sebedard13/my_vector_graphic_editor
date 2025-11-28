@@ -17,6 +17,7 @@ import { SceneClient } from "wasm-client";
     templateUrl: "./canvas.component.html",
     styleUrls: ["./canvas.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CanvasComponent implements AfterViewInit {
     @ViewChild("canvas") canvas!: ElementRef<HTMLCanvasElement>;

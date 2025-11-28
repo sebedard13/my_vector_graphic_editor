@@ -1,4 +1,4 @@
-use polynomen::Poly;
+use roots::{find_roots_sturm, SimpleConvergency};
 
 use common::{
     pures::Vec2,
@@ -42,13 +42,13 @@ pub fn t_closest(
     let df = 2.0 * (c.x * d.x + c.y * d.y) as f64; // 2*c_x*d_x+2*c_y*d_y
 
     //Division by da, because function accept only monic polynomials
-    let mut vec = vec![1.0, db / da, dc / da, dd / da, de / da, df / da];
+    // find_roots_sturm expects coefficients for monic polynomial x^n + a[0]*x^(n-1) + ... + a[n-1]
+    // So we provide [db/da, dc/da, dd/da, de/da, df/da] for quintic polynomial
+    let coeffs = [db / da, dc / da, dd / da, de / da, df / da];
 
-    vec.reverse();
-
-    for i in 0..vec.len() {
-        if vec[i].is_nan() {
-            log::error!("Nan in vec[{}]: {:?}", i, vec);
+    for i in 0..coeffs.len() {
+        if coeffs[i].is_nan() {
+            log::error!("Nan in coeffs[{}]: {:?}", i, coeffs);
             log::debug!(
                 "coord: {:?}, p0: {:?}, cp0: {:?}, cp1: {:?}, p1: {:?}",
                 coord,
@@ -61,11 +61,11 @@ pub fn t_closest(
         }
     }
 
-    let poly = Poly::new_from_coeffs(&vec);
-
-    let real_roots_raw = poly.complex_roots();
-
-    let mut real_roots = real_roots_raw.iter().map(|x| x.0).collect::<Vec<f64>>();
+    // Use Sturm's method to find all real roots
+    let mut convergency = SimpleConvergency { eps: 1e-12, max_iter: 100 };
+    let roots_result = find_roots_sturm(&coeffs, &mut convergency);
+    
+    let mut real_roots: Vec<f64> = roots_result.into_iter().filter_map(|r| r.ok()).collect();
 
     real_roots.push(0.0);
     real_roots.push(1.0);

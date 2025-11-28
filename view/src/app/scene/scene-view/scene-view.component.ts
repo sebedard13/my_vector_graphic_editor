@@ -9,6 +9,7 @@ import { NewSceneComponent } from "src/app/new-scene/new-scene.component";
     templateUrl: "./scene-view.component.html",
     styleUrl: "./scene-view.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class SceneViewComponent {
     protected faXmark = faXmark;

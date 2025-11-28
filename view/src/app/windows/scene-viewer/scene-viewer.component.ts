@@ -39,7 +39,6 @@ export type MergedTreeViewModel = TreeViewModel & LocalTreeViewModel;
     templateUrl: "./scene-viewer.component.html",
     styleUrl: "./scene-viewer.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
     imports: [
         CdkTreeModule,
         FontAwesomeModule,
@@ -47,7 +46,7 @@ export type MergedTreeViewModel = TreeViewModel & LocalTreeViewModel;
         CdkDrag,
         CdkDragPlaceholder,
         LayerThumbnailComponent,
-    ],
+    ]
 })
 export class SceneViewerComponent {
     protected Icon = {

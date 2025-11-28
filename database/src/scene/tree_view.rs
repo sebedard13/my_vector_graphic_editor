@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tsify_next::Tsify;
-use wasm_bindgen::convert::*;
-use wasm_bindgen::describe::*;
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 use super::{LayerType, Scene};
@@ -13,24 +11,6 @@ pub struct TreeViewModel {
     pub layer_type: String,
     pub name: String,
     pub level: usize,
-}
-
-impl WasmDescribeVector for TreeViewModel {
-    fn describe_vector() {
-        inform(VECTOR);
-        TreeViewModel::describe();
-    }
-}
-
-impl VectorIntoWasmAbi for TreeViewModel {
-    type Abi = <
-        wasm_bindgen::__rt::std::boxed::Box<[wasm_bindgen::JsValue]>
-        as wasm_bindgen::convert::IntoWasmAbi
-        >::Abi;
-
-    fn vector_into_abi(vector: wasm_bindgen::__rt::std::boxed::Box<[TreeViewModel]>) -> Self::Abi {
-        wasm_bindgen::convert::js_value_vector_into_abi(vector)
-    }
 }
 
 impl Scene {

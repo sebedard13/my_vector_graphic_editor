@@ -9,9 +9,9 @@ edition = "2021"
 anyhow.workspace = true
 log.workspace = true
 postcard.workspace = true
-polynomen.workspace = true
+roots.workspace = true
 serde.workspace = true
-tsify-next.workspace = true
+tsify.workspace = true
 wasm-bindgen.workspace = true
 
 tiny-skia = { version = "0.11.4", optional = true }
