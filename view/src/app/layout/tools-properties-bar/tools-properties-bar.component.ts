@@ -4,8 +4,8 @@ import { NumberInputComponent } from "src/app/utilities/number-input/number-inpu
 import { SelectionService } from "src/app/scene/selection.service";
 import { ScenesService } from "src/app/scene/scenes.service";
 import { filter, map } from "rxjs";
-import { Rgba } from "src/app/utilities/client/common";
 import { toSignal } from "@angular/core/rxjs-interop";
+import { Rgba } from "../../utilities/client/common";
 
 @Component({
     selector: "app-tools-properties-bar",
