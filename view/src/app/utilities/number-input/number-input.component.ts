@@ -6,8 +6,7 @@ import { FormsModule } from "@angular/forms";
     templateUrl: "./number-input.component.html",
     styleUrl: "./number-input.component.scss",
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [FormsModule],
+    imports: [FormsModule]
 })
 export class NumberInputComponent {
     @Input() id!: string;

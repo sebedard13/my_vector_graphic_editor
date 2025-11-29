@@ -1,4 +1,4 @@
-import { NgModule, provideExperimentalZonelessChangeDetection } from "@angular/core";
+import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 
 import { AppComponent } from "./app.component";
@@ -35,7 +35,7 @@ import { ToolsPropertiesBarComponent } from "./layout/tools-properties-bar/tools
         ColorPickerComponent,
         NumberInputComponent,
     ],
-    providers: [EventsService, provideExperimentalZonelessChangeDetection()],
+    providers: [EventsService],
     bootstrap: [AppComponent],
 })
 export class AppModule {}

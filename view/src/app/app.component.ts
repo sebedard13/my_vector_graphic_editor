@@ -18,6 +18,7 @@ import { ToolsPropertiesBarComponent } from "./layout/tools-properties-bar/tools
     templateUrl: "./app.component.html",
     styleUrls: ["./app.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class AppComponent {
     @ViewChild("modalContainer", { read: ViewContainerRef }) modalContainer!: ViewContainerRef;

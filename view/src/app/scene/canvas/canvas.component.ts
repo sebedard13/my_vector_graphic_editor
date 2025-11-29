@@ -7,9 +7,9 @@ import {
     ChangeDetectionStrategy,
 } from "@angular/core";
 import { Subscription, animationFrames } from "rxjs";
-import { EventsService } from "../../scene/events.service";
-import { ScenesService } from "../../scene/scenes.service";
-import { SelectionService } from "../../scene/selection.service";
+import { EventsService } from "../events.service";
+import { ScenesService } from "../scenes.service";
+import { SelectionService } from "../selection.service";
 import { SceneClient } from "wasm-client";
 
 @Component({
@@ -17,6 +17,7 @@ import { SceneClient } from "wasm-client";
     templateUrl: "./canvas.component.html",
     styleUrls: ["./canvas.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class CanvasComponent implements AfterViewInit {
     @ViewChild("canvas") canvas!: ElementRef<HTMLCanvasElement>;

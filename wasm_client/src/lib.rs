@@ -11,7 +11,7 @@ use common::{
 use database::{SceneUserContext, SelectedLevel, UserSelection};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
-use tsify_next::Tsify;
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[wasm_bindgen]

@@ -13,7 +13,7 @@ path = "src/lib.rs"
 log.workspace = true
 postcard.workspace = true
 serde.workspace = true
-tsify-next.workspace = true
+tsify.workspace = true
 wasm-bindgen.workspace = true
 
 common = { path = "../common" }

@@ -109,7 +109,7 @@ export class ScenesService {
 
     public saveSceneToFile(): void {
         this.currentSceneNow((scene) => {
-            const array = scene.sceneClient.save();
+            const array = new Uint8Array(scene.sceneClient.save());
             const url = URL.createObjectURL(new Blob([array]));
 
             const a = document.createElement("a");

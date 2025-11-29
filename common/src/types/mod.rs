@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{forward_ref_binop, forward_ref_unop};
 use std::ops::{Add, Div, Mul, Neg, Sub};
-use tsify_next::Tsify;
+use tsify::Tsify;
 use wasm_bindgen::prelude::wasm_bindgen;
 
 mod coord;

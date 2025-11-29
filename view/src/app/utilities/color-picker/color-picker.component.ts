@@ -20,8 +20,7 @@ import { AsyncPipe } from "@angular/common";
     templateUrl: "./color-picker.component.html",
     styleUrls: ["./color-picker.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [AsyncPipe],
+    imports: [AsyncPipe]
 })
 export class ColorPickerComponent implements AfterViewInit {
     private _destory = inject(DestroyRef);

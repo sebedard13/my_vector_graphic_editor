@@ -20,6 +20,7 @@ import { ScenesService } from "src/app/scene/scenes.service";
     templateUrl: "./tools-bar.component.html",
     styleUrls: ["./tools-bar.component.scss"],
     changeDetection: ChangeDetectionStrategy.OnPush,
+    standalone: false
 })
 export class ToolsBarComponent implements AfterViewInit, OnDestroy {
     buttons: Button[] = toolsbarSvgBtn();
